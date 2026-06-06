@@ -1,101 +1,223 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import Link from "next/link";
+import HeroCarousel from "@/components/home/HeroCarousel";
+
+const CATEGORIES = [
+  { label: "Lehengas", slug: "lehenga" },
+  { label: "Sarees", slug: "saree" },
+  { label: "Salwar Kameez", slug: "salwar_kameez" },
+  { label: "Sherwanis", slug: "sherwani" },
+  { label: "Indo-Western", slug: "indo_western" },
+  { label: "Jewellery", slug: "jewellery" },
+];
+
+const MARQUEE_ITEMS = [
+  "Buy & Sell", "Rent & Discover", "South Asian Fashion",
+  "New Arrivals", "Wedding Season", "Daily Wear",
+];
+
+// Placeholder listing cards — replace with real Supabase data
+const TRENDING = [
+  { id: 1, title: "Red Bridal Lehenga", price: "₹4,500", type: "Sale", bg: "#DDD0C5" },
+  { id: 2, title: "Silk Banarasi Saree", price: "₹1,200 / day", type: "Rent", bg: "#D5C9BE" },
+  { id: 3, title: "Anarkali Suit", price: "₹2,800", type: "Sale", bg: "#CABDB1" },
+  { id: 4, title: "Sherwani Set", price: "₹900 / day", type: "Rent", bg: "#C3B5A8" },
+];
+
+export default function HomePage() {
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+    <div style={{ background: "var(--cream)" }}>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+      {/* ── Hero Carousel ─────────────────────────────────────── */}
+      <HeroCarousel />
+
+      {/* ── Categories ────────────────────────────────────────── */}
+      <section className="max-w-7xl mx-auto px-6 lg:px-10 py-16">
+        <div className="flex items-center gap-4 mb-8">
+          <h2 style={{
+            fontFamily: "var(--font-cormorant)", fontWeight: 300,
+            fontSize: "clamp(1.4rem, 2.5vw, 2rem)", letterSpacing: "0.03em",
+            color: "var(--dark)", whiteSpace: "nowrap"
+          }}>
+            Shop by category
+          </h2>
+          <div style={{ flex: 1, height: "1px", background: "var(--warm-tan)" }} />
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+
+        <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+          {CATEGORIES.map((cat) => (
+            <Link
+              key={cat.slug}
+              href={`/listings?category=${cat.slug}`}
+              className="flex flex-col items-center py-5 px-2 text-center"
+              style={{ border: "1px solid var(--warm-tan)", background: "transparent", transition: "background 0.2s" }}
+              onMouseOver={e => (e.currentTarget.style.background = "var(--warm-tan)")}
+              onMouseOut={e => (e.currentTarget.style.background = "transparent")}
+            >
+              <span style={{
+                fontFamily: "var(--font-cormorant)", fontWeight: 400,
+                fontSize: "0.95rem", letterSpacing: "0.06em",
+                textTransform: "uppercase", color: "var(--dark)"
+              }}>
+                {cat.label}
+              </span>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      {/* ── Marquee ───────────────────────────────────────────── */}
+      <div style={{
+        borderTop: "1px solid var(--warm-tan)", borderBottom: "1px solid var(--warm-tan)",
+        padding: "1rem 0", overflow: "hidden"
+      }}>
+        <div className="marquee-track flex w-max">
+          {[...MARQUEE_ITEMS, ...MARQUEE_ITEMS].map((item, i) => (
+            <div key={i} className="flex items-center gap-8 px-8 whitespace-nowrap">
+              <span style={{
+                fontFamily: "var(--font-cormorant)", fontWeight: 300,
+                fontSize: "clamp(1rem, 2.2vw, 1.6rem)", letterSpacing: "0.08em",
+                textTransform: "uppercase", color: "var(--dark)"
+              }}>
+                {item}
+              </span>
+              <span style={{
+                width: "4px", height: "4px", borderRadius: "50%",
+                background: "var(--burnt-orange)", display: "inline-block", flexShrink: 0
+              }} />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Trending Now ──────────────────────────────────────── */}
+      <section className="max-w-7xl mx-auto px-6 lg:px-10 py-16">
+        <div className="flex items-center gap-4 mb-8">
+          <h2 style={{
+            fontFamily: "var(--font-cormorant)", fontWeight: 300,
+            fontSize: "clamp(1.4rem, 2.5vw, 2rem)", letterSpacing: "0.03em",
+            color: "var(--dark)", whiteSpace: "nowrap"
+          }}>
+            Trending now
+          </h2>
+          <div style={{ flex: 1, height: "1px", background: "var(--warm-tan)" }} />
+          <Link
+            href="/listings"
+            style={{
+              fontFamily: "var(--font-jost)", fontWeight: 300,
+              fontSize: "0.55rem", letterSpacing: "0.18em", textTransform: "uppercase",
+              color: "var(--burnt-orange)", whiteSpace: "nowrap", transition: "opacity 0.2s"
+            }}
+            onMouseOver={e => (e.currentTarget.style.opacity = "0.6")}
+            onMouseOut={e => (e.currentTarget.style.opacity = "1")}
+          >
+            View all →
+          </Link>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          {TRENDING.map((item) => (
+            <Link
+              key={item.id}
+              href={`/listings/${item.id}`}
+              className="group block"
+              style={{ textDecoration: "none" }}
+            >
+              {/* Photo placeholder */}
+              <div
+                style={{
+                  background: item.bg, aspectRatio: "3/4",
+                  position: "relative", overflow: "hidden",
+                  transition: "opacity 0.2s"
+                }}
+                onMouseOver={e => (e.currentTarget.style.opacity = "0.85")}
+                onMouseOut={e => (e.currentTarget.style.opacity = "1")}
+              >
+                {/* Type badge */}
+                <span style={{
+                  position: "absolute", top: "0.75rem", left: "0.75rem",
+                  fontFamily: "var(--font-jost)", fontWeight: 300,
+                  fontSize: "0.5rem", letterSpacing: "0.18em", textTransform: "uppercase",
+                  color: "var(--cream)", background: item.type === "Rent" ? "var(--dark)" : "var(--burnt-orange)",
+                  padding: "0.3rem 0.6rem"
+                }}>
+                  {item.type}
+                </span>
+                {/* Add photo hint */}
+                <div style={{
+                  position: "absolute", inset: 0, display: "flex",
+                  alignItems: "center", justifyContent: "center"
+                }}>
+                  <span style={{
+                    fontFamily: "var(--font-jost)", fontSize: "0.5rem",
+                    letterSpacing: "0.18em", textTransform: "uppercase",
+                    color: "var(--muted)", opacity: 0.5
+                  }}>
+                    Add photo
+                  </span>
+                </div>
+              </div>
+
+              {/* Info */}
+              <div style={{ padding: "0.75rem 0" }}>
+                <p style={{
+                  fontFamily: "var(--font-jost)", fontWeight: 300,
+                  fontSize: "0.75rem", letterSpacing: "0.05em",
+                  color: "var(--dark)", marginBottom: "0.2rem"
+                }}>
+                  {item.title}
+                </p>
+                <p style={{
+                  fontFamily: "var(--font-cormorant)", fontWeight: 400,
+                  fontSize: "1rem", color: "var(--burnt-orange)"
+                }}>
+                  {item.price}
+                </p>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      {/* ── AI Assistant ──────────────────────────────────────── */}
+      <section style={{ background: "#EDE8E2", padding: "5rem 1.5rem", textAlign: "center" }}>
+        <p style={{
+          fontFamily: "var(--font-jost)", fontWeight: 200,
+          fontSize: "0.55rem", letterSpacing: "0.25em", textTransform: "uppercase",
+          color: "var(--burnt-orange)", marginBottom: "1rem"
+        }}>
+          ✦ AI Assistant
+        </p>
+        <h2 style={{
+          fontFamily: "var(--font-cormorant)", fontStyle: "italic", fontWeight: 300,
+          fontSize: "clamp(1.6rem, 3.5vw, 2.4rem)", color: "var(--dark)",
+          letterSpacing: "0.03em", marginBottom: "1rem"
+        }}>
+          Not sure where to start?
+        </h2>
+        <p style={{
+          fontFamily: "var(--font-jost)", fontWeight: 200,
+          fontSize: "0.82rem", letterSpacing: "0.06em", lineHeight: 1.8,
+          color: "var(--muted)", maxWidth: "400px", margin: "0 auto 2rem"
+        }}>
+          Ask about pricing, styling tips, tailors near you,<br />
+          or how to create your first listing.
+        </p>
+        <button
+          style={{
+            fontFamily: "var(--font-jost)", fontWeight: 400,
+            fontSize: "0.58rem", letterSpacing: "0.2em", textTransform: "uppercase",
+            color: "var(--cream)", background: "var(--burnt-orange)",
+            padding: "0.85rem 2rem", border: "none", cursor: "pointer", transition: "opacity 0.2s"
+          }}
+          onMouseOver={e => (e.currentTarget.style.opacity = "0.8")}
+          onMouseOut={e => (e.currentTarget.style.opacity = "1")}
         >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+          Chat with Veeral AI
+        </button>
+      </section>
+
     </div>
   );
 }
