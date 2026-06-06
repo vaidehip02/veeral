@@ -19,7 +19,7 @@ const SLIDES = [
     id: 2,
     label: "New Arrivals",
     heading: "Fresh Finds\nEvery Day",
-    sub: "Discover one-of-a-kind pieces from sellers across India.",
+    sub: "Discover one-of-a-kind South Asian fashion from sellers near you.",
     cta: "Browse Listings",
     href: "/listings",
     bg: "#EDE8E2",

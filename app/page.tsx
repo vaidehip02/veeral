@@ -19,10 +19,10 @@ const MARQUEE_ITEMS = [
 
 // Placeholder listing cards — replace with real Supabase data
 const TRENDING = [
-  { id: 1, title: "Red Bridal Lehenga", price: "₹4,500", type: "Sale", bg: "#DDD0C5" },
-  { id: 2, title: "Silk Banarasi Saree", price: "₹1,200 / day", type: "Rent", bg: "#D5C9BE" },
-  { id: 3, title: "Anarkali Suit", price: "₹2,800", type: "Sale", bg: "#CABDB1" },
-  { id: 4, title: "Sherwani Set", price: "₹900 / day", type: "Rent", bg: "#C3B5A8" },
+  { id: 1, title: "Red Bridal Lehenga", price: "$450", type: "Sale", bg: "#DDD0C5" },
+  { id: 2, title: "Silk Banarasi Saree", price: "$120 / day", type: "Rent", bg: "#D5C9BE" },
+  { id: 3, title: "Anarkali Suit", price: "$280", type: "Sale", bg: "#CABDB1" },
+  { id: 4, title: "Sherwani Set", price: "$90 / day", type: "Rent", bg: "#C3B5A8" },
 ];
 
 export default function HomePage() {
