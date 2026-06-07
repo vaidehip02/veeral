@@ -93,7 +93,7 @@ const GARMENT_LABELS: Record<GarmentType, string> = {
 const thStyle: React.CSSProperties = {
   fontFamily: "var(--font-jost)",
   fontWeight: 600,
-  fontSize: "0.55rem",
+  fontSize: "0.85rem",
   letterSpacing: "0.18em",
   textTransform: "uppercase",
   color: "var(--muted)",
@@ -105,8 +105,8 @@ const thStyle: React.CSSProperties = {
 
 const tdStyle: React.CSSProperties = {
   fontFamily: "var(--font-jost)",
-  fontWeight: 300,
-  fontSize: "0.72rem",
+  fontWeight: 500,
+  fontSize: "0.82rem",
   letterSpacing: "0.04em",
   color: "var(--dark)",
   padding: "0.6rem 0.8rem",
@@ -150,14 +150,14 @@ export default function SizeChart({ garmentType, onClose }: SizeChartProps) {
         }}>
           <div>
             <h3 style={{
-              fontFamily: "var(--font-cormorant)", fontStyle: "italic", fontWeight: 300,
+              fontFamily: "var(--font-cormorant)", fontStyle: "italic", fontWeight: 500,
               fontSize: "1.5rem", color: "var(--dark)", marginBottom: "0.15rem"
             }}>
               Size chart
             </h3>
             <p style={{
-              fontFamily: "var(--font-jost)", fontWeight: 300,
-              fontSize: "0.58rem", letterSpacing: "0.15em", color: "var(--muted)"
+              fontFamily: "var(--font-jost)", fontWeight: 500,
+              fontSize: "0.88rem", letterSpacing: "0.15em", color: "var(--muted)"
             }}>
               {GARMENT_LABELS[garmentType]} · US sizing
             </p>
@@ -205,8 +205,8 @@ export default function SizeChart({ garmentType, onClose }: SizeChartProps) {
           padding: "1rem 1.8rem", borderTop: "1px solid var(--warm-tan)", flexShrink: 0,
         }}>
           <p style={{
-            fontFamily: "var(--font-jost)", fontWeight: 300,
-            fontSize: "0.62rem", letterSpacing: "0.06em", color: "var(--muted)", lineHeight: 1.7
+            fontFamily: "var(--font-jost)", fontWeight: 500,
+            fontSize: "0.7rem", letterSpacing: "0.06em", color: "var(--muted)", lineHeight: 1.7
           }}>
             Measurements are in inches. When between sizes, size up.
           </p>

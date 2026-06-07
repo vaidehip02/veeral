@@ -15,7 +15,7 @@ const inputStyle = {
   borderBottom: "1.5px solid var(--warm-tan)",
   outline: "none",
   fontFamily: "var(--font-jost)",
-  fontWeight: 300,
+  fontWeight: 500,
   fontSize: "0.85rem",
   letterSpacing: "0.04em",
   color: "var(--dark)",
@@ -25,7 +25,7 @@ const inputStyle = {
 
 const labelStyle = {
   fontFamily: "var(--font-jost)",
-  fontWeight: 300,
+  fontWeight: 500,
   fontSize: "0.52rem",
   letterSpacing: "0.22em",
   textTransform: "uppercase" as const,
@@ -75,10 +75,10 @@ export default function SignupPage() {
   if (success) {
     return (
       <div style={{ maxWidth: "380px", width: "100%", textAlign: "center" }}>
-        <p style={{ fontFamily: "var(--font-cormorant)", fontStyle: "italic", fontWeight: 300, fontSize: "1.6rem", color: "var(--dark)", marginBottom: "1rem" }}>
+        <p style={{ fontFamily: "var(--font-cormorant)", fontStyle: "italic", fontWeight: 500, fontSize: "1.6rem", color: "var(--dark)", marginBottom: "1rem" }}>
           Check your email ✦
         </p>
-        <p style={{ fontFamily: "var(--font-jost)", fontWeight: 200, fontSize: "0.82rem", letterSpacing: "0.05em", lineHeight: 1.8, color: "var(--muted)" }}>
+        <p style={{ fontFamily: "var(--font-jost)", fontWeight: 500, fontSize: "0.82rem", letterSpacing: "0.05em", lineHeight: 1.8, color: "var(--muted)" }}>
           We sent a confirmation link to <strong>{email}</strong>.<br />
           Click it to activate your account.
         </p>
@@ -91,14 +91,14 @@ export default function SignupPage() {
 
       {/* Heading */}
       <h1 style={{
-        fontFamily: "var(--font-cormorant)", fontStyle: "italic", fontWeight: 300,
+        fontFamily: "var(--font-cormorant)", fontStyle: "italic", fontWeight: 500,
         fontSize: "2rem", letterSpacing: "0.02em", color: "var(--dark)",
         marginBottom: "0.4rem", textAlign: "center"
       }}>
         Create an account
       </h1>
       <p style={{
-        fontFamily: "var(--font-jost)", fontWeight: 200,
+        fontFamily: "var(--font-jost)", fontWeight: 500,
         fontSize: "0.75rem", letterSpacing: "0.07em",
         color: "var(--muted)", textAlign: "center", marginBottom: "2.5rem"
       }}>
@@ -118,7 +118,7 @@ export default function SignupPage() {
               border: "none",
               cursor: "pointer",
               fontFamily: "var(--font-jost)",
-              fontWeight: 400,
+              fontWeight: 600,
               fontSize: "0.55rem",
               letterSpacing: "0.2em",
               textTransform: "uppercase",
@@ -181,7 +181,7 @@ export default function SignupPage() {
           type="submit"
           disabled={loading}
           style={{
-            fontFamily: "var(--font-jost)", fontWeight: 400,
+            fontFamily: "var(--font-jost)", fontWeight: 600,
             fontSize: "0.58rem", letterSpacing: "0.2em", textTransform: "uppercase",
             color: "var(--cream)", background: "var(--burnt-orange)",
             border: "none", padding: "0.95rem", cursor: "pointer",
@@ -203,7 +203,7 @@ export default function SignupPage() {
       {/* Social auth */}
       <SocialAuth role={role} />
 
-      <p style={{ textAlign: "center", marginTop: "2rem", fontFamily: "var(--font-jost)", fontWeight: 300, fontSize: "0.72rem", letterSpacing: "0.05em", color: "var(--muted)" }}>
+      <p style={{ textAlign: "center", marginTop: "2rem", fontFamily: "var(--font-jost)", fontWeight: 500, fontSize: "0.72rem", letterSpacing: "0.05em", color: "var(--muted)" }}>
         Already have an account?{" "}
         <Link href="/login" style={{ color: "var(--burnt-orange)", textDecoration: "none" }}>
           Log in

@@ -72,7 +72,7 @@ export default function SocialAuth({ role = "buyer" }: SocialAuthProps) {
             border: "1px solid var(--warm-tan)",
             cursor: "pointer",
             fontFamily: "var(--font-jost)",
-            fontWeight: 300,
+            fontWeight: 500,
             fontSize: "0.68rem",
             letterSpacing: "0.08em",
             color: "var(--dark)",

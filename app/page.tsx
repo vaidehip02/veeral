@@ -36,7 +36,7 @@ export default function HomePage() {
       <section className="max-w-7xl mx-auto px-6 lg:px-10 py-16">
         <div className="flex items-center gap-4 mb-8">
           <h2 style={{
-            fontFamily: "var(--font-cormorant)", fontWeight: 300,
+            fontFamily: "var(--font-cormorant)", fontWeight: 500,
             fontSize: "clamp(1.4rem, 2.5vw, 2rem)", letterSpacing: "0.03em",
             color: "var(--dark)", whiteSpace: "nowrap"
           }}>
@@ -56,7 +56,7 @@ export default function HomePage() {
               onMouseOut={e => (e.currentTarget.style.background = "transparent")}
             >
               <span style={{
-                fontFamily: "var(--font-cormorant)", fontWeight: 400,
+                fontFamily: "var(--font-cormorant)", fontWeight: 600,
                 fontSize: "0.95rem", letterSpacing: "0.06em",
                 textTransform: "uppercase", color: "var(--dark)"
               }}>
@@ -76,7 +76,7 @@ export default function HomePage() {
           {[...MARQUEE_ITEMS, ...MARQUEE_ITEMS].map((item, i) => (
             <div key={i} className="flex items-center gap-8 px-8 whitespace-nowrap">
               <span style={{
-                fontFamily: "var(--font-cormorant)", fontWeight: 300,
+                fontFamily: "var(--font-cormorant)", fontWeight: 500,
                 fontSize: "clamp(1rem, 2.2vw, 1.6rem)", letterSpacing: "0.08em",
                 textTransform: "uppercase", color: "var(--dark)"
               }}>
@@ -95,7 +95,7 @@ export default function HomePage() {
       <section className="max-w-7xl mx-auto px-6 lg:px-10 py-16">
         <div className="flex items-center gap-4 mb-8">
           <h2 style={{
-            fontFamily: "var(--font-cormorant)", fontWeight: 300,
+            fontFamily: "var(--font-cormorant)", fontWeight: 500,
             fontSize: "clamp(1.4rem, 2.5vw, 2rem)", letterSpacing: "0.03em",
             color: "var(--dark)", whiteSpace: "nowrap"
           }}>
@@ -105,7 +105,7 @@ export default function HomePage() {
           <Link
             href="/listings"
             style={{
-              fontFamily: "var(--font-jost)", fontWeight: 300,
+              fontFamily: "var(--font-jost)", fontWeight: 500,
               fontSize: "0.55rem", letterSpacing: "0.18em", textTransform: "uppercase",
               color: "var(--burnt-orange)", whiteSpace: "nowrap", transition: "opacity 0.2s"
             }}
@@ -137,7 +137,7 @@ export default function HomePage() {
                 {/* Type badge */}
                 <span style={{
                   position: "absolute", top: "0.75rem", left: "0.75rem",
-                  fontFamily: "var(--font-jost)", fontWeight: 300,
+                  fontFamily: "var(--font-jost)", fontWeight: 500,
                   fontSize: "0.5rem", letterSpacing: "0.18em", textTransform: "uppercase",
                   color: "var(--cream)", background: item.type === "Rent" ? "var(--dark)" : "var(--burnt-orange)",
                   padding: "0.3rem 0.6rem"
@@ -162,14 +162,14 @@ export default function HomePage() {
               {/* Info */}
               <div style={{ padding: "0.75rem 0" }}>
                 <p style={{
-                  fontFamily: "var(--font-jost)", fontWeight: 300,
+                  fontFamily: "var(--font-jost)", fontWeight: 500,
                   fontSize: "0.75rem", letterSpacing: "0.05em",
                   color: "var(--dark)", marginBottom: "0.2rem"
                 }}>
                   {item.title}
                 </p>
                 <p style={{
-                  fontFamily: "var(--font-cormorant)", fontWeight: 400,
+                  fontFamily: "var(--font-cormorant)", fontWeight: 600,
                   fontSize: "1rem", color: "var(--burnt-orange)"
                 }}>
                   {item.price}
@@ -183,21 +183,21 @@ export default function HomePage() {
       {/* ── AI Assistant ──────────────────────────────────────── */}
       <section style={{ background: "#EDE8E2", padding: "5rem 1.5rem", textAlign: "center" }}>
         <p style={{
-          fontFamily: "var(--font-jost)", fontWeight: 200,
+          fontFamily: "var(--font-jost)", fontWeight: 500,
           fontSize: "0.55rem", letterSpacing: "0.25em", textTransform: "uppercase",
           color: "var(--burnt-orange)", marginBottom: "1rem"
         }}>
           ✦ AI Assistant
         </p>
         <h2 style={{
-          fontFamily: "var(--font-cormorant)", fontStyle: "italic", fontWeight: 300,
+          fontFamily: "var(--font-cormorant)", fontStyle: "italic", fontWeight: 500,
           fontSize: "clamp(1.6rem, 3.5vw, 2.4rem)", color: "var(--dark)",
           letterSpacing: "0.03em", marginBottom: "1rem"
         }}>
           Not sure where to start?
         </h2>
         <p style={{
-          fontFamily: "var(--font-jost)", fontWeight: 200,
+          fontFamily: "var(--font-jost)", fontWeight: 500,
           fontSize: "0.82rem", letterSpacing: "0.06em", lineHeight: 1.8,
           color: "var(--muted)", maxWidth: "400px", margin: "0 auto 2rem"
         }}>
@@ -206,7 +206,7 @@ export default function HomePage() {
         </p>
         <button
           style={{
-            fontFamily: "var(--font-jost)", fontWeight: 400,
+            fontFamily: "var(--font-jost)", fontWeight: 600,
             fontSize: "0.58rem", letterSpacing: "0.2em", textTransform: "uppercase",
             color: "var(--cream)", background: "var(--burnt-orange)",
             padding: "0.85rem 2rem", border: "none", cursor: "pointer", transition: "opacity 0.2s"

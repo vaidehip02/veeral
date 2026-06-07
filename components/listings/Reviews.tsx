@@ -73,12 +73,12 @@ export default function Reviews({ listingId, reviews = PLACEHOLDER_REVIEWS, canR
       {/* Section header */}
       <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "1.5rem" }}>
         <h2 style={{
-          fontFamily: "var(--font-cormorant)", fontWeight: 300,
-          fontSize: "1.4rem", letterSpacing: "0.03em", color: "var(--dark)", whiteSpace: "nowrap"
+          fontFamily: "var(--font-cormorant)", fontWeight: 500,
+          fontSize: "1.4rem", letterSpacing: "0.03em", color: "#1A1A18", whiteSpace: "nowrap"
         }}>
           Reviews
           {avg && (
-            <span style={{ fontFamily: "var(--font-jost)", fontWeight: 300, fontSize: "0.75rem", color: "var(--muted)", marginLeft: "0.75rem" }}>
+            <span style={{ fontFamily: "var(--font-jost)", fontWeight: 500, fontSize: "0.85rem", color: "var(--muted)", marginLeft: "0.75rem" }}>
               ★ {avg} · {reviews.length} {reviews.length === 1 ? "review" : "reviews"}
             </span>
           )}
@@ -88,8 +88,8 @@ export default function Reviews({ listingId, reviews = PLACEHOLDER_REVIEWS, canR
           <button
             onClick={() => setShowForm(true)}
             style={{
-              fontFamily: "var(--font-jost)", fontWeight: 400,
-              fontSize: "0.55rem", letterSpacing: "0.18em", textTransform: "uppercase",
+              fontFamily: "var(--font-jost)", fontWeight: 600,
+              fontSize: "0.85rem", letterSpacing: "0.18em", textTransform: "uppercase",
               color: "var(--cream)", background: "#C4440A",
               border: "none", padding: "0.55rem 1.1rem", cursor: "pointer",
               whiteSpace: "nowrap", transition: "opacity 0.2s",
@@ -109,8 +109,8 @@ export default function Reviews({ listingId, reviews = PLACEHOLDER_REVIEWS, canR
           style={{ border: "1px solid var(--warm-tan)", padding: "1.5rem", marginBottom: "1.5rem" }}
         >
           <p style={{
-            fontFamily: "var(--font-jost)", fontWeight: 300,
-            fontSize: "0.52rem", letterSpacing: "0.22em", textTransform: "uppercase",
+            fontFamily: "var(--font-jost)", fontWeight: 500,
+            fontSize: "0.7rem", letterSpacing: "0.22em", textTransform: "uppercase",
             color: "var(--muted)", marginBottom: "0.8rem"
           }}>
             Your rating
@@ -124,7 +124,7 @@ export default function Reviews({ listingId, reviews = PLACEHOLDER_REVIEWS, canR
                 onMouseLeave={() => setHovered(0)}
                 style={{
                   background: "none", border: "none", cursor: "pointer",
-                  fontSize: "1.6rem", color: s <= (hovered || rating) ? "#C4440A" : "var(--warm-tan)",
+                  fontSize: "1.6rem", color: s <= (hovered || rating) ? "#C4440A" : "#C8C2BB",
                   padding: "0 0.1rem", transition: "color 0.1s",
                 }}
               >★</button>
@@ -132,8 +132,8 @@ export default function Reviews({ listingId, reviews = PLACEHOLDER_REVIEWS, canR
           </div>
 
           <p style={{
-            fontFamily: "var(--font-jost)", fontWeight: 300,
-            fontSize: "0.52rem", letterSpacing: "0.22em", textTransform: "uppercase",
+            fontFamily: "var(--font-jost)", fontWeight: 500,
+            fontSize: "0.7rem", letterSpacing: "0.22em", textTransform: "uppercase",
             color: "var(--muted)", marginBottom: "0.5rem"
           }}>
             Your review
@@ -147,7 +147,7 @@ export default function Reviews({ listingId, reviews = PLACEHOLDER_REVIEWS, canR
             style={{
               width: "100%", background: "transparent",
               border: "1px solid var(--warm-tan)", outline: "none",
-              fontFamily: "var(--font-jost)", fontWeight: 300,
+              fontFamily: "var(--font-jost)", fontWeight: 500,
               fontSize: "0.82rem", letterSpacing: "0.03em",
               color: "var(--dark)", padding: "0.75rem", resize: "none",
               caretColor: "#C4440A",
@@ -156,16 +156,16 @@ export default function Reviews({ listingId, reviews = PLACEHOLDER_REVIEWS, canR
 
           <div style={{ display: "flex", gap: "0.75rem", marginTop: "1rem" }}>
             <button type="submit" style={{
-              fontFamily: "var(--font-jost)", fontWeight: 400,
-              fontSize: "0.58rem", letterSpacing: "0.2em", textTransform: "uppercase",
+              fontFamily: "var(--font-jost)", fontWeight: 600,
+              fontSize: "0.88rem", letterSpacing: "0.2em", textTransform: "uppercase",
               color: "var(--cream)", background: "#C4440A",
               border: "none", padding: "0.75rem 1.5rem", cursor: "pointer",
             }}>
               Submit review
             </button>
             <button type="button" onClick={() => setShowForm(false)} style={{
-              fontFamily: "var(--font-jost)", fontWeight: 300,
-              fontSize: "0.58rem", letterSpacing: "0.18em", textTransform: "uppercase",
+              fontFamily: "var(--font-jost)", fontWeight: 500,
+              fontSize: "0.88rem", letterSpacing: "0.18em", textTransform: "uppercase",
               color: "var(--muted)", background: "none",
               border: "1px solid var(--warm-tan)", padding: "0.75rem 1.5rem", cursor: "pointer",
             }}>
@@ -177,8 +177,8 @@ export default function Reviews({ listingId, reviews = PLACEHOLDER_REVIEWS, canR
 
       {submitted && (
         <p style={{
-          fontFamily: "var(--font-jost)", fontWeight: 300,
-          fontSize: "0.75rem", letterSpacing: "0.06em",
+          fontFamily: "var(--font-jost)", fontWeight: 500,
+          fontSize: "0.85rem", letterSpacing: "0.06em",
           color: "#C4440A", marginBottom: "1.5rem"
         }}>
           ✦ Thanks for your review!
@@ -188,9 +188,9 @@ export default function Reviews({ listingId, reviews = PLACEHOLDER_REVIEWS, canR
       {/* Review list */}
       {reviews.length === 0 ? (
         <p style={{
-          fontFamily: "var(--font-jost)", fontWeight: 200,
+          fontFamily: "var(--font-jost)", fontWeight: 500,
           fontSize: "0.8rem", letterSpacing: "0.06em",
-          color: "var(--muted)", fontStyle: "italic"
+          color: "#1E1E1C"
         }}>
           No reviews yet — be the first to review this item.
         </p>
@@ -202,14 +202,14 @@ export default function Reviews({ listingId, reviews = PLACEHOLDER_REVIEWS, canR
                 <div>
                   <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "0.25rem" }}>
                     <span style={{
-                      fontFamily: "var(--font-jost)", fontWeight: 400,
-                      fontSize: "0.75rem", color: "var(--dark)"
+                      fontFamily: "var(--font-jost)", fontWeight: 600,
+                      fontSize: "0.85rem", color: "var(--dark)"
                     }}>
                       @{r.buyer_username}
                     </span>
                     {r.verified_purchase && (
                       <span style={{
-                        fontFamily: "var(--font-jost)", fontWeight: 300,
+                        fontFamily: "var(--font-jost)", fontWeight: 500,
                         fontSize: "0.5rem", letterSpacing: "0.15em", textTransform: "uppercase",
                         color: "#C4440A", border: "1px solid #C4440A",
                         padding: "0.15rem 0.5rem"
@@ -221,14 +221,14 @@ export default function Reviews({ listingId, reviews = PLACEHOLDER_REVIEWS, canR
                   <Stars rating={r.rating} />
                 </div>
                 <span style={{
-                  fontFamily: "var(--font-jost)", fontWeight: 300,
-                  fontSize: "0.62rem", letterSpacing: "0.06em", color: "var(--warm-tan)"
+                  fontFamily: "var(--font-jost)", fontWeight: 500,
+                  fontSize: "0.7rem", letterSpacing: "0.06em", color: "#3D3830"
                 }}>
                   {fmtDate(r.created_at)}
                 </span>
               </div>
               <p style={{
-                fontFamily: "var(--font-jost)", fontWeight: 300,
+                fontFamily: "var(--font-jost)", fontWeight: 500,
                 fontSize: "0.8rem", letterSpacing: "0.03em",
                 lineHeight: 1.8, color: "var(--dark)", marginTop: "0.5rem"
               }}>

@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 
-// ── Placeholder listing data (replace with Supabase fetch by listingId) ───────
+// ── Placeholder — replace with Supabase fetch using listingId ─────────────────
 const LISTING = {
   id: "1",
   title: "Red Bridal Lehenga with Gold Embroidery",
@@ -16,257 +16,370 @@ const LISTING = {
   seller_username: "priya_sharma",
 };
 
-function formatPrice(n: number) {
-  return `$${n.toLocaleString("en-US")}`;
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function fmt(n: number) {
+  return `$${n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
-
 function fmtDate(iso: string) {
   return new Date(iso).toLocaleDateString("en-US", { weekday: "short", month: "long", day: "numeric", year: "numeric" });
 }
 
-const inputStyle: React.CSSProperties = {
-  width: "100%", background: "transparent",
-  border: "none", borderBottom: "1.5px solid var(--warm-tan)",
-  outline: "none", fontFamily: "var(--font-jost)",
-  fontWeight: 300, fontSize: "0.85rem", letterSpacing: "0.04em",
-  color: "var(--dark)", padding: "0.5rem 0",
-  caretColor: "#C4440A",
-};
-
-const labelStyle: React.CSSProperties = {
-  fontFamily: "var(--font-jost)", fontWeight: 300,
-  fontSize: "0.52rem", letterSpacing: "0.22em",
-  textTransform: "uppercase", color: "var(--muted)",
+// ── Shared style tokens ───────────────────────────────────────────────────────
+const label: React.CSSProperties = {
+  fontFamily: "var(--font-jost)", fontWeight: 500,
+  fontSize: "0.7rem", letterSpacing: "0.22em",
+  textTransform: "uppercase", color: "#2A2118",
   display: "block", marginBottom: "0.4rem",
 };
 
-const sectionHeading: React.CSSProperties = {
-  fontFamily: "var(--font-cormorant)", fontStyle: "italic", fontWeight: 300,
-  fontSize: "1.3rem", color: "var(--dark)", marginBottom: "1.2rem",
+const input: React.CSSProperties = {
+  width: "100%", background: "transparent", border: "none",
+  borderBottom: "1.5px solid #E8DDD3", outline: "none",
+  fontFamily: "var(--font-jost)", fontWeight: 500,
+  fontSize: "0.85rem", letterSpacing: "0.04em",
+  color: "#0D0906", padding: "0.5rem 0", caretColor: "#C4440A",
+};
+
+const sectionTitle: React.CSSProperties = {
+  fontFamily: "var(--font-cormorant)", fontStyle: "italic", fontWeight: 500,
+  fontSize: "1.25rem", color: "#1A1A18", marginBottom: "1.2rem",
+};
+
+const rowBetween: React.CSSProperties = {
+  display: "flex", justifyContent: "space-between", alignItems: "baseline",
 };
 
 export default function CheckoutPage({ params }: { params: { listingId: string } }) {
-  const searchParams = useSearchParams();
-  const isRental    = searchParams.get("type") === "rent";
-  const days        = Number(searchParams.get("days") || 1);
-  const returnDate  = searchParams.get("returnDate");
+  const router = useRouter();
+  const sp = useSearchParams();
+  const isRental   = sp.get("type") === "rent";
+  const days       = Number(sp.get("days") || 1);
+  const returnDate = sp.get("returnDate") || "";
 
-  const l           = LISTING;
-  const rentalCost  = l.rent_price * days;
-  const deposit     = Math.round(l.price * 0.40);
-  const totalDue    = isRental ? rentalCost + deposit : l.price;
+  const l = LISTING;
+  const rentalCost = l.rent_price * days;
+  const deposit    = Math.round(l.price * 0.40);
+  const shipping   = 18;
+  const subtotal   = isRental ? rentalCost : l.price;
+  const total      = subtotal + shipping + (isRental ? deposit : 0);
 
-  const [placing, setPlacing] = useState(false);
+  const [promoCode, setPromoCode]   = useState("");
+  const [promoApplied, setPromoApplied] = useState(false);
+  const [promoError, setPromoError] = useState("");
+  const [placing, setPlacing]       = useState(false);
   const [form, setForm] = useState({
     firstName: "", lastName: "", email: "",
-    address: "", city: "", state: "", zip: "",
+    address1: "", address2: "", city: "", state: "", zip: "",
   });
 
-  function set(field: string) {
+  function setField(k: string) {
     return (e: React.ChangeEvent<HTMLInputElement>) =>
-      setForm(f => ({ ...f, [field]: e.target.value }));
+      setForm(f => ({ ...f, [k]: e.target.value }));
   }
 
-  async function handleSubmit(e: React.FormEvent) {
+  function applyPromo() {
+    if (promoCode.trim().toUpperCase() === "VEERAL10") {
+      setPromoApplied(true);
+      setPromoError("");
+    } else {
+      setPromoError("Invalid promo code.");
+      setPromoApplied(false);
+    }
+  }
+
+  function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setPlacing(true);
-    // TODO: create Stripe PaymentIntent, confirm, then redirect
-    setTimeout(() => { window.location.href = "/checkout/success"; }, 1200);
+    // TODO: create Stripe PaymentIntent and confirm
+    const q = new URLSearchParams({
+      isRental: String(isRental), days: String(days), returnDate,
+      address: `${form.address1}, ${form.city}, ${form.state} ${form.zip}`,
+    });
+    setTimeout(() => router.push(`/checkout/success?${q}`), 1200);
   }
+
+  const discount = promoApplied ? Math.round(subtotal * 0.10) : 0;
 
   return (
     <div style={{ background: "var(--cream)", minHeight: "100vh" }}>
+      <div className="max-w-6xl mx-auto px-6 lg:px-10 py-10">
 
-      {/* Top bar */}
-      <div style={{ borderBottom: "1px solid var(--warm-tan)", padding: "1.2rem 2rem", textAlign: "center" }}>
-        <Link href="/" style={{
-          fontFamily: "var(--font-cormorant-logo)", fontWeight: 500, fontStyle: "italic",
-          fontSize: "1.8rem", letterSpacing: "-0.02em", color: "#C4440A", textDecoration: "none"
+        {/* Page title */}
+        <h1 style={{
+          fontFamily: "var(--font-cormorant)", fontStyle: "italic", fontWeight: 500,
+          fontSize: "clamp(1.6rem, 3vw, 2.2rem)", color: "#1A1A18",
+          marginBottom: "2rem", letterSpacing: "0.02em"
         }}>
-          veeral
-        </Link>
-      </div>
+          Checkout
+        </h1>
 
-      <div className="max-w-5xl mx-auto px-6 lg:px-10 py-12">
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 380px", gap: "4rem", alignItems: "start" }}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 420px", gap: "3.5rem", alignItems: "start" }}
           className="checkout-grid"
         >
 
-          {/* LEFT — Forms */}
-          <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "2.5rem" }}>
+          {/* ── LEFT: Order summary ─────────────────────────────── */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
+
+            {/* Item card */}
+            <section>
+              <p style={sectionTitle}>Order summary</p>
+              <div style={{ display: "flex", gap: "1.2rem", padding: "1.2rem", border: "1px solid #E8DDD3" }}>
+                {/* Photo */}
+                <div style={{ width: "90px", aspectRatio: "3/4", background: l.bg, flexShrink: 0 }} />
+                {/* Info */}
+                <div style={{ flex: 1 }}>
+                  <p style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.88rem", color: "#1A1A18", marginBottom: "0.3rem", lineHeight: 1.4 }}>
+                    {l.title}
+                  </p>
+                  <p style={{ fontFamily: "var(--font-jost)", fontWeight: 500, fontSize: "0.88rem", color: "#2A2118", marginBottom: "0.2rem" }}>
+                    {l.category} · US Size {l.us_size}
+                  </p>
+                  <p style={{ fontFamily: "var(--font-jost)", fontWeight: 500, fontSize: "0.85rem", color: "#3D3830", marginBottom: "0.6rem" }}>
+                    @{l.seller_username}
+                  </p>
+                  <span style={{
+                    fontFamily: "var(--font-jost)", fontWeight: 600,
+                    fontSize: "0.5rem", letterSpacing: "0.15em", textTransform: "uppercase",
+                    color: isRental ? "#1A1A18" : "#C4440A",
+                    border: `1px solid ${isRental ? "#E8DDD3" : "#C4440A"}`,
+                    padding: "0.22rem 0.6rem"
+                  }}>
+                    {isRental ? "Rental" : "Purchase"}
+                  </span>
+                </div>
+                {/* Price */}
+                <div style={{ flexShrink: 0, textAlign: "right" }}>
+                  <p style={{ fontFamily: "var(--font-cormorant)", fontWeight: 600, fontSize: "1.3rem", color: "#C4440A" }}>
+                    {isRental ? fmt(rentalCost) : fmt(l.price)}
+                  </p>
+                  {isRental && (
+                    <p style={{ fontFamily: "var(--font-jost)", fontWeight: 500, fontSize: "0.7rem", color: "#3D3830" }}>
+                      {days} days × {fmt(l.rent_price)}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Rental detail box */}
+              {isRental && returnDate && (
+                <div style={{
+                  background: "rgba(196,68,10,0.05)", border: "1px solid rgba(196,68,10,0.2)",
+                  borderTop: "none", padding: "1.2rem",
+                }}>
+                  <p style={{ fontFamily: "var(--font-jost)", fontWeight: 500, fontSize: "0.7rem", letterSpacing: "0.22em", textTransform: "uppercase", color: "#C4440A", marginBottom: "0.8rem" }}>
+                    ✦ Rental details
+                  </p>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "0.45rem" }}>
+                    {([
+                      ["Duration",             `${days} ${days === 1 ? "day" : "days"}`],
+                      ["Daily rate",           fmt(l.rent_price)],
+                      ["Total rental cost",    fmt(rentalCost)],
+                      ["Security deposit (40%, refundable)", fmt(deposit)],
+                      ["Return by",            fmtDate(returnDate)],
+                    ] as [string, string][]).map(([k, v]) => (
+                      <div key={k} style={{ ...rowBetween }}>
+                        <span style={{ fontFamily: "var(--font-jost)", fontWeight: 500, fontSize: "0.82rem", color: "#2A2118" }}>{k}</span>
+                        <span style={{ fontFamily: "var(--font-jost)", fontWeight: k === "Return by" ? 700 : 400, fontSize: "0.82rem", color: k === "Return by" ? "#C4440A" : "#1A1A18" }}>{v}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </section>
+
+            {/* Promo code */}
+            <section>
+              <p style={sectionTitle}>Promo code</p>
+              <div style={{ display: "flex", gap: "0.75rem", alignItems: "flex-end" }}>
+                <div style={{ flex: 1 }}>
+                  <label style={label}>Code</label>
+                  <input
+                    style={{ ...input, textTransform: "uppercase" }}
+                    value={promoCode}
+                    onChange={e => { setPromoCode(e.target.value); setPromoError(""); setPromoApplied(false); }}
+                    placeholder="VEERAL10"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={applyPromo}
+                  style={{
+                    fontFamily: "var(--font-jost)", fontWeight: 600,
+                    fontSize: "0.85rem", letterSpacing: "0.18em", textTransform: "uppercase",
+                    color: "#C4440A", border: "1px solid #C4440A", background: "transparent",
+                    padding: "0.65rem 1.2rem", cursor: "pointer", whiteSpace: "nowrap",
+                    transition: "all 0.2s", flexShrink: 0,
+                  }}
+                  onMouseOver={e => { e.currentTarget.style.background = "#C4440A"; e.currentTarget.style.color = "var(--cream)"; }}
+                  onMouseOut={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "#C4440A"; }}
+                >
+                  Apply
+                </button>
+              </div>
+              {promoApplied && (
+                <p style={{ fontFamily: "var(--font-jost)", fontWeight: 500, fontSize: "0.85rem", color: "#5a8a5a", marginTop: "0.5rem" }}>
+                  ✓ Code applied — 10% off subtotal
+                </p>
+              )}
+              {promoError && (
+                <p style={{ fontFamily: "var(--font-jost)", fontWeight: 500, fontSize: "0.85rem", color: "#C4440A", marginTop: "0.5rem" }}>
+                  {promoError}
+                </p>
+              )}
+            </section>
+
+            {/* Order total */}
+            <section style={{ border: "1px solid #E8DDD3", padding: "1.2rem" }}>
+              <p style={sectionTitle}>Order total</p>
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.55rem" }}>
+                <div style={rowBetween}>
+                  <span style={{ fontFamily: "var(--font-jost)", fontWeight: 500, fontSize: "0.85rem", color: "#2A2118" }}>
+                    {isRental ? "Rental cost" : "Item price"}
+                  </span>
+                  <span style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.85rem", color: "#1A1A18" }}>{fmt(subtotal)}</span>
+                </div>
+                {promoApplied && (
+                  <div style={rowBetween}>
+                    <span style={{ fontFamily: "var(--font-jost)", fontWeight: 500, fontSize: "0.85rem", color: "#5a8a5a" }}>Promo (VEERAL10)</span>
+                    <span style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.85rem", color: "#5a8a5a" }}>−{fmt(discount)}</span>
+                  </div>
+                )}
+                <div style={rowBetween}>
+                  <span style={{ fontFamily: "var(--font-jost)", fontWeight: 500, fontSize: "0.85rem", color: "#2A2118" }}>Shipping</span>
+                  <span style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.85rem", color: "#1A1A18" }}>{fmt(shipping)}</span>
+                </div>
+                {isRental && (
+                  <div style={rowBetween}>
+                    <span style={{ fontFamily: "var(--font-jost)", fontWeight: 500, fontSize: "0.85rem", color: "#2A2118" }}>Security deposit (refundable)</span>
+                    <span style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.85rem", color: "#1A1A18" }}>{fmt(deposit)}</span>
+                  </div>
+                )}
+                <div style={{ height: "1px", background: "#E8DDD3", margin: "0.4rem 0" }} />
+                <div style={rowBetween}>
+                  <span style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.82rem", letterSpacing: "0.1em", textTransform: "uppercase", color: "#1A1A18" }}>
+                    Total
+                  </span>
+                  <span style={{ fontFamily: "var(--font-cormorant)", fontWeight: 600, fontSize: "1.7rem", color: "#C4440A" }}>
+                    {fmt(total - discount)}
+                  </span>
+                </div>
+              </div>
+            </section>
+          </div>
+
+          {/* ── RIGHT: Shipping + Payment ──────────────────────── */}
+          <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "2rem", position: "sticky", top: "6rem" }}>
 
             {/* Shipping */}
             <section>
-              <h2 style={sectionHeading}>Shipping address</h2>
-              <div style={{ display: "flex", flexDirection: "column", gap: "1.4rem" }}>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.2rem" }}>
+              <p style={sectionTitle}>Shipping address</p>
+              <div style={{ display: "flex", flexDirection: "column", gap: "1.3rem" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
                   <div>
-                    <label style={labelStyle}>First name</label>
-                    <input required style={inputStyle} value={form.firstName} onChange={set("firstName")} placeholder="Priya" />
+                    <label style={label}>First name</label>
+                    <input required style={input} value={form.firstName} onChange={setField("firstName")} placeholder="Priya" />
                   </div>
                   <div>
-                    <label style={labelStyle}>Last name</label>
-                    <input required style={inputStyle} value={form.lastName} onChange={set("lastName")} placeholder="Sharma" />
+                    <label style={label}>Last name</label>
+                    <input required style={input} value={form.lastName} onChange={setField("lastName")} placeholder="Sharma" />
                   </div>
                 </div>
                 <div>
-                  <label style={labelStyle}>Email</label>
-                  <input required type="email" style={inputStyle} value={form.email} onChange={set("email")} placeholder="priya@email.com" />
+                  <label style={label}>Email</label>
+                  <input required type="email" style={input} value={form.email} onChange={setField("email")} placeholder="priya@email.com" />
                 </div>
                 <div>
-                  <label style={labelStyle}>Street address</label>
-                  <input required style={inputStyle} value={form.address} onChange={set("address")} placeholder="123 Main Street, Apt 4B" />
+                  <label style={label}>Address line 1</label>
+                  <input required style={input} value={form.address1} onChange={setField("address1")} placeholder="123 Main Street" />
                 </div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "1rem" }}>
+                <div>
+                  <label style={label}>Address line 2 <span style={{ opacity: 0.5 }}>(optional)</span></label>
+                  <input style={input} value={form.address2} onChange={setField("address2")} placeholder="Apt 4B" />
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 80px 100px", gap: "1rem" }}>
                   <div>
-                    <label style={labelStyle}>City</label>
-                    <input required style={inputStyle} value={form.city} onChange={set("city")} placeholder="New York" />
+                    <label style={label}>City</label>
+                    <input required style={input} value={form.city} onChange={setField("city")} placeholder="New York" />
                   </div>
                   <div>
-                    <label style={labelStyle}>State</label>
-                    <input required style={inputStyle} value={form.state} onChange={set("state")} placeholder="NY" maxLength={2} />
+                    <label style={label}>State</label>
+                    <input required style={input} value={form.state} onChange={setField("state")} placeholder="NY" maxLength={2} />
                   </div>
                   <div>
-                    <label style={labelStyle}>ZIP</label>
-                    <input required style={inputStyle} value={form.zip} onChange={set("zip")} placeholder="10001" maxLength={10} />
+                    <label style={label}>ZIP</label>
+                    <input required style={input} value={form.zip} onChange={setField("zip")} placeholder="10001" maxLength={10} />
                   </div>
                 </div>
               </div>
             </section>
-
-            <div style={{ height: "1px", background: "var(--warm-tan)" }} />
 
             {/* Payment */}
             <section>
-              <h2 style={sectionHeading}>Payment</h2>
-              <div style={{ border: "1px solid var(--warm-tan)", padding: "1.2rem", display: "flex", flexDirection: "column", gap: "1.4rem" }}>
+              <p style={sectionTitle}>Payment</p>
+              <div style={{ border: "1px solid #E8DDD3", padding: "1.2rem", display: "flex", flexDirection: "column", gap: "1.3rem" }}>
                 <div>
-                  <label style={labelStyle}>Card number</label>
-                  <input required style={{ ...inputStyle, letterSpacing: "0.12em" }} placeholder="1234 5678 9012 3456" maxLength={19} />
+                  <label style={label}>Card number</label>
+                  <input
+                    required
+                    style={{ ...input, letterSpacing: "0.1em" }}
+                    placeholder="1234 5678 9012 3456"
+                    maxLength={19}
+                    onChange={e => {
+                      const v = e.target.value.replace(/\D/g, "").slice(0, 16);
+                      e.target.value = v.replace(/(.{4})/g, "$1 ").trim();
+                    }}
+                  />
                 </div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.2rem" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
                   <div>
-                    <label style={labelStyle}>Expiry</label>
-                    <input required style={inputStyle} placeholder="MM / YY" maxLength={7} />
+                    <label style={label}>Expiry</label>
+                    <input required style={input} placeholder="MM / YY" maxLength={7} />
                   </div>
                   <div>
-                    <label style={labelStyle}>CVC</label>
-                    <input required style={inputStyle} placeholder="•••" maxLength={4} type="password" />
+                    <label style={label}>CVV</label>
+                    <input required style={input} placeholder="•••" type="password" maxLength={4} />
                   </div>
                 </div>
                 <div>
-                  <label style={labelStyle}>Name on card</label>
-                  <input required style={inputStyle} placeholder="Priya Sharma" />
+                  <label style={label}>Name on card</label>
+                  <input required style={input} placeholder="Priya Sharma" />
                 </div>
               </div>
-              <p style={{
-                fontFamily: "var(--font-jost)", fontWeight: 300,
-                fontSize: "0.6rem", letterSpacing: "0.06em",
-                color: "var(--muted)", marginTop: "0.75rem"
-              }}>
-                🔒 Payments processed securely via Stripe. Veeral never stores your card details.
+              <p style={{ fontFamily: "var(--font-jost)", fontWeight: 500, fontSize: "0.7rem", letterSpacing: "0.06em", color: "#3D3830", marginTop: "0.6rem" }}>
+                🔒 Payments processed securely via Stripe
               </p>
             </section>
 
+            {/* Place order */}
             <button
               type="submit" disabled={placing}
               style={{
-                width: "100%", padding: "1.1rem",
-                background: "#C4440A", border: "none", cursor: "pointer",
-                fontFamily: "var(--font-jost)", fontWeight: 400,
-                fontSize: "0.6rem", letterSpacing: "0.2em", textTransform: "uppercase",
-                color: "var(--cream)", opacity: placing ? 0.6 : 1, transition: "opacity 0.2s",
+                width: "100%", padding: "1.05rem", border: "none", cursor: "pointer",
+                background: "#C4440A", color: "var(--cream)",
+                fontFamily: "var(--font-jost)", fontWeight: 600,
+                fontSize: "0.7rem", letterSpacing: "0.2em", textTransform: "uppercase",
+                opacity: placing ? 0.6 : 1, transition: "opacity 0.2s",
               }}
+              onMouseOver={e => !placing && (e.currentTarget.style.opacity = "0.85")}
+              onMouseOut={e => (e.currentTarget.style.opacity = placing ? "0.6" : "1")}
             >
-              {placing ? "Placing order…" : `Place order — ${formatPrice(totalDue)}`}
+              {placing ? "Placing order…" : `Place order — ${fmt(total - discount)}`}
             </button>
+
+            <p style={{ fontFamily: "var(--font-jost)", fontWeight: 500, fontSize: "0.7rem", letterSpacing: "0.06em", color: "#3D3830", textAlign: "center", marginTop: "-0.5rem" }}>
+              By placing an order you agree to Veeral&apos;s terms and conditions.
+            </p>
           </form>
 
-          {/* RIGHT — Order summary */}
-          <aside style={{ position: "sticky", top: "2rem" }}>
-            <h2 style={sectionHeading}>Order summary</h2>
-
-            {/* Item card */}
-            <div style={{ display: "flex", gap: "1rem", marginBottom: "1.5rem", paddingBottom: "1.5rem", borderBottom: "1px solid var(--warm-tan)" }}>
-              <div style={{ width: "80px", aspectRatio: "3/4", background: l.bg, flexShrink: 0 }} />
-              <div style={{ flex: 1 }}>
-                <p style={{ fontFamily: "var(--font-jost)", fontWeight: 400, fontSize: "0.82rem", color: "var(--dark)", marginBottom: "0.3rem", lineHeight: 1.3 }}>
-                  {l.title}
-                </p>
-                <p style={{ fontFamily: "var(--font-jost)", fontWeight: 300, fontSize: "0.65rem", color: "var(--muted)", marginBottom: "0.2rem" }}>
-                  {l.category} · US {l.us_size}
-                </p>
-                <p style={{ fontFamily: "var(--font-jost)", fontWeight: 300, fontSize: "0.65rem", color: "var(--muted)", marginBottom: "0.4rem" }}>
-                  @{l.seller_username}
-                </p>
-                <span style={{
-                  fontFamily: "var(--font-jost)", fontWeight: 400,
-                  fontSize: "0.5rem", letterSpacing: "0.15em", textTransform: "uppercase",
-                  color: isRental ? "var(--dark)" : "#C4440A",
-                  border: `1px solid ${isRental ? "var(--warm-tan)" : "#C4440A"}`,
-                  padding: "0.2rem 0.5rem"
-                }}>
-                  {isRental ? "Rental" : "Purchase"}
-                </span>
-              </div>
-            </div>
-
-            {/* Rental details */}
-            {isRental && returnDate && (
-              <div style={{ background: "#EDE8E2", padding: "1rem", marginBottom: "1.2rem", display: "flex", flexDirection: "column", gap: "0.45rem" }}>
-                <p style={{ fontFamily: "var(--font-jost)", fontWeight: 300, fontSize: "0.52rem", letterSpacing: "0.2em", textTransform: "uppercase", color: "var(--muted)", marginBottom: "0.3rem" }}>
-                  Rental details
-                </p>
-                {([
-                  ["Duration", `${days} ${days === 1 ? "day" : "days"}`],
-                  ["Return by", fmtDate(returnDate)],
-                  ["Rental cost", formatPrice(rentalCost)],
-                  ["Deposit (refundable)", formatPrice(deposit)],
-                ] as [string, string][]).map(([k, v]) => (
-                  <div key={k} style={{ display: "flex", justifyContent: "space-between" }}>
-                    <span style={{ fontFamily: "var(--font-jost)", fontWeight: 300, fontSize: "0.68rem", color: "var(--muted)" }}>{k}</span>
-                    <span style={{ fontFamily: "var(--font-jost)", fontWeight: k === "Return by" ? 600 : 400, fontSize: "0.68rem", color: k === "Return by" ? "#C4440A" : "var(--dark)" }}>{v}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Price breakdown */}
-            <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem", paddingBottom: "1rem", borderBottom: "1px solid var(--warm-tan)" }}>
-              {isRental ? (
-                <>
-                  <div style={{ display: "flex", justifyContent: "space-between" }}>
-                    <span style={{ fontFamily: "var(--font-jost)", fontWeight: 300, fontSize: "0.72rem", color: "var(--muted)" }}>Rental ({days} days)</span>
-                    <span style={{ fontFamily: "var(--font-jost)", fontWeight: 400, fontSize: "0.72rem", color: "var(--dark)" }}>{formatPrice(rentalCost)}</span>
-                  </div>
-                  <div style={{ display: "flex", justifyContent: "space-between" }}>
-                    <span style={{ fontFamily: "var(--font-jost)", fontWeight: 300, fontSize: "0.72rem", color: "var(--muted)" }}>Security deposit</span>
-                    <span style={{ fontFamily: "var(--font-jost)", fontWeight: 400, fontSize: "0.72rem", color: "var(--dark)" }}>{formatPrice(deposit)}</span>
-                  </div>
-                </>
-              ) : (
-                <div style={{ display: "flex", justifyContent: "space-between" }}>
-                  <span style={{ fontFamily: "var(--font-jost)", fontWeight: 300, fontSize: "0.72rem", color: "var(--muted)" }}>Item price</span>
-                  <span style={{ fontFamily: "var(--font-jost)", fontWeight: 400, fontSize: "0.72rem", color: "var(--dark)" }}>{formatPrice(l.price)}</span>
-                </div>
-              )}
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <span style={{ fontFamily: "var(--font-jost)", fontWeight: 300, fontSize: "0.72rem", color: "var(--muted)" }}>Shipping</span>
-                <span style={{ fontFamily: "var(--font-jost)", fontWeight: 300, fontSize: "0.72rem", color: "var(--muted)", fontStyle: "italic" }}>Calculated after order</span>
-              </div>
-            </div>
-
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", paddingTop: "1rem" }}>
-              <span style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.72rem", letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--dark)" }}>Total</span>
-              <span style={{ fontFamily: "var(--font-cormorant)", fontWeight: 400, fontSize: "1.8rem", color: "#C4440A" }}>{formatPrice(totalDue)}</span>
-            </div>
-          </aside>
         </div>
       </div>
 
       <style>{`
         @media (max-width: 768px) {
-          .checkout-grid { grid-template-columns: 1fr !important; }
+          .checkout-grid {
+            grid-template-columns: 1fr !important;
+            gap: 2rem !important;
+          }
         }
       `}</style>
     </div>

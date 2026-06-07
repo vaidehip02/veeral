@@ -27,6 +27,7 @@ export default function PhotoGallery({ images, title }: PhotoGalleryProps) {
         style={{
           position: "relative",
           aspectRatio: "3/4",
+          maxHeight: "60vh",
           background: PLACEHOLDER_COLORS[active % PLACEHOLDER_COLORS.length],
           overflow: "hidden",
         }}

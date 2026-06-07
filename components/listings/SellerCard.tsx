@@ -11,9 +11,9 @@ interface SellerCardProps {
 
 function Stars({ rating }: { rating: number }) {
   return (
-    <span style={{ color: "#C4440A", fontSize: "0.75rem", letterSpacing: "0.05em" }}>
+    <span style={{ color: "#C4440A", fontSize: "0.85rem", letterSpacing: "0.05em" }}>
       {"★".repeat(Math.round(rating))}{"☆".repeat(5 - Math.round(rating))}
-      <span style={{ fontFamily: "var(--font-jost)", fontWeight: 300, fontSize: "0.65rem", color: "var(--muted)", marginLeft: "0.4rem" }}>
+      <span style={{ fontFamily: "var(--font-jost)", fontWeight: 500, fontSize: "0.85rem", color: "var(--muted)", marginLeft: "0.4rem" }}>
         {rating.toFixed(1)}
       </span>
     </span>
@@ -49,14 +49,14 @@ export default function SellerCard({ username, displayName, avatarUrl, totalList
       {/* Info */}
       <div style={{ flex: 1, minWidth: "120px" }}>
         <p style={{
-          fontFamily: "var(--font-jost)", fontWeight: 400,
+          fontFamily: "var(--font-jost)", fontWeight: 600,
           fontSize: "0.82rem", letterSpacing: "0.04em", color: "var(--dark)", marginBottom: "0.2rem"
         }}>
           {displayName}
         </p>
         <p style={{
-          fontFamily: "var(--font-jost)", fontWeight: 300,
-          fontSize: "0.65rem", letterSpacing: "0.08em", color: "var(--muted)", marginBottom: "0.3rem"
+          fontFamily: "var(--font-jost)", fontWeight: 500,
+          fontSize: "0.85rem", letterSpacing: "0.08em", color: "var(--muted)", marginBottom: "0.3rem"
         }}>
           @{username} · {totalListings} listings
         </p>
@@ -68,8 +68,8 @@ export default function SellerCard({ username, displayName, avatarUrl, totalList
         <Link
           href={`/sellers/${username}`}
           style={{
-            fontFamily: "var(--font-jost)", fontWeight: 400,
-            fontSize: "0.55rem", letterSpacing: "0.18em", textTransform: "uppercase",
+            fontFamily: "var(--font-jost)", fontWeight: 600,
+            fontSize: "0.85rem", letterSpacing: "0.18em", textTransform: "uppercase",
             color: "var(--cream)", background: "#C4440A",
             padding: "0.6rem 1.2rem", textDecoration: "none", transition: "opacity 0.2s"
           }}
@@ -79,8 +79,8 @@ export default function SellerCard({ username, displayName, avatarUrl, totalList
           View shop
         </Link>
         <button style={{
-          fontFamily: "var(--font-jost)", fontWeight: 400,
-          fontSize: "0.55rem", letterSpacing: "0.18em", textTransform: "uppercase",
+          fontFamily: "var(--font-jost)", fontWeight: 600,
+          fontSize: "0.85rem", letterSpacing: "0.18em", textTransform: "uppercase",
           color: "#C4440A", background: "transparent",
           border: "1px solid #C4440A", padding: "0.6rem 1.2rem",
           cursor: "pointer", transition: "opacity 0.2s"

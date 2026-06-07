@@ -1,15 +1,15 @@
 import Link from "next/link";
 
 const linkStyle = {
-  fontFamily: "var(--font-jost)", fontWeight: 300,
-  fontSize: "0.58rem", letterSpacing: "0.18em",
-  textTransform: "uppercase" as const, color: "var(--muted)",
+  fontFamily: "var(--font-jost)", fontWeight: 600,
+  fontSize: "0.88rem", letterSpacing: "0.18em",
+  textTransform: "uppercase" as const, color: "#1A1410",
   textDecoration: "none", display: "block", marginBottom: "0.75rem",
 };
 
 const headingStyle = {
-  fontFamily: "var(--font-jost)", fontWeight: 300,
-  fontSize: "0.52rem", letterSpacing: "0.22em",
+  fontFamily: "var(--font-jost)", fontWeight: 700,
+  fontSize: "0.7rem", letterSpacing: "0.22em",
   textTransform: "uppercase" as const, color: "var(--burnt-orange)",
   marginBottom: "1.2rem",
 };
@@ -68,7 +68,7 @@ export default function Footer() {
         className="max-w-7xl mx-auto px-6 lg:px-10 py-5 flex justify-between items-center"
         style={{ borderTop: "1px solid var(--warm-tan)" }}
       >
-        <span style={{ fontFamily: "var(--font-jost)", fontWeight: 300, fontSize: "0.58rem", letterSpacing: "0.12em", color: "var(--warm-tan)" }}>
+        <span style={{ fontFamily: "var(--font-jost)", fontWeight: 500, fontSize: "0.88rem", letterSpacing: "0.12em", color: "#1A1410" }}>
           © 2026 Veeral
         </span>
         <div className="flex gap-6">

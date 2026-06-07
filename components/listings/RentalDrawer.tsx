@@ -59,8 +59,8 @@ export default function RentalDrawer({
   }
 
   const labelStyle: React.CSSProperties = {
-    fontFamily: "var(--font-jost)", fontWeight: 300,
-    fontSize: "0.55rem", letterSpacing: "0.2em",
+    fontFamily: "var(--font-jost)", fontWeight: 500,
+    fontSize: "0.85rem", letterSpacing: "0.2em",
     textTransform: "uppercase", color: "var(--muted)",
   };
 
@@ -102,7 +102,7 @@ export default function RentalDrawer({
           <div>
             <p style={labelStyle}>Rental options</p>
             <h3 style={{
-              fontFamily: "var(--font-cormorant)", fontStyle: "italic", fontWeight: 300,
+              fontFamily: "var(--font-cormorant)", fontStyle: "italic", fontWeight: 500,
               fontSize: "1.3rem", color: "var(--dark)", marginTop: "0.3rem",
               lineHeight: 1.2,
             }}>
@@ -123,7 +123,7 @@ export default function RentalDrawer({
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "1rem" }}>
               <span style={labelStyle}>Duration</span>
               <span style={{
-                fontFamily: "var(--font-cormorant)", fontWeight: 400,
+                fontFamily: "var(--font-cormorant)", fontWeight: 600,
                 fontSize: "1.4rem", color: "var(--dark)"
               }}>
                 {days} {days === 1 ? "day" : "days"}
@@ -146,7 +146,7 @@ export default function RentalDrawer({
                 flex: 1, height: "44px", border: "1px solid var(--warm-tan)",
                 borderLeft: "none", borderRight: "none",
                 display: "flex", alignItems: "center", justifyContent: "center",
-                fontFamily: "var(--font-jost)", fontWeight: 400,
+                fontFamily: "var(--font-jost)", fontWeight: 600,
                 fontSize: "0.9rem", color: "var(--dark)",
               }}>
                 {days} {days === 1 ? "day" : "days"}
@@ -169,8 +169,8 @@ export default function RentalDrawer({
               style={{ width: "100%", accentColor: "#C4440A" }}
             />
             <div style={{ display: "flex", justifyContent: "space-between", marginTop: "0.3rem" }}>
-              <span style={{ fontFamily: "var(--font-jost)", fontSize: "0.55rem", color: "var(--warm-tan)" }}>1 day</span>
-              <span style={{ fontFamily: "var(--font-jost)", fontSize: "0.55rem", color: "var(--warm-tan)" }}>Max {maxDays} days</span>
+              <span style={{ fontFamily: "var(--font-jost)", fontSize: "0.85rem", color: "var(--warm-tan)" }}>1 day</span>
+              <span style={{ fontFamily: "var(--font-jost)", fontSize: "0.85rem", color: "var(--warm-tan)" }}>Max {maxDays} days</span>
             </div>
           </div>
 
@@ -179,13 +179,13 @@ export default function RentalDrawer({
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.6rem" }}>
               <div>
                 <p style={{ ...labelStyle, marginBottom: "0.3rem" }}>Rental starts</p>
-                <p style={{ fontFamily: "var(--font-jost)", fontWeight: 400, fontSize: "0.78rem", color: "var(--dark)" }}>
+                <p style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.88rem", color: "var(--dark)" }}>
                   {fmtDate(startDate)}
                 </p>
               </div>
               <div style={{ textAlign: "right" }}>
                 <p style={{ ...labelStyle, marginBottom: "0.3rem" }}>Return by</p>
-                <p style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.78rem", color: "#C4440A" }}>
+                <p style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.88rem", color: "#C4440A" }}>
                   {fmtDate(returnDate)}
                 </p>
               </div>
@@ -196,26 +196,26 @@ export default function RentalDrawer({
           <div>
             <p style={{ ...labelStyle, marginBottom: "0.5rem" }}>Cost breakdown</p>
             <div style={rowStyle}>
-              <span style={{ fontFamily: "var(--font-jost)", fontWeight: 300, fontSize: "0.78rem", color: "var(--muted)" }}>
+              <span style={{ fontFamily: "var(--font-jost)", fontWeight: 500, fontSize: "0.88rem", color: "var(--muted)" }}>
                 {formatPrice(pricePerDay)} × {days} days
               </span>
-              <span style={{ fontFamily: "var(--font-jost)", fontWeight: 400, fontSize: "0.78rem", color: "var(--dark)" }}>
+              <span style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.88rem", color: "var(--dark)" }}>
                 {formatPrice(rentalCost)}
               </span>
             </div>
             <div style={rowStyle}>
-              <span style={{ fontFamily: "var(--font-jost)", fontWeight: 300, fontSize: "0.78rem", color: "var(--muted)" }}>
+              <span style={{ fontFamily: "var(--font-jost)", fontWeight: 500, fontSize: "0.88rem", color: "var(--muted)" }}>
                 Security deposit (40% of sale price, refundable)
               </span>
-              <span style={{ fontFamily: "var(--font-jost)", fontWeight: 400, fontSize: "0.78rem", color: "var(--dark)" }}>
+              <span style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.88rem", color: "var(--dark)" }}>
                 {formatPrice(deposit)}
               </span>
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", paddingTop: "0.8rem" }}>
-              <span style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.72rem", letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--dark)" }}>
+              <span style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.82rem", letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--dark)" }}>
                 Total due now
               </span>
-              <span style={{ fontFamily: "var(--font-cormorant)", fontWeight: 400, fontSize: "1.6rem", color: "#C4440A" }}>
+              <span style={{ fontFamily: "var(--font-cormorant)", fontWeight: 600, fontSize: "1.6rem", color: "#C4440A" }}>
                 {formatPrice(totalDue)}
               </span>
             </div>
@@ -225,7 +225,7 @@ export default function RentalDrawer({
           {careInstructions && (
             <div style={{ background: "#EDE8E2", padding: "1.2rem" }}>
               <p style={{ ...labelStyle, marginBottom: "0.5rem" }}>Seller care instructions</p>
-              <p style={{ fontFamily: "var(--font-jost)", fontWeight: 300, fontSize: "0.75rem", lineHeight: 1.7, color: "var(--dark)" }}>
+              <p style={{ fontFamily: "var(--font-jost)", fontWeight: 500, fontSize: "0.85rem", lineHeight: 1.7, color: "var(--dark)" }}>
                 {careInstructions}
               </p>
             </div>
@@ -239,8 +239,8 @@ export default function RentalDrawer({
             style={{
               width: "100%", padding: "1rem",
               background: "#C4440A", border: "none", cursor: "pointer",
-              fontFamily: "var(--font-jost)", fontWeight: 400,
-              fontSize: "0.6rem", letterSpacing: "0.2em", textTransform: "uppercase",
+              fontFamily: "var(--font-jost)", fontWeight: 600,
+              fontSize: "0.7rem", letterSpacing: "0.2em", textTransform: "uppercase",
               color: "var(--cream)", transition: "opacity 0.2s",
             }}
             onMouseOver={e => (e.currentTarget.style.opacity = "0.85")}
@@ -249,8 +249,8 @@ export default function RentalDrawer({
             Confirm rental — {formatPrice(totalDue)}
           </button>
           <p style={{
-            fontFamily: "var(--font-jost)", fontWeight: 300,
-            fontSize: "0.58rem", letterSpacing: "0.06em",
+            fontFamily: "var(--font-jost)", fontWeight: 500,
+            fontSize: "0.88rem", letterSpacing: "0.06em",
             color: "var(--muted)", textAlign: "center", marginTop: "0.75rem",
           }}>
             Deposit refunded within 3 days of return

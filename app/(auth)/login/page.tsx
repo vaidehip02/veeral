@@ -13,7 +13,7 @@ const inputStyle = {
   borderBottom: "1.5px solid var(--warm-tan)",
   outline: "none",
   fontFamily: "var(--font-jost)",
-  fontWeight: 300,
+  fontWeight: 500,
   fontSize: "0.85rem",
   letterSpacing: "0.04em",
   color: "var(--dark)",
@@ -23,7 +23,7 @@ const inputStyle = {
 
 const labelStyle = {
   fontFamily: "var(--font-jost)",
-  fontWeight: 300,
+  fontWeight: 500,
   fontSize: "0.52rem",
   letterSpacing: "0.22em",
   textTransform: "uppercase" as const,
@@ -75,14 +75,14 @@ export default function LoginPage() {
 
       {/* Heading */}
       <h1 style={{
-        fontFamily: "var(--font-cormorant)", fontStyle: "italic", fontWeight: 300,
+        fontFamily: "var(--font-cormorant)", fontStyle: "italic", fontWeight: 500,
         fontSize: "2rem", letterSpacing: "0.02em", color: "var(--dark)",
         marginBottom: "0.4rem", textAlign: "center"
       }}>
         Welcome back
       </h1>
       <p style={{
-        fontFamily: "var(--font-jost)", fontWeight: 200,
+        fontFamily: "var(--font-jost)", fontWeight: 500,
         fontSize: "0.75rem", letterSpacing: "0.07em",
         color: "var(--muted)", textAlign: "center", marginBottom: "2.5rem"
       }}>
@@ -107,7 +107,7 @@ export default function LoginPage() {
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
             <label style={labelStyle}>Password</label>
             <Link href="/forgot-password" style={{
-              fontFamily: "var(--font-jost)", fontWeight: 300,
+              fontFamily: "var(--font-jost)", fontWeight: 500,
               fontSize: "0.52rem", letterSpacing: "0.12em",
               color: "var(--burnt-orange)", textDecoration: "none"
             }}>
@@ -134,7 +134,7 @@ export default function LoginPage() {
           type="submit"
           disabled={loading}
           style={{
-            fontFamily: "var(--font-jost)", fontWeight: 400,
+            fontFamily: "var(--font-jost)", fontWeight: 600,
             fontSize: "0.58rem", letterSpacing: "0.2em", textTransform: "uppercase",
             color: "var(--cream)", background: "var(--burnt-orange)",
             border: "none", padding: "0.95rem", cursor: "pointer",
@@ -156,7 +156,7 @@ export default function LoginPage() {
       {/* Social auth */}
       <SocialAuth />
 
-      <p style={{ textAlign: "center", marginTop: "2rem", fontFamily: "var(--font-jost)", fontWeight: 300, fontSize: "0.72rem", letterSpacing: "0.05em", color: "var(--muted)" }}>
+      <p style={{ textAlign: "center", marginTop: "2rem", fontFamily: "var(--font-jost)", fontWeight: 500, fontSize: "0.72rem", letterSpacing: "0.05em", color: "var(--muted)" }}>
         Don&apos;t have an account?{" "}
         <Link href="/signup" style={{ color: "var(--burnt-orange)", textDecoration: "none" }}>
           Sign up

@@ -74,14 +74,14 @@ export default function HeroCarousel() {
         {/* Left: text */}
         <div className="flex-1 pr-8">
           <p style={{
-            fontFamily: "var(--font-jost)", fontWeight: 300,
+            fontFamily: "var(--font-jost)", fontWeight: 500,
             fontSize: "0.58rem", letterSpacing: "0.25em", textTransform: "uppercase",
             color: "var(--burnt-orange)", marginBottom: "1rem"
           }}>
             ✦ {slide.label}
           </p>
           <h2 style={{
-            fontFamily: "var(--font-cormorant)", fontWeight: 300,
+            fontFamily: "var(--font-cormorant)", fontWeight: 500,
             fontSize: "clamp(2.2rem, 5vw, 3.8rem)", lineHeight: 1.1,
             letterSpacing: "-0.01em", color: "var(--dark)",
             marginBottom: "1rem", whiteSpace: "pre-line"
@@ -99,7 +99,7 @@ export default function HeroCarousel() {
           <Link
             href={slide.href}
             style={{
-              fontFamily: "var(--font-jost)", fontWeight: 400,
+              fontFamily: "var(--font-jost)", fontWeight: 600,
               fontSize: "0.6rem", letterSpacing: "0.2em", textTransform: "uppercase",
               color: "var(--cream)", background: "var(--burnt-orange)",
               padding: "0.8rem 2rem", display: "inline-block", transition: "opacity 0.2s"

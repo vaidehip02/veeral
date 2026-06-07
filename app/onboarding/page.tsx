@@ -1,200 +1,344 @@
 "use client";
 
 import { useState } from "react";
-import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { createClient } from "@/lib/supabase/client";
 
-const inputStyle = {
-  width: "100%",
-  background: "transparent",
-  border: "none",
-  borderBottom: "1.5px solid var(--warm-tan)",
-  outline: "none",
-  fontFamily: "var(--font-jost)",
-  fontWeight: 300,
-  fontSize: "0.85rem",
-  letterSpacing: "0.04em",
-  color: "var(--dark)",
-  padding: "0.5rem 0",
-  caretColor: "var(--burnt-orange)",
-} as const;
-
-const labelStyle = {
-  fontFamily: "var(--font-jost)",
-  fontWeight: 300,
-  fontSize: "0.52rem",
-  letterSpacing: "0.22em",
-  textTransform: "uppercase" as const,
-  color: "var(--muted)",
-  display: "block",
-  marginBottom: "0.4rem",
+// ── Shared styles ─────────────────────────────────────────────────────────────
+const inputStyle: React.CSSProperties = {
+  width: "100%", background: "transparent", border: "none",
+  borderBottom: "1.5px solid var(--warm-tan)", outline: "none",
+  fontFamily: "var(--font-jost)", fontWeight: 500,
+  fontSize: "0.9rem", letterSpacing: "0.04em",
+  color: "#0D0906", padding: "0.5rem 0", caretColor: "#C4440A",
 };
 
-export default function OnboardingPage() {
-  const router = useRouter();
-  const supabase = createClient();
+const labelStyle: React.CSSProperties = {
+  fontFamily: "var(--font-jost)", fontWeight: 600,
+  fontSize: "0.7rem", letterSpacing: "0.22em",
+  textTransform: "uppercase", color: "#2A2118",
+  display: "block", marginBottom: "0.4rem",
+};
 
-  const [username, setUsername] = useState("");
-  const [displayName, setDisplayName] = useState("");
-  const [bio, setBio] = useState("");
-  const [location, setLocation] = useState("");
+const hintStyle: React.CSSProperties = {
+  fontFamily: "var(--font-jost)", fontWeight: 500,
+  fontSize: "0.72rem", letterSpacing: "0.06em",
+  color: "var(--muted)", marginTop: "0.35rem",
+};
+
+// ── Step indicator ────────────────────────────────────────────────────────────
+function Steps({ current }: { current: number }) {
+  const steps = ["Profile", "Payouts", "Done"];
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: "0", marginBottom: "2.5rem" }}>
+      {steps.map((s, i) => (
+        <div key={s} style={{ display: "flex", alignItems: "center", flex: i < steps.length - 1 ? 1 : undefined }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexShrink: 0 }}>
+            <div style={{
+              width: "28px", height: "28px", borderRadius: "50%",
+              background: i < current ? "#C4440A" : i === current ? "#C4440A" : "transparent",
+              border: `1.5px solid ${i <= current ? "#C4440A" : "var(--warm-tan)"}`,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              transition: "all 0.3s"
+            }}>
+              {i < current ? (
+                <span style={{ color: "var(--cream)", fontSize: "0.75rem" }}>✓</span>
+              ) : (
+                <span style={{ fontFamily: "var(--font-jost)", fontWeight: 700, fontSize: "0.65rem", color: i === current ? "var(--cream)" : "var(--warm-tan)" }}>
+                  {i + 1}
+                </span>
+              )}
+            </div>
+            <span style={{
+              fontFamily: "var(--font-jost)", fontWeight: i === current ? 700 : 500,
+              fontSize: "0.72rem", letterSpacing: "0.1em", textTransform: "uppercase",
+              color: i <= current ? "#1A1A18" : "var(--warm-tan)"
+            }}>
+              {s}
+            </span>
+          </div>
+          {i < steps.length - 1 && (
+            <div style={{ flex: 1, height: "1px", background: i < current ? "#C4440A" : "var(--warm-tan)", margin: "0 0.75rem", transition: "background 0.3s" }} />
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ── Step 1: Profile ───────────────────────────────────────────────────────────
+function StepProfile({ onNext }: { onNext: () => void }) {
+  const supabase = createClient();
+  const [form, setForm] = useState({ displayName: "", username: "", bio: "", city: "", state: "" });
+  const [avatar, setAvatar] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  function setField(k: string) {
+    return (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
+      setForm(f => ({ ...f, [k]: e.target.value }));
+  }
+
+  function handleAvatar(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setAvatar(file);
+    setAvatarPreview(URL.createObjectURL(file));
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setLoading(true);
-    setError("");
+    setLoading(true); setError("");
 
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { router.push("/login"); return; }
+    if (!user) { setError("Not logged in."); setLoading(false); return; }
 
-    // Upsert the seller profile
-    const { error } = await supabase
-      .from("seller_profiles")
-      .upsert({
-        id: user.id,
-        username: username.toLowerCase().trim(),
-        display_name: displayName.trim(),
-        bio: bio.trim() || null,
-        location: location.trim() || null,
-      });
+    let avatarUrl = "";
+    if (avatar) {
+      // Upload to Cloudinary via our API route
+      const fd = new FormData(); fd.append("file", avatar);
+      const res = await fetch("/api/upload", { method: "POST", body: fd });
+      const json = await res.json();
+      avatarUrl = json.url || "";
+    }
 
-    if (error) {
-      setError(error.message.includes("unique") ? "That username is taken — try another." : error.message);
+    const { error: dbErr } = await supabase.from("seller_profiles").upsert({
+      id: user.id,
+      username: form.username.toLowerCase().trim(),
+      display_name: form.displayName.trim(),
+      bio: form.bio.trim() || null,
+      location: [form.city, form.state].filter(Boolean).join(", ") || null,
+      ...(avatarUrl ? { avatar_url: avatarUrl } : {}),
+    });
+
+    if (dbErr) {
+      setError(dbErr.message.includes("unique") ? "That username is taken — try another." : dbErr.message);
       setLoading(false);
     } else {
-      router.push("/dashboard");
+      onNext();
     }
   }
 
   return (
-    <div style={{ minHeight: "100vh", background: "var(--cream)", display: "flex", flexDirection: "column" }}>
+    <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "1.6rem" }}>
+      <div>
+        <h2 style={{ fontFamily: "var(--font-cormorant)", fontStyle: "italic", fontWeight: 500, fontSize: "1.6rem", color: "#1A1A18", marginBottom: "0.3rem" }}>
+          Set up your profile
+        </h2>
+        <p style={{ fontFamily: "var(--font-jost)", fontWeight: 500, fontSize: "0.85rem", color: "var(--muted)" }}>
+          This is how buyers will find and recognise you.
+        </p>
+      </div>
 
-      {/* Wordmark */}
-      <header style={{ padding: "1.8rem 2rem", textAlign: "center" }}>
-        <Link href="/" style={{
-          fontFamily: "var(--font-cormorant-logo)", fontWeight: 500, fontStyle: "italic",
-          fontSize: "2.2rem", letterSpacing: "-0.02em", color: "#C4440A", textDecoration: "none"
-        }}>
-          veeral
-        </Link>
-      </header>
-
-      <main style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }}>
-        <div style={{ maxWidth: "420px", width: "100%" }}>
-
-          <h1 style={{
-            fontFamily: "var(--font-cormorant)", fontStyle: "italic", fontWeight: 300,
-            fontSize: "2rem", letterSpacing: "0.02em", color: "var(--dark)",
-            marginBottom: "0.4rem", textAlign: "center"
+      {/* Avatar upload */}
+      <div>
+        <label style={labelStyle}>Profile photo</label>
+        <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+          <div style={{
+            width: "72px", height: "72px", borderRadius: "50%",
+            background: avatarPreview ? "transparent" : "var(--warm-tan)",
+            border: "1px solid var(--warm-tan)", overflow: "hidden", flexShrink: 0,
+            display: "flex", alignItems: "center", justifyContent: "center"
           }}>
-            Set up your seller profile
-          </h1>
-          <p style={{
-            fontFamily: "var(--font-jost)", fontWeight: 200,
-            fontSize: "0.75rem", letterSpacing: "0.07em",
-            color: "var(--muted)", textAlign: "center", marginBottom: "2.5rem"
+            {avatarPreview
+              ? <img src={avatarPreview} alt="Avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              : <span style={{ fontFamily: "var(--font-cormorant)", fontSize: "1.6rem", color: "var(--muted)", fontStyle: "italic" }}>P</span>
+            }
+          </div>
+          <label style={{
+            fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.7rem",
+            letterSpacing: "0.15em", textTransform: "uppercase",
+            color: "#C4440A", border: "1px solid #C4440A",
+            padding: "0.5rem 1rem", cursor: "pointer"
           }}>
-            This is how buyers will find and recognise you
-          </p>
-
-          <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "1.6rem" }}>
-            <div>
-              <label style={labelStyle}>Username</label>
-              <input
-                type="text"
-                required
-                value={username}
-                onChange={e => setUsername(e.target.value.replace(/[^a-z0-9_]/gi, "").toLowerCase())}
-                placeholder="priya_sharma"
-                maxLength={30}
-                style={inputStyle}
-              />
-              <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.55rem", letterSpacing: "0.1em", color: "var(--warm-tan)", marginTop: "0.4rem" }}>
-                shopveeral.com/sellers/{username || "your-username"}
-              </p>
-            </div>
-
-            <div>
-              <label style={labelStyle}>Display name</label>
-              <input
-                type="text"
-                required
-                value={displayName}
-                onChange={e => setDisplayName(e.target.value)}
-                placeholder="Priya Sharma"
-                style={inputStyle}
-              />
-            </div>
-
-            <div>
-              <label style={labelStyle}>Bio <span style={{ opacity: 0.5 }}>(optional)</span></label>
-              <textarea
-                value={bio}
-                onChange={e => setBio(e.target.value)}
-                placeholder="Tell buyers a little about you and what you sell…"
-                rows={3}
-                maxLength={200}
-                style={{
-                  ...inputStyle,
-                  borderBottom: "none",
-                  border: "1px solid var(--warm-tan)",
-                  padding: "0.6rem 0.8rem",
-                  resize: "none",
-                  width: "100%",
-                }}
-              />
-            </div>
-
-            <div>
-              <label style={labelStyle}>Location <span style={{ opacity: 0.5 }}>(optional)</span></label>
-              <input
-                type="text"
-                value={location}
-                onChange={e => setLocation(e.target.value)}
-                placeholder="Mumbai, Delhi, London…"
-                style={inputStyle}
-              />
-            </div>
-
-            {error && (
-              <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.72rem", color: "#C95C1A", letterSpacing: "0.04em" }}>
-                {error}
-              </p>
-            )}
-
-            <button
-              type="submit"
-              disabled={loading}
-              style={{
-                fontFamily: "var(--font-jost)", fontWeight: 400,
-                fontSize: "0.58rem", letterSpacing: "0.2em", textTransform: "uppercase",
-                color: "var(--cream)", background: "var(--burnt-orange)",
-                border: "none", padding: "0.95rem", cursor: "pointer",
-                opacity: loading ? 0.6 : 1, transition: "opacity 0.2s",
-                marginTop: "0.5rem",
-              }}
-            >
-              {loading ? "Saving…" : "Complete profile →"}
-            </button>
-
-            <button
-              type="button"
-              onClick={() => router.push("/")}
-              style={{
-                fontFamily: "var(--font-jost)", fontWeight: 300,
-                fontSize: "0.55rem", letterSpacing: "0.15em", textTransform: "uppercase",
-                color: "var(--muted)", background: "none", border: "none",
-                cursor: "pointer", textAlign: "center"
-              }}
-            >
-              Skip for now
-            </button>
-          </form>
+            {avatarPreview ? "Change photo" : "Upload photo"}
+            <input type="file" accept="image/*" onChange={handleAvatar} style={{ display: "none" }} />
+          </label>
         </div>
-      </main>
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.2rem" }}>
+        <div>
+          <label style={labelStyle}>Display name</label>
+          <input required style={inputStyle} value={form.displayName} onChange={setField("displayName")} placeholder="Priya Sharma" />
+        </div>
+        <div>
+          <label style={labelStyle}>Username</label>
+          <input
+            required style={inputStyle}
+            value={form.username}
+            onChange={e => setForm(f => ({ ...f, username: e.target.value.replace(/[^a-z0-9_]/gi, "").toLowerCase() }))}
+            placeholder="priya_sharma"
+            maxLength={30}
+          />
+          <p style={hintStyle}>veeral.com/sellers/{form.username || "your-handle"}</p>
+        </div>
+      </div>
+
+      <div>
+        <label style={labelStyle}>Bio <span style={{ opacity: 0.5, textTransform: "none", letterSpacing: 0 }}>(optional)</span></label>
+        <textarea
+          value={form.bio} onChange={setField("bio")}
+          rows={3} maxLength={200}
+          placeholder="Tell buyers what you sell and what makes your pieces special…"
+          style={{ ...inputStyle, borderBottom: "none", border: "1px solid var(--warm-tan)", padding: "0.6rem 0.8rem", resize: "none" }}
+        />
+        <p style={hintStyle}>{200 - form.bio.length} characters remaining</p>
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.2rem" }}>
+        <div>
+          <label style={labelStyle}>City <span style={{ opacity: 0.5 }}>(optional)</span></label>
+          <input style={inputStyle} value={form.city} onChange={setField("city")} placeholder="New York" />
+        </div>
+        <div>
+          <label style={labelStyle}>State <span style={{ opacity: 0.5 }}>(optional)</span></label>
+          <input style={inputStyle} value={form.state} onChange={setField("state")} placeholder="NY" maxLength={2} />
+        </div>
+      </div>
+
+      {error && <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.8rem", color: "#C4440A" }}>{error}</p>}
+
+      <button type="submit" disabled={loading} style={{
+        width: "100%", padding: "1rem", background: "#C4440A", border: "none", cursor: "pointer",
+        fontFamily: "var(--font-jost)", fontWeight: 700, fontSize: "0.75rem",
+        letterSpacing: "0.2em", textTransform: "uppercase", color: "var(--cream)",
+        opacity: loading ? 0.6 : 1, transition: "opacity 0.2s"
+      }}>
+        {loading ? "Saving…" : "Continue →"}
+      </button>
+    </form>
+  );
+}
+
+// ── Step 2: Stripe Connect ────────────────────────────────────────────────────
+function StepStripe({ onNext }: { onNext: () => void }) {
+  const [connecting, setConnecting] = useState(false);
+
+  async function handleConnect() {
+    setConnecting(true);
+    const res = await fetch("/api/stripe/connect", { method: "POST" });
+    const { url } = await res.json();
+    if (url) window.location.href = url;
+    else { setConnecting(false); }
+  }
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "1.8rem" }}>
+      <div>
+        <h2 style={{ fontFamily: "var(--font-cormorant)", fontStyle: "italic", fontWeight: 500, fontSize: "1.6rem", color: "#1A1A18", marginBottom: "0.3rem" }}>
+          Connect your bank account
+        </h2>
+        <p style={{ fontFamily: "var(--font-jost)", fontWeight: 500, fontSize: "0.85rem", color: "var(--muted)", lineHeight: 1.7 }}>
+          Veeral uses Stripe to pay sellers securely. Connect your bank account to receive payouts within 2–3 business days of each sale.
+        </p>
+      </div>
+
+      {/* What to expect */}
+      <div style={{ border: "1px solid var(--warm-tan)", padding: "1.4rem", display: "flex", flexDirection: "column", gap: "0.85rem" }}>
+        {[
+          ["🔒", "Secure", "Your bank details are handled entirely by Stripe — Veeral never sees them."],
+          ["⚡", "Fast payouts", "Funds reach your account within 2–3 business days of each completed sale."],
+          ["💸", "10% platform fee", "Veeral deducts 10% automatically. You receive 90% of every transaction."],
+        ].map(([icon, title, desc]) => (
+          <div key={title} style={{ display: "flex", gap: "0.9rem", alignItems: "flex-start" }}>
+            <span style={{ fontSize: "1.1rem", flexShrink: 0 }}>{icon}</span>
+            <div>
+              <p style={{ fontFamily: "var(--font-jost)", fontWeight: 700, fontSize: "0.85rem", color: "#1A1A18", marginBottom: "0.15rem" }}>{title}</p>
+              <p style={{ fontFamily: "var(--font-jost)", fontWeight: 500, fontSize: "0.8rem", color: "var(--muted)", lineHeight: 1.6 }}>{desc}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <button onClick={handleConnect} disabled={connecting} style={{
+        width: "100%", padding: "1rem", background: "#C4440A", border: "none", cursor: "pointer",
+        fontFamily: "var(--font-jost)", fontWeight: 700, fontSize: "0.75rem",
+        letterSpacing: "0.2em", textTransform: "uppercase", color: "var(--cream)",
+        opacity: connecting ? 0.6 : 1, transition: "opacity 0.2s",
+        display: "flex", alignItems: "center", justifyContent: "center", gap: "0.75rem"
+      }}>
+        {connecting ? "Redirecting to Stripe…" : "Connect with Stripe →"}
+      </button>
+
+      <button onClick={onNext} style={{
+        background: "none", border: "none", cursor: "pointer",
+        fontFamily: "var(--font-jost)", fontWeight: 500, fontSize: "0.75rem",
+        letterSpacing: "0.1em", color: "var(--muted)", textDecoration: "underline",
+        textUnderlineOffset: "3px"
+      }}>
+        Skip for now — I&apos;ll connect later
+      </button>
+    </div>
+  );
+}
+
+// ── Step 3: Done ──────────────────────────────────────────────────────────────
+function StepDone() {
+  return (
+    <div style={{ textAlign: "center", display: "flex", flexDirection: "column", gap: "1.5rem", alignItems: "center" }}>
+      <div style={{
+        width: "72px", height: "72px", borderRadius: "50%",
+        background: "rgba(196,68,10,0.08)", border: "1.5px solid #C4440A",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        fontSize: "1.8rem", color: "#C4440A"
+      }}>
+        ✦
+      </div>
+      <h2 style={{ fontFamily: "var(--font-cormorant)", fontStyle: "italic", fontWeight: 500, fontSize: "2rem", color: "#1A1A18" }}>
+        You&apos;re ready to sell!
+      </h2>
+      <p style={{ fontFamily: "var(--font-jost)", fontWeight: 500, fontSize: "0.9rem", color: "var(--muted)", lineHeight: 1.8, maxWidth: "380px" }}>
+        Your seller profile is live. Create your first listing now and start reaching thousands of South Asian fashion buyers.
+      </p>
+      <Link href="/dashboard/listings/new" style={{
+        fontFamily: "var(--font-jost)", fontWeight: 700, fontSize: "0.75rem",
+        letterSpacing: "0.2em", textTransform: "uppercase",
+        color: "var(--cream)", background: "#C4440A",
+        padding: "1rem 2.5rem", textDecoration: "none", display: "inline-block"
+      }}>
+        Create your first listing →
+      </Link>
+      <Link href="/dashboard" style={{
+        fontFamily: "var(--font-jost)", fontWeight: 500, fontSize: "0.78rem",
+        letterSpacing: "0.08em", color: "var(--muted)", textDecoration: "underline",
+        textUnderlineOffset: "3px"
+      }}>
+        Go to my dashboard
+      </Link>
+    </div>
+  );
+}
+
+// ── Main page ─────────────────────────────────────────────────────────────────
+export default function OnboardingPage() {
+  const [step, setStep] = useState(0);
+
+  return (
+    <div style={{ background: "var(--cream)", minHeight: "100vh" }}>
+      <div style={{ maxWidth: "520px", margin: "0 auto", padding: "3rem 1.5rem 5rem" }}>
+
+        {/* Header */}
+        <div style={{ textAlign: "center", marginBottom: "2.5rem" }}>
+          <Link href="/" style={{
+            fontFamily: "var(--font-cormorant-logo)", fontWeight: 500, fontStyle: "italic",
+            fontSize: "1.8rem", color: "#C4440A", textDecoration: "none"
+          }}>
+            veeral
+          </Link>
+          <p style={{ fontFamily: "var(--font-jost)", fontWeight: 500, fontSize: "0.72rem", letterSpacing: "0.15em", textTransform: "uppercase", color: "var(--muted)", marginTop: "0.4rem" }}>
+            Seller onboarding
+          </p>
+        </div>
+
+        <Steps current={step} />
+
+        {step === 0 && <StepProfile onNext={() => setStep(1)} />}
+        {step === 1 && <StepStripe onNext={() => setStep(2)} />}
+        {step === 2 && <StepDone />}
+      </div>
     </div>
   );
 }

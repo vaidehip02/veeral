@@ -19,8 +19,8 @@ export default function Navbar() {
       <div style={{
         background: "var(--burnt-orange)", color: "var(--cream)",
         textAlign: "center", padding: "0.45rem 1rem",
-        fontFamily: "var(--font-jost)", fontWeight: 300,
-        fontSize: "0.58rem", letterSpacing: "0.18em"
+        fontFamily: "var(--font-jost)", fontWeight: 500,
+        fontSize: "0.88rem", letterSpacing: "0.18em"
       }}>
         New listings added daily — discover South Asian fashion ✦
       </div>
@@ -40,7 +40,7 @@ export default function Navbar() {
                 href={l.href}
                 style={{
                   fontFamily: "var(--font-jost)", fontWeight: 600,
-                  fontSize: "0.6rem", letterSpacing: "0.2em",
+                  fontSize: "0.7rem", letterSpacing: "0.2em",
                   textTransform: "uppercase", color: "var(--muted)",
                   transition: "color 0.2s"
                 }}
@@ -99,8 +99,8 @@ export default function Navbar() {
             <Link
               href="/signup"
               style={{
-                fontFamily: "var(--font-jost)", fontWeight: 400,
-                fontSize: "0.58rem", letterSpacing: "0.18em", textTransform: "uppercase",
+                fontFamily: "var(--font-jost)", fontWeight: 600,
+                fontSize: "0.88rem", letterSpacing: "0.18em", textTransform: "uppercase",
                 color: "var(--cream)", background: "var(--burnt-orange)",
                 padding: "0.5rem 1.1rem", textDecoration: "none", transition: "opacity 0.2s"
               }}
@@ -135,8 +135,8 @@ export default function Navbar() {
               href={l.href}
               onClick={() => setMenuOpen(false)}
               style={{
-                fontFamily: "var(--font-jost)", fontWeight: 300,
-                fontSize: "0.6rem", letterSpacing: "0.2em",
+                fontFamily: "var(--font-jost)", fontWeight: 500,
+                fontSize: "0.7rem", letterSpacing: "0.2em",
                 textTransform: "uppercase", color: "var(--muted)"
               }}
             >

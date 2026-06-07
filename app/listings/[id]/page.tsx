@@ -73,8 +73,8 @@ const CONDITION_LABEL: Record<string, string> = {
 function Tag({ children }: { children: React.ReactNode }) {
   return (
     <span style={{
-      fontFamily: "var(--font-jost)", fontWeight: 300,
-      fontSize: "0.58rem", letterSpacing: "0.12em", textTransform: "uppercase",
+      fontFamily: "var(--font-jost)", fontWeight: 500,
+      fontSize: "0.88rem", letterSpacing: "0.12em", textTransform: "uppercase",
       color: "var(--muted)", border: "1px solid var(--warm-tan)",
       padding: "0.3rem 0.7rem", display: "inline-block"
     }}>
@@ -87,7 +87,7 @@ function Stars({ rating }: { rating: number }) {
   return (
     <span style={{ color: "#C4440A", fontSize: "0.8rem" }}>
       {"★".repeat(Math.round(rating))}{"☆".repeat(5 - Math.round(rating))}
-      <span style={{ fontFamily: "var(--font-jost)", fontWeight: 300, fontSize: "0.65rem", color: "var(--muted)", marginLeft: "0.35rem" }}>
+      <span style={{ fontFamily: "var(--font-jost)", fontWeight: 500, fontSize: "0.85rem", color: "var(--muted)", marginLeft: "0.35rem" }}>
         ({rating})
       </span>
     </span>
@@ -112,7 +112,7 @@ export default function ListingPage({ params }: { params: { id: string } }) {
 
         {/* Breadcrumb */}
         <nav style={{ marginBottom: "1.5rem" }}>
-          <span style={{ fontFamily: "var(--font-jost)", fontWeight: 300, fontSize: "0.58rem", letterSpacing: "0.15em", color: "var(--muted)" }}>
+          <span style={{ fontFamily: "var(--font-jost)", fontWeight: 500, fontSize: "0.88rem", letterSpacing: "0.15em", color: "var(--muted)" }}>
             <Link href="/" style={{ color: "var(--muted)", textDecoration: "none" }}>Home</Link>
             {" / "}
             <Link href="/listings" style={{ color: "var(--muted)", textDecoration: "none" }}>Listings</Link>
@@ -137,7 +137,7 @@ export default function ListingPage({ params }: { params: { id: string } }) {
             {/* Title */}
             <div>
               <h1 style={{
-                fontFamily: "var(--font-cormorant)", fontStyle: "italic", fontWeight: 300,
+                fontFamily: "var(--font-cormorant)", fontStyle: "italic", fontWeight: 500,
                 fontSize: "clamp(1.6rem, 2.5vw, 2.2rem)", letterSpacing: "0.01em",
                 color: "var(--dark)", lineHeight: 1.2, marginBottom: "1rem"
               }}>
@@ -156,8 +156,8 @@ export default function ListingPage({ params }: { params: { id: string } }) {
                 </div>
                 <div>
                   <Link href={`/sellers/${l.seller.username}`} style={{
-                    fontFamily: "var(--font-jost)", fontWeight: 400,
-                    fontSize: "0.72rem", color: "var(--dark)", textDecoration: "none",
+                    fontFamily: "var(--font-jost)", fontWeight: 600,
+                    fontSize: "0.82rem", color: "var(--dark)", textDecoration: "none",
                     letterSpacing: "0.04em"
                   }}>
                     @{l.seller.username}
@@ -174,29 +174,29 @@ export default function ListingPage({ params }: { params: { id: string } }) {
             <div>
               {(l.type === "sale" || l.type === "both") && (
                 <p style={{
-                  fontFamily: "var(--font-cormorant)", fontWeight: 400,
+                  fontFamily: "var(--font-cormorant)", fontWeight: 600,
                   fontSize: "2rem", color: "#C4440A", lineHeight: 1
                 }}>
                   {formatPrice(l.price)}
-                  <span style={{ fontFamily: "var(--font-jost)", fontWeight: 300, fontSize: "0.65rem", letterSpacing: "0.1em", color: "var(--muted)", marginLeft: "0.5rem" }}>
+                  <span style={{ fontFamily: "var(--font-jost)", fontWeight: 500, fontSize: "0.85rem", letterSpacing: "0.1em", color: "var(--muted)", marginLeft: "0.5rem" }}>
                     to buy
                   </span>
                 </p>
               )}
               {(l.type === "rent" || l.type === "both") && l.rent_price && (
                 <p style={{
-                  fontFamily: "var(--font-cormorant)", fontWeight: 400,
+                  fontFamily: "var(--font-cormorant)", fontWeight: 600,
                   fontSize: "1.3rem", color: "var(--dark)", marginTop: "0.3rem"
                 }}>
                   {formatPrice(l.rent_price)}
-                  <span style={{ fontFamily: "var(--font-jost)", fontWeight: 300, fontSize: "0.65rem", letterSpacing: "0.1em", color: "var(--muted)", marginLeft: "0.5rem" }}>
+                  <span style={{ fontFamily: "var(--font-jost)", fontWeight: 500, fontSize: "0.85rem", letterSpacing: "0.1em", color: "var(--muted)", marginLeft: "0.5rem" }}>
                     / day to rent · up to {l.rent_duration_days} days
                   </span>
                 </p>
               )}
               {/* Original price + savings */}
               {l.original_price && (
-                <p style={{ fontFamily: "var(--font-jost)", fontWeight: 300, fontSize: "0.68rem", letterSpacing: "0.05em", color: "var(--muted)", marginTop: "0.4rem" }}>
+                <p style={{ fontFamily: "var(--font-jost)", fontWeight: 500, fontSize: "0.88rem", letterSpacing: "0.05em", color: "var(--muted)", marginTop: "0.4rem" }}>
                   Originally {formatPrice(l.original_price)} ·{" "}
                   <span style={{ color: "#5a8a5a" }}>You save {formatPrice(savings)}</span>
                 </p>
@@ -211,8 +211,8 @@ export default function ListingPage({ params }: { params: { id: string } }) {
               {l.tags.map(t => <Tag key={t}>{t}</Tag>)}
               {l.dry_clean_only && (
                 <span style={{
-                  fontFamily: "var(--font-jost)", fontWeight: 400,
-                  fontSize: "0.55rem", letterSpacing: "0.12em", textTransform: "uppercase",
+                  fontFamily: "var(--font-jost)", fontWeight: 600,
+                  fontSize: "0.85rem", letterSpacing: "0.12em", textTransform: "uppercase",
                   color: "var(--cream)", background: "var(--muted)",
                   padding: "0.3rem 0.7rem", display: "inline-flex", alignItems: "center", gap: "0.35rem"
                 }}>
@@ -225,8 +225,8 @@ export default function ListingPage({ params }: { params: { id: string } }) {
             <div>
               <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: "0.75rem" }}>
                 <label style={{
-                  fontFamily: "var(--font-jost)", fontWeight: 300,
-                  fontSize: "0.52rem", letterSpacing: "0.22em", textTransform: "uppercase",
+                  fontFamily: "var(--font-jost)", fontWeight: 500,
+                  fontSize: "0.7rem", letterSpacing: "0.22em", textTransform: "uppercase",
                   color: "var(--muted)"
                 }}>
                   US Size
@@ -235,8 +235,8 @@ export default function ListingPage({ params }: { params: { id: string } }) {
                   onClick={() => setSizeChartOpen(true)}
                   style={{
                     background: "none", border: "none", cursor: "pointer",
-                    fontFamily: "var(--font-jost)", fontWeight: 300,
-                    fontSize: "0.58rem", letterSpacing: "0.12em",
+                    fontFamily: "var(--font-jost)", fontWeight: 500,
+                    fontSize: "0.88rem", letterSpacing: "0.12em",
                     color: "#C4440A", textDecoration: "underline",
                     textUnderlineOffset: "3px", padding: 0
                   }}
@@ -269,8 +269,8 @@ export default function ListingPage({ params }: { params: { id: string } }) {
               </div>
 
               <p style={{
-                fontFamily: "var(--font-jost)", fontWeight: 300,
-                fontSize: "0.58rem", letterSpacing: "0.08em",
+                fontFamily: "var(--font-jost)", fontWeight: 500,
+                fontSize: "0.88rem", letterSpacing: "0.08em",
                 color: "var(--muted)", marginTop: "0.5rem"
               }}>
                 Listed as: <strong>US {l.us_size}</strong>
@@ -280,13 +280,14 @@ export default function ListingPage({ params }: { params: { id: string } }) {
             {/* What's included */}
             <div>
               <p style={{
-                fontFamily: "var(--font-jost)", fontWeight: 300,
-                fontSize: "0.52rem", letterSpacing: "0.22em", textTransform: "uppercase",
+                fontFamily: "var(--font-jost)", fontWeight: 500,
+                fontSize: "0.7rem", letterSpacing: "0.22em", textTransform: "uppercase",
                 color: "var(--muted)", marginBottom: "0.75rem"
               }}>
                 What&apos;s included
               </p>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem 1.5rem" }}>
+              {/* 3-column grid: row 1 = Lehenga skirt, Blouse, Dupatta | row 2 = Jacket/Shrug, Belt/Kamarband */}
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "0.6rem 1rem" }}>
                 {INCLUDED_OPTIONS.map(item => {
                   const included = l.included.includes(item);
                   return (
@@ -296,14 +297,14 @@ export default function ListingPage({ params }: { params: { id: string } }) {
                         border: `1px solid ${included ? "#C4440A" : "var(--warm-tan)"}`,
                         background: included ? "rgba(196,68,10,0.1)" : "transparent",
                         display: "flex", alignItems: "center", justifyContent: "center",
-                        flexShrink: 0, fontSize: "0.65rem", color: "#C4440A"
+                        flexShrink: 0, fontSize: "0.85rem", color: "#C4440A"
                       }}>
                         {included ? "✓" : ""}
                       </span>
                       <span style={{
-                        fontFamily: "var(--font-jost)", fontWeight: 300,
-                        fontSize: "0.72rem", letterSpacing: "0.04em",
-                        color: included ? "var(--dark)" : "var(--warm-tan)",
+                        fontFamily: "var(--font-jost)", fontWeight: 500,
+                        fontSize: "0.82rem", letterSpacing: "0.04em",
+                        color: included ? "var(--dark)" : "#3D3830",
                         textDecoration: included ? "none" : "line-through"
                       }}>
                         {item}
@@ -317,14 +318,14 @@ export default function ListingPage({ params }: { params: { id: string } }) {
             {/* Description */}
             <div>
               <p style={{
-                fontFamily: "var(--font-jost)", fontWeight: 300,
-                fontSize: "0.52rem", letterSpacing: "0.22em", textTransform: "uppercase",
+                fontFamily: "var(--font-jost)", fontWeight: 500,
+                fontSize: "0.7rem", letterSpacing: "0.22em", textTransform: "uppercase",
                 color: "var(--muted)", marginBottom: "0.6rem"
               }}>
                 Description
               </p>
               <p style={{
-                fontFamily: "var(--font-jost)", fontWeight: 300,
+                fontFamily: "var(--font-jost)", fontWeight: 500,
                 fontSize: "0.82rem", letterSpacing: "0.03em",
                 lineHeight: 1.8, color: "var(--dark)"
               }}>
@@ -338,8 +339,8 @@ export default function ListingPage({ params }: { params: { id: string } }) {
                 <button style={{
                   width: "100%", padding: "1rem",
                   background: "#C4440A", border: "none", cursor: "pointer",
-                  fontFamily: "var(--font-jost)", fontWeight: 400,
-                  fontSize: "0.6rem", letterSpacing: "0.2em", textTransform: "uppercase",
+                  fontFamily: "var(--font-jost)", fontWeight: 600,
+                  fontSize: "0.7rem", letterSpacing: "0.2em", textTransform: "uppercase",
                   color: "var(--cream)", transition: "opacity 0.2s"
                 }}
                   onMouseOver={e => (e.currentTarget.style.opacity = "0.85")}
@@ -354,8 +355,8 @@ export default function ListingPage({ params }: { params: { id: string } }) {
                   <button style={{
                     flex: 1, padding: "1rem",
                     background: "transparent", border: "1px solid #C4440A", cursor: "pointer",
-                    fontFamily: "var(--font-jost)", fontWeight: 400,
-                    fontSize: "0.6rem", letterSpacing: "0.2em", textTransform: "uppercase",
+                    fontFamily: "var(--font-jost)", fontWeight: 600,
+                    fontSize: "0.7rem", letterSpacing: "0.2em", textTransform: "uppercase",
                     color: "#C4440A", transition: "opacity 0.2s"
                   }}
                     onMouseOver={e => (e.currentTarget.style.opacity = "0.65")}
@@ -373,7 +374,7 @@ export default function ListingPage({ params }: { params: { id: string } }) {
                     background: "transparent",
                     border: `1px solid ${saved ? "#C4440A" : "var(--warm-tan)"}`,
                     cursor: "pointer", fontSize: "1.1rem",
-                    color: saved ? "#C4440A" : "var(--warm-tan)",
+                    color: saved ? "#C4440A" : "#3D3830",
                     transition: "all 0.2s", flexShrink: 0,
                   }}
                 >
@@ -387,8 +388,8 @@ export default function ListingPage({ params }: { params: { id: string } }) {
                   style={{
                     width: "100%", padding: "1rem",
                     background: "var(--dark)", border: "none", cursor: "pointer",
-                    fontFamily: "var(--font-jost)", fontWeight: 400,
-                    fontSize: "0.6rem", letterSpacing: "0.2em", textTransform: "uppercase",
+                    fontFamily: "var(--font-jost)", fontWeight: 600,
+                    fontSize: "0.7rem", letterSpacing: "0.2em", textTransform: "uppercase",
                     color: "var(--cream)", transition: "opacity 0.2s"
                   }}
                   onMouseOver={e => (e.currentTarget.style.opacity = "0.8")}
@@ -399,16 +400,18 @@ export default function ListingPage({ params }: { params: { id: string } }) {
               )}
             </div>
 
-            <p style={{ fontFamily: "var(--font-jost)", fontWeight: 300, fontSize: "0.65rem", letterSpacing: "0.08em", color: "var(--muted)" }}>
-              📍 {l.location}
-            </p>
+            {l.location && (
+              <p style={{ fontFamily: "var(--font-jost)", fontWeight: 500, fontSize: "0.85rem", letterSpacing: "0.08em", color: "var(--muted)" }}>
+                📍 {l.location}
+              </p>
+            )}
           </div>
         </div>
 
         {/* ── Seller card ── */}
         <div style={{ marginTop: "3rem" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "1.2rem" }}>
-            <h2 style={{ fontFamily: "var(--font-cormorant)", fontWeight: 300, fontSize: "1.4rem", letterSpacing: "0.03em", color: "var(--dark)", whiteSpace: "nowrap" }}>
+            <h2 style={{ fontFamily: "var(--font-cormorant)", fontWeight: 500, fontSize: "1.4rem", letterSpacing: "0.03em", color: "var(--dark)", whiteSpace: "nowrap" }}>
               About the seller
             </h2>
             <div style={{ flex: 1, height: "1px", background: "var(--warm-tan)" }} />
@@ -435,15 +438,15 @@ export default function ListingPage({ params }: { params: { id: string } }) {
         <div style={{ marginTop: "3rem" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "1.2rem" }}>
             <h2 style={{
-              fontFamily: "var(--font-cormorant)", fontWeight: 300,
+              fontFamily: "var(--font-cormorant)", fontWeight: 500,
               fontSize: "1.4rem", letterSpacing: "0.03em", color: "var(--dark)", whiteSpace: "nowrap"
             }}>
               More from @{l.seller.username}
             </h2>
             <div style={{ flex: 1, height: "1px", background: "var(--warm-tan)" }} />
             <Link href={`/sellers/${l.seller.username}`} style={{
-              fontFamily: "var(--font-jost)", fontWeight: 300,
-              fontSize: "0.55rem", letterSpacing: "0.18em", textTransform: "uppercase",
+              fontFamily: "var(--font-jost)", fontWeight: 500,
+              fontSize: "0.85rem", letterSpacing: "0.18em", textTransform: "uppercase",
               color: "#C4440A", whiteSpace: "nowrap", textDecoration: "none"
             }}>
               View all →
@@ -453,8 +456,8 @@ export default function ListingPage({ params }: { params: { id: string } }) {
             {SELLER_LISTINGS.map(item => (
               <Link key={item.id} href={`/listings/${item.id}`} style={{ flexShrink: 0, width: "160px", textDecoration: "none" }}>
                 <div style={{ background: item.bg, aspectRatio: "3/4", width: "160px", marginBottom: "0.6rem" }} />
-                <p style={{ fontFamily: "var(--font-jost)", fontWeight: 300, fontSize: "0.72rem", color: "var(--dark)", marginBottom: "0.2rem" }}>{item.title}</p>
-                <p style={{ fontFamily: "var(--font-cormorant)", fontWeight: 400, fontSize: "1rem", color: "#C4440A" }}>{formatPrice(item.price)}</p>
+                <p style={{ fontFamily: "var(--font-jost)", fontWeight: 500, fontSize: "0.82rem", color: "var(--dark)", marginBottom: "0.2rem" }}>{item.title}</p>
+                <p style={{ fontFamily: "var(--font-cormorant)", fontWeight: 600, fontSize: "1rem", color: "#C4440A" }}>{formatPrice(item.price)}</p>
               </Link>
             ))}
           </div>
@@ -464,15 +467,15 @@ export default function ListingPage({ params }: { params: { id: string } }) {
         <div style={{ marginTop: "3rem", marginBottom: "2rem" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "1.2rem" }}>
             <h2 style={{
-              fontFamily: "var(--font-cormorant)", fontWeight: 300,
+              fontFamily: "var(--font-cormorant)", fontWeight: 500,
               fontSize: "1.4rem", letterSpacing: "0.03em", color: "var(--dark)", whiteSpace: "nowrap"
             }}>
               Similar items
             </h2>
             <div style={{ flex: 1, height: "1px", background: "var(--warm-tan)" }} />
             <Link href="/listings?category=lehenga" style={{
-              fontFamily: "var(--font-jost)", fontWeight: 300,
-              fontSize: "0.55rem", letterSpacing: "0.18em", textTransform: "uppercase",
+              fontFamily: "var(--font-jost)", fontWeight: 500,
+              fontSize: "0.85rem", letterSpacing: "0.18em", textTransform: "uppercase",
               color: "#C4440A", whiteSpace: "nowrap", textDecoration: "none"
             }}>
               Browse all →
@@ -485,8 +488,8 @@ export default function ListingPage({ params }: { params: { id: string } }) {
                   onMouseOver={e => (e.currentTarget.style.opacity = "0.85")}
                   onMouseOut={e => (e.currentTarget.style.opacity = "1")}
                 />
-                <p style={{ fontFamily: "var(--font-jost)", fontWeight: 300, fontSize: "0.72rem", color: "var(--dark)", marginBottom: "0.2rem" }}>{item.title}</p>
-                <p style={{ fontFamily: "var(--font-cormorant)", fontWeight: 400, fontSize: "1rem", color: "#C4440A" }}>{formatPrice(item.price)}</p>
+                <p style={{ fontFamily: "var(--font-jost)", fontWeight: 500, fontSize: "0.82rem", color: "var(--dark)", marginBottom: "0.2rem" }}>{item.title}</p>
+                <p style={{ fontFamily: "var(--font-cormorant)", fontWeight: 600, fontSize: "1rem", color: "#C4440A" }}>{formatPrice(item.price)}</p>
               </Link>
             ))}
           </div>
