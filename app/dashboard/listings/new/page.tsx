@@ -3,6 +3,8 @@
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import AIIdentifyPanel from "@/components/seller/AIIdentifyPanel";
+import AIPricingSuggestion from "@/components/seller/AIPricingSuggestion";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const GARMENT_TYPES = [
@@ -29,10 +31,109 @@ const MENS_SIZES   = ["36", "38", "40", "42", "44", "46"];
 const INCLUDED_OPTS: Record<string, string[]> = {
   lehenga:       ["Lehenga skirt", "Blouse", "Dupatta", "Jacket/Shrug", "Belt/Kamarband"],
   saree:         ["Saree", "Blouse", "Petticoat"],
-  salwar_kameez: ["Kurta/Kameez", "Salwar/Palazzo", "Dupatta", "Jacket"],
-  sherwani:      ["Sherwani", "Churidar/Pants", "Dupatta/Stole", "Kalgi"],
-  default:       ["Main piece", "Lining", "Accessories"],
+  salwar_kameez: ["Kameez", "Salwar/Pants", "Dupatta"],
+  sherwani:      ["Sherwani", "Pants", "Dupatta/Stole"],
+  indo_western:  ["Main piece", "Jacket/Shrug", "Accessories"],
+  jewellery:     ["Main piece", "Accessories"],
+  other:         ["Main piece", "Accessories"],
 };
+
+// ── What's Included Modal ─────────────────────────────────────────────────────
+function IncludedModal({
+  garmentType, selected, onConfirm,
+}: {
+  garmentType: string;
+  selected: string[];
+  onConfirm: (items: string[]) => void;
+}) {
+  const opts = INCLUDED_OPTS[garmentType] || INCLUDED_OPTS.other;
+  const garmentLabel = GARMENT_TYPES.find(g => g.value === garmentType)?.label || "this item";
+  const [local, setLocal] = useState<string[]>(selected.length ? selected : opts);
+
+  function toggle(item: string) {
+    setLocal(l => l.includes(item) ? l.filter(x => x !== item) : [...l, item]);
+  }
+
+  return (
+    <div
+      style={{
+        position: "fixed", inset: 0, zIndex: 400,
+        background: "rgba(26,20,16,0.5)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        padding: "1rem",
+      }}
+    >
+      <div style={{
+        background: "var(--cream)", width: "100%", maxWidth: "420px",
+        border: "1px solid var(--warm-tan)",
+      }}>
+        {/* Header */}
+        <div style={{ padding: "1.5rem 1.8rem", borderBottom: "1px solid var(--warm-tan)" }}>
+          <p style={{
+            fontFamily: "var(--font-jost)", fontWeight: 600,
+            fontSize: "0.62rem", letterSpacing: "0.22em", textTransform: "uppercase",
+            color: "#C4440A", marginBottom: "0.3rem"
+          }}>
+            {garmentLabel}
+          </p>
+          <h3 style={{
+            fontFamily: "var(--font-cormorant)", fontStyle: "italic", fontWeight: 500,
+            fontSize: "1.4rem", color: "#1A1A18",
+          }}>
+            What&apos;s included in this listing?
+          </h3>
+        </div>
+
+        {/* Checkboxes */}
+        <div style={{ padding: "1.5rem 1.8rem", display: "flex", flexDirection: "column", gap: "0.9rem" }}>
+          {opts.map(item => (
+            <label
+              key={item}
+              onClick={() => toggle(item)}
+              style={{ display: "flex", alignItems: "center", gap: "0.85rem", cursor: "pointer" }}
+            >
+              <div style={{
+                width: "20px", height: "20px", borderRadius: "3px", flexShrink: 0,
+                border: `1.5px solid ${local.includes(item) ? "#C4440A" : "var(--warm-tan)"}`,
+                background: local.includes(item) ? "rgba(196,68,10,0.1)" : "transparent",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                transition: "all 0.15s",
+              }}>
+                {local.includes(item) && (
+                  <span style={{ color: "#C4440A", fontSize: "0.75rem", fontWeight: 700 }}>✓</span>
+                )}
+              </div>
+              <span style={{
+                fontFamily: "var(--font-jost)", fontWeight: local.includes(item) ? 600 : 500,
+                fontSize: "0.88rem", color: "#1A1A18", letterSpacing: "0.02em"
+              }}>
+                {item}
+              </span>
+            </label>
+          ))}
+        </div>
+
+        {/* Footer */}
+        <div style={{ padding: "1.2rem 1.8rem", borderTop: "1px solid var(--warm-tan)" }}>
+          <button
+            onClick={() => onConfirm(local)}
+            style={{
+              width: "100%", padding: "0.9rem", background: "#C4440A",
+              border: "none", cursor: "pointer",
+              fontFamily: "var(--font-jost)", fontWeight: 700,
+              fontSize: "0.72rem", letterSpacing: "0.2em", textTransform: "uppercase",
+              color: "var(--cream)", transition: "opacity 0.2s",
+            }}
+            onMouseOver={e => (e.currentTarget.style.opacity = "0.85")}
+            onMouseOut={e => (e.currentTarget.style.opacity = "1")}
+          >
+            Confirm
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 // ── Shared styles ─────────────────────────────────────────────────────────────
 const label: React.CSSProperties = {
@@ -155,15 +256,17 @@ export default function NewListingPage() {
     rentPrice: "", maxRentalDays: "14", depositPercent: "40",
     us_size: "",
   });
-  const [occasions, setOccasions]         = useState<string[]>([]);
+  const [occasions, setOccasions]           = useState<string[]>([]);
   const [embellishments, setEmbellishments] = useState<string[]>([]);
-  const [included, setIncluded]           = useState<string[]>([]);
+  const [included, setIncluded]             = useState<string[]>([]);
+  const [includedModalOpen, setIncludedModalOpen] = useState(false);
+  const [identifyOpen, setIdentifyOpen]           = useState(false);
   const [saving, setSaving]               = useState(false);
   const [publishing, setPublishing]       = useState(false);
   const [error, setError]                 = useState("");
+  const [fieldErrors, setFieldErrors]     = useState<Record<string, string>>({});
 
   const sizeOptions = form.garmentType === "sherwani" ? MENS_SIZES : WOMENS_SIZES;
-  const includedOpts = INCLUDED_OPTS[form.garmentType] || INCLUDED_OPTS.default;
 
   function setF(k: string) {
     return (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
@@ -195,8 +298,29 @@ export default function NewListingPage() {
   }
 
   async function saveOrPublish(status: "draft" | "active") {
-    status === "draft" ? setSaving(true) : setPublishing(true);
     setError("");
+    setFieldErrors({});
+
+    // Validate required fields for publish (drafts are more lenient)
+    if (status === "active") {
+      const errs: Record<string, string> = {};
+      if (!form.title.trim())       errs.title       = "Please complete this field before publishing";
+      if (!form.garmentType)        errs.garmentType  = "Please complete this field before publishing";
+      if (!form.condition)          errs.condition    = "Please complete this field before publishing";
+      if (!form.price)              errs.price        = "Please complete this field before publishing";
+      if (!form.us_size)            errs.us_size      = "Please complete this field before publishing";
+      if (photos.length === 0)      errs.photos       = "Add at least one photo before publishing";
+
+      if (Object.keys(errs).length > 0) {
+        setFieldErrors(errs);
+        // Scroll to first error
+        const firstKey = Object.keys(errs)[0];
+        document.getElementById(`field-${firstKey}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+        return;
+      }
+    }
+
+    status === "draft" ? setSaving(true) : setPublishing(true);
 
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { setError("You must be logged in."); setSaving(false); setPublishing(false); return; }
@@ -243,7 +367,7 @@ export default function NewListingPage() {
         <div style={{ display: "flex", flexDirection: "column", gap: "0" }}>
 
           {/* ── Photos ─────────────────────────────────────────── */}
-          <section>
+          <section id="field-photos">
             <p style={sectionHead}>Photos</p>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "0.75rem" }} className="photo-grid">
               {Array.from({ length: 8 }).map((_, i) => (
@@ -256,7 +380,27 @@ export default function NewListingPage() {
                 />
               ))}
             </div>
-            <p style={hint}>First photo is the cover image. Up to 8 photos. Drag to reorder coming soon.</p>
+            {fieldErrors.photos
+              ? <p style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.75rem", color: "#C4440A", marginTop: "0.5rem" }}>{fieldErrors.photos}</p>
+              : <p style={hint}>First photo is the cover image. Up to 8 photos. Drag to reorder coming soon.</p>
+            }
+            {/* AI identify link */}
+            <button
+              type="button"
+              onClick={() => setIdentifyOpen(true)}
+              style={{
+                marginTop: "0.75rem", background: "none", border: "none", cursor: "pointer", padding: 0,
+                fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.75rem",
+                letterSpacing: "0.06em", color: "#C4440A",
+                textDecoration: "underline", textUnderlineOffset: "3px",
+                display: "flex", alignItems: "center", gap: "0.35rem",
+                transition: "opacity 0.2s"
+              }}
+              onMouseOver={e => (e.currentTarget.style.opacity = "0.7")}
+              onMouseOut={e => (e.currentTarget.style.opacity = "1")}
+            >
+              ✦ Not sure what you have? Let AI identify it →
+            </button>
           </section>
 
           <div style={divider} />
@@ -266,27 +410,61 @@ export default function NewListingPage() {
             <p style={sectionHead}>Item details</p>
             <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
 
-              <div>
+              <div id="field-title">
                 <label style={label}>Title</label>
-                <input required style={inp} value={form.title} onChange={setF("title")} placeholder="e.g. Red Bridal Lehenga with Gold Zari Embroidery" maxLength={80} />
-                <p style={hint}>{80 - form.title.length} characters remaining</p>
+                <input style={inp} value={form.title} onChange={setF("title")} placeholder="e.g. Red Bridal Lehenga with Gold Zari Embroidery" maxLength={80} />
+                {fieldErrors.title
+                  ? <p style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.75rem", color: "#C4440A", marginTop: "0.3rem" }}>{fieldErrors.title}</p>
+                  : <p style={hint}>{80 - form.title.length} characters remaining</p>
+                }
               </div>
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.2rem" }}>
-                <div>
+                <div id="field-garmentType">
                   <label style={label}>Garment type</label>
-                  <select required style={selectStyle} value={form.garmentType}
-                    onChange={e => { setForm(f => ({ ...f, garmentType: e.target.value })); setIncluded([]); }}>
+                  <select style={selectStyle} value={form.garmentType}
+                    onChange={e => {
+                      const val = e.target.value;
+                      setForm(f => ({ ...f, garmentType: val }));
+                      setIncluded([]);
+                      if (val) setIncludedModalOpen(true);
+                    }}>
                     <option value="">Select type</option>
                     {GARMENT_TYPES.map(g => <option key={g.value} value={g.value}>{g.label}</option>)}
                   </select>
+                  {/* Included summary — only shown after modal has been confirmed */}
+                  {form.garmentType && included.length > 0 && (
+                    <p style={{
+                      fontFamily: "var(--font-jost)", fontWeight: 500,
+                      fontSize: "0.75rem", color: "#1A1A18", marginTop: "0.5rem", lineHeight: 1.5
+                    }}>
+                      Includes: {included.join(", ")} —{" "}
+                      <button
+                        type="button"
+                        onClick={() => setIncludedModalOpen(true)}
+                        style={{
+                          background: "none", border: "none", cursor: "pointer", padding: 0,
+                          fontFamily: "var(--font-jost)", fontWeight: 700, fontSize: "0.75rem",
+                          color: "#C4440A", textDecoration: "underline", textUnderlineOffset: "3px"
+                        }}
+                      >
+                        Edit
+                      </button>
+                    </p>
+                  )}
+                  {fieldErrors.garmentType && (
+                    <p style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.75rem", color: "#C4440A", marginTop: "0.3rem" }}>{fieldErrors.garmentType}</p>
+                  )}
                 </div>
-                <div>
+                <div id="field-condition">
                   <label style={label}>Condition</label>
-                  <select required style={selectStyle} value={form.condition} onChange={setF("condition")}>
+                  <select style={selectStyle} value={form.condition} onChange={setF("condition")}>
                     <option value="">Select condition</option>
                     {CONDITIONS.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
                   </select>
+                  {fieldErrors.condition && (
+                    <p style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.75rem", color: "#C4440A", marginTop: "0.3rem" }}>{fieldErrors.condition}</p>
+                  )}
                 </div>
               </div>
 
@@ -332,7 +510,7 @@ export default function NewListingPage() {
               </div>
 
               {/* US Size */}
-              <div>
+              <div id="field-us_size">
                 <label style={label}>US Size</label>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
                   {sizeOptions.map(s => (
@@ -350,37 +528,13 @@ export default function NewListingPage() {
                     </button>
                   ))}
                 </div>
-                <p style={hint}>
-                  {form.garmentType === "sherwani" ? "Men's chest size in inches" : "Women's US dress size"}
-                </p>
+                {fieldErrors.us_size
+                  ? <p style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.75rem", color: "#C4440A", marginTop: "0.3rem" }}>{fieldErrors.us_size}</p>
+                  : <p style={hint}>{form.garmentType === "sherwani" ? "Men's chest size in inches" : "Women's US dress size"}</p>
+                }
               </div>
 
-              {/* What's included */}
-              {includedOpts.length > 0 && (
-                <div>
-                  <label style={label}>What&apos;s included</label>
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "0.5rem 1rem" }}>
-                    {includedOpts.map(item => (
-                      <label key={item} style={{ display: "flex", alignItems: "center", gap: "0.5rem", cursor: "pointer" }}>
-                        <div
-                          onClick={() => toggleArr(included, item, setIncluded)}
-                          style={{
-                            width: "18px", height: "18px", borderRadius: "2px", flexShrink: 0,
-                            border: `1px solid ${included.includes(item) ? "#C4440A" : "var(--warm-tan)"}`,
-                            background: included.includes(item) ? "rgba(196,68,10,0.1)" : "transparent",
-                            display: "flex", alignItems: "center", justifyContent: "center",
-                            cursor: "pointer", fontSize: "0.7rem", color: "#C4440A"
-                          }}>
-                          {included.includes(item) ? "✓" : ""}
-                        </div>
-                        <span style={{ fontFamily: "var(--font-jost)", fontWeight: 500, fontSize: "0.82rem", color: "#1A1A18" }}>
-                          {item}
-                        </span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              )}
+              {/* What's included — managed via modal, summary shown under garment type */}
 
               {/* Dry clean toggle */}
               <div style={{ display: "flex", alignItems: "center", gap: "0.85rem" }}>
@@ -413,7 +567,7 @@ export default function NewListingPage() {
                 <textarea
                   value={form.description} onChange={setF("description")}
                   rows={5} maxLength={1000}
-                  placeholder="Describe the item — its history, how it fits, any flaws, what makes it special…"
+                  placeholder="Describe the item — include fabric details, embellishments (zari, mirror work, beadwork), condition notes, any flaws or repairs, and note if any pieces are missing from the set"
                   style={{ ...inp, border: "1px solid var(--warm-tan)", borderBottom: undefined, padding: "0.75rem", resize: "none" }}
                 />
                 <p style={hint}>{1000 - form.description.length} characters remaining</p>
@@ -440,9 +594,22 @@ export default function NewListingPage() {
             <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.2rem" }}>
-                <div>
+                <div id="field-price">
                   <label style={label}>Sale price ($)</label>
                   <input type="number" min="1" step="0.01" style={inp} value={form.price} onChange={setF("price")} placeholder="450" />
+                  {fieldErrors.price && (
+                    <p style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.75rem", color: "#C4440A", marginTop: "0.3rem" }}>{fieldErrors.price}</p>
+                  )}
+                  <AIPricingSuggestion
+                    garmentType={form.garmentType}
+                    condition={form.condition}
+                    fabric={form.fabric}
+                    embellishments={embellishments}
+                    brand={form.brand}
+                    onApply={(salePrice, rentPrice) => {
+                      setForm(f => ({ ...f, price: salePrice, rentPrice, isRental: true }));
+                    }}
+                  />
                 </div>
                 <div>
                   <label style={label}>Original / retail price ($) <span style={{ opacity: 0.5 }}>(optional)</span></label>
@@ -553,6 +720,37 @@ export default function NewListingPage() {
           </p>
         </div>
       </div>
+
+      {/* AI Identify panel */}
+      {identifyOpen && (
+        <AIIdentifyPanel
+          onClose={() => setIdentifyOpen(false)}
+          onApply={(result) => {
+            setForm(f => ({
+              ...f,
+              garmentType: result.garmentType || f.garmentType,
+              fabric: result.fabric || f.fabric,
+              brand: result.designerStyle || f.brand,
+            }));
+            if (result.embellishments?.length) setEmbellishments(result.embellishments);
+            // If garment type changed, open the included modal
+            if (result.garmentType && result.garmentType !== form.garmentType) {
+              setIncluded([]);
+              setIncludedModalOpen(true);
+            }
+            setIdentifyOpen(false);
+          }}
+        />
+      )}
+
+      {/* What's Included modal */}
+      {includedModalOpen && form.garmentType && (
+        <IncludedModal
+          garmentType={form.garmentType}
+          selected={included}
+          onConfirm={(items) => { setIncluded(items); setIncludedModalOpen(false); }}
+        />
+      )}
 
       <style>{`
         @media (max-width: 640px) {
