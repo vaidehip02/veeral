@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 
 // ── Placeholder — replace with Supabase fetch using listingId ─────────────────
@@ -49,7 +48,7 @@ const rowBetween: React.CSSProperties = {
   display: "flex", justifyContent: "space-between", alignItems: "baseline",
 };
 
-export default function CheckoutPage({ params }: { params: { listingId: string } }) {
+export default function CheckoutPage({ params: _params }: { params: { listingId: string } }) {
   const router = useRouter();
   const sp = useSearchParams();
   const isRental   = sp.get("type") === "rent";

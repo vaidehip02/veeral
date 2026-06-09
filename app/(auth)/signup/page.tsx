@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
-import { useRouter } from "next/navigation";
+
 import SocialAuth from "@/components/auth/SocialAuth";
 
 type Role = "buyer" | "seller";
@@ -35,7 +35,6 @@ const labelStyle = {
 };
 
 export default function SignupPage() {
-  const router = useRouter();
   const supabase = createClient();
 
   const [role, setRole] = useState<Role>("buyer");

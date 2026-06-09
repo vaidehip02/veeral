@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 
@@ -28,7 +29,7 @@ const ORDER = {
   deposit: 1800,
 };
 
-export default function SuccessPage() {
+function SuccessContent() {
   const sp         = useSearchParams();
   const isRental   = sp.get("isRental") === "true";
   const days       = Number(sp.get("days") || 0);
@@ -232,5 +233,17 @@ export default function SuccessPage() {
 
       </div>
     </div>
+  );
+}
+
+export default function SuccessPage() {
+  return (
+    <Suspense fallback={
+      <div style={{ background: "var(--cream)", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <p style={{ fontFamily: "var(--font-jost)", color: "var(--muted)", fontSize: "0.85rem", letterSpacing: "0.1em" }}>Loading…</p>
+      </div>
+    }>
+      <SuccessContent />
+    </Suspense>
   );
 }

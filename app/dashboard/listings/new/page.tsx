@@ -320,7 +320,7 @@ export default function NewListingPage() {
       }
     }
 
-    status === "draft" ? setSaving(true) : setPublishing(true);
+    if (status === "draft") { setSaving(true); } else { setPublishing(true); }
 
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { setError("You must be logged in."); setSaving(false); setPublishing(false); return; }
@@ -614,7 +614,7 @@ export default function NewListingPage() {
                 <div>
                   <label style={label}>Original / retail price ($) <span style={{ opacity: 0.5 }}>(optional)</span></label>
                   <input type="number" min="1" step="0.01" style={inp} value={form.originalPrice} onChange={setF("originalPrice")} placeholder="1200" />
-                  <p style={hint}>Shows "You save $X" to buyers</p>
+                  <p style={hint}>Shows &ldquo;You save $X&rdquo; to buyers</p>
                 </div>
               </div>
 

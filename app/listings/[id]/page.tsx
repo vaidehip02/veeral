@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import PhotoGallery from "@/components/listings/PhotoGallery";
 import SellerCard from "@/components/listings/SellerCard";
-import SizeChart, { WOMENS_SIZES, MENS_SIZES, GarmentType } from "@/components/listings/SizeChart";
+import SizeChart, { WOMENS_SIZES, MENS_SIZES } from "@/components/listings/SizeChart";
 import RentalDrawer from "@/components/listings/RentalDrawer";
 import Reviews from "@/components/listings/Reviews";
 
@@ -95,7 +95,7 @@ function Stars({ rating }: { rating: number }) {
 }
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
-export default function ListingPage({ params }: { params: { id: string } }) {
+export default function ListingPage({ params: _params }: { params: { id: string } }) {
   const [saved, setSaved] = useState(false);
   const [rentalOpen, setRentalOpen] = useState(false);
   const [sizeChartOpen, setSizeChartOpen] = useState(false);

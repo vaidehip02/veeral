@@ -50,7 +50,7 @@ function fmtDate(iso: string) {
   return new Date(iso).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
 }
 
-export default function Reviews({ listingId, reviews = PLACEHOLDER_REVIEWS, canReview }: ReviewsProps) {
+export default function Reviews({ listingId: _listingId, reviews = PLACEHOLDER_REVIEWS, canReview }: ReviewsProps) {
   const [showForm, setShowForm] = useState(false);
   const [rating, setRating] = useState(5);
   const [hovered, setHovered] = useState(0);
