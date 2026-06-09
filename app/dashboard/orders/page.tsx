@@ -14,14 +14,15 @@ interface MockOrder {
   status: OrderStatus;
   tracking?: string;
   carrier?: string;
+  color: string; // placeholder bg color until real images load
 }
 
 const MOCK_ORDERS: MockOrder[] = [
-  { id: "1043", buyer: "ananya_m", item: "Banarasi Silk Lehenga", size: "S (US 4)", date: "Jun 9, 2026", total: 18000, status: "pending_shipment" },
-  { id: "1042", buyer: "priya_k22", item: "Zardozi Saree — Ivory & Gold", size: "Free size", date: "Jun 7, 2026", total: 12000, status: "shipped", tracking: "BD123456789IN", carrier: "Blue Dart" },
-  { id: "1040", buyer: "sana.rents", item: "Indo-Western Sherwani Set", size: "M (US 38)", date: "Jun 2, 2026", total: 9500, status: "delivered" },
-  { id: "1038", buyer: "meera_b", item: "Embroidered Chanderi Saree", size: "Free size", date: "May 28, 2026", total: 7800, status: "completed" },
-  { id: "1035", buyer: "divya.looks", item: "Silk Sharara Set", size: "M (US 8)", date: "May 20, 2026", total: 8600, status: "completed" },
+  { id: "1043", buyer: "ananya_m",   item: "Banarasi Silk Lehenga",       size: "S (US 4)",   date: "Jun 9, 2026",  total: 18000, status: "pending_shipment", color: "#D4C5B5" },
+  { id: "1042", buyer: "priya_k22",  item: "Zardozi Saree — Ivory & Gold", size: "Free size",  date: "Jun 7, 2026",  total: 12000, status: "shipped",          tracking: "BD123456789IN", carrier: "Blue Dart", color: "#E8DDD3" },
+  { id: "1040", buyer: "sana.rents", item: "Indo-Western Sherwani Set",    size: "M (US 38)",  date: "Jun 2, 2026",  total: 9500,  status: "delivered",        color: "#C8B9A8" },
+  { id: "1038", buyer: "meera_b",    item: "Embroidered Chanderi Saree",   size: "Free size",  date: "May 28, 2026", total: 7800,  status: "completed",        color: "#DDD0C5" },
+  { id: "1035", buyer: "divya.looks",item: "Silk Sharara Set",             size: "M (US 8)",   date: "May 20, 2026", total: 8600,  status: "completed",        color: "#CFC0AF" },
 ];
 
 const STATUS_CONFIG: Record<OrderStatus, { label: string; bg: string; text: string }> = {
@@ -75,7 +76,7 @@ export default function OrdersPage() {
         <div
           className="hidden md:grid"
           style={{
-            gridTemplateColumns: "80px 1fr 1fr 100px 90px 120px 140px",
+            gridTemplateColumns: "48px 80px 1fr 1fr 100px 90px 120px 140px",
             padding: "0.6rem 1rem",
             borderBottom: "2px solid var(--warm-tan)",
             fontFamily: "var(--font-jost)", fontWeight: 600,
@@ -83,6 +84,7 @@ export default function OrdersPage() {
             color: "var(--muted)", opacity: 0.6,
           }}
         >
+          <span />
           <span>Order</span>
           <span>Item</span>
           <span>Buyer</span>
@@ -106,11 +108,18 @@ export default function OrdersPage() {
               <div
                 className="hidden md:grid items-center"
                 style={{
-                  gridTemplateColumns: "80px 1fr 1fr 100px 90px 120px 140px",
-                  padding: "1rem 1rem",
+                  gridTemplateColumns: "48px 80px 1fr 1fr 100px 90px 120px 140px",
+                  padding: "0.75rem 1rem",
                   gap: "0.5rem",
                 }}
               >
+                {/* Thumbnail */}
+                <div style={{
+                  width: "40px", height: "40px", borderRadius: "2px",
+                  background: order.color, flexShrink: 0,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  overflow: "hidden",
+                }} />
                 <span style={{ fontFamily: "var(--font-jost)", fontSize: "0.75rem", color: "var(--muted)", opacity: 0.55 }}>
                   #{order.id}
                 </span>
@@ -168,7 +177,12 @@ export default function OrdersPage() {
 
               {/* Mobile card */}
               <div className="md:hidden" style={{ padding: "1rem" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "0.4rem" }}>
+                <div style={{ display: "flex", gap: "0.75rem", alignItems: "flex-start", marginBottom: "0.4rem" }}>
+                  <div style={{
+                    width: "48px", height: "48px", borderRadius: "2px",
+                    background: order.color, flexShrink: 0,
+                  }} />
+                  <div style={{ flex: 1 }}>
                   <p style={{ fontFamily: "var(--font-jost)", fontWeight: 500, fontSize: "0.85rem", color: "#1A1A18" }}>
                     {order.item}
                   </p>
@@ -179,13 +193,14 @@ export default function OrdersPage() {
                   }}>
                     {cfg.label}
                   </span>
+                  <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.72rem", color: "var(--muted)", opacity: 0.65, marginTop: "0.25rem", marginBottom: "0.25rem" }}>
+                    @{order.buyer} · {order.size} · {order.date}
+                  </p>
+                  <p style={{ fontFamily: "var(--font-cormorant)", fontStyle: "italic", fontSize: "1rem", color: "#1A1A18", marginBottom: "0.5rem" }}>
+                    ₹{order.total.toLocaleString()}
+                  </p>
+                  </div>
                 </div>
-                <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.72rem", color: "var(--muted)", opacity: 0.65, marginBottom: "0.25rem" }}>
-                  @{order.buyer} · {order.size} · {order.date}
-                </p>
-                <p style={{ fontFamily: "var(--font-cormorant)", fontStyle: "italic", fontSize: "1rem", color: "#1A1A18", marginBottom: "0.6rem" }}>
-                  ₹{order.total.toLocaleString()}
-                </p>
                 {order.status === "pending_shipment" && (
                   <button
                     onClick={() => setDrawer({ orderId: order.id, tracking: "", carrier: "Blue Dart" })}

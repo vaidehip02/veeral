@@ -12,6 +12,7 @@ interface MockRental {
   totalDays: number;
   deposit: number;
   returnByDate: Date;
+  color: string;
 }
 
 const TODAY = new Date("2026-06-09");
@@ -27,6 +28,7 @@ const MOCK_RENTALS: MockRental[] = [
     totalDays: 8,
     deposit: 10000,
     returnByDate: new Date("2026-06-14"),
+    color: "#D4C5B5",
   },
   {
     id: "R198",
@@ -38,6 +40,7 @@ const MOCK_RENTALS: MockRental[] = [
     totalDays: 6,
     deposit: 8000,
     returnByDate: new Date("2026-06-11"),
+    color: "#B8BFCC",
   },
   {
     id: "R195",
@@ -49,6 +52,7 @@ const MOCK_RENTALS: MockRental[] = [
     totalDays: 8,
     deposit: 6000,
     returnByDate: new Date("2026-06-07"),
+    color: "#E8DDD3",
   },
 ];
 
@@ -127,6 +131,11 @@ export default function RentalsPage() {
                 }}
               >
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "0.75rem" }}>
+                  {/* Thumbnail */}
+                  <div style={{
+                    width: "56px", height: "56px", borderRadius: "2px",
+                    background: rental.color, flexShrink: 0,
+                  }} />
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "0.5rem", flexWrap: "wrap" }}>
                       <p style={{
