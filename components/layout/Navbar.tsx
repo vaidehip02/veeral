@@ -12,12 +12,12 @@ const NAV_LINKS = [
 ];
 
 const DROPDOWN_ITEMS = [
-  { label: "My Profile",   href: "/profile",          icon: "👤" },
-  { label: "Dashboard",    href: "/dashboard",         icon: "⊞",  sellerOnly: true },
-  { label: "My Orders",    href: "/orders",            icon: "📦" },
-  { label: "My Rentals",   href: "/rentals",           icon: "📅" },
-  { label: "Saved Items",  href: "/saved",             icon: "♡" },
-  { label: "Settings",     href: "/settings",          icon: "⚙" },
+  { label: "My Profile",   href: "/profile",           sellerOnly: false },
+  { label: "Dashboard",    href: "/dashboard",         sellerOnly: true  },
+  { label: "My Orders",    href: "/orders",            sellerOnly: false },
+  { label: "My Rentals",   href: "/rentals",           sellerOnly: false },
+  { label: "Saved Items",  href: "/saved",             sellerOnly: false },
+  { label: "Settings",     href: "/settings",          sellerOnly: false },
 ];
 
 function getInitials(user: User): string {
@@ -248,7 +248,7 @@ export default function Navbar() {
                           href={item.href}
                           onClick={() => setDropdownOpen(false)}
                           style={{
-                            display: "flex", alignItems: "center", gap: "0.75rem",
+                            display: "block",
                             padding: "0.6rem 1.1rem",
                             fontFamily: "var(--font-jost)", fontWeight: 400,
                             fontSize: "0.8rem", color: "var(--muted)",
@@ -263,9 +263,6 @@ export default function Navbar() {
                             e.currentTarget.style.color = "var(--muted)";
                           }}
                         >
-                          <span style={{ fontSize: "0.85rem", opacity: 0.7, width: "16px", textAlign: "center" }}>
-                            {item.icon}
-                          </span>
                           {item.label}
                         </Link>
                       ))}
@@ -276,7 +273,7 @@ export default function Navbar() {
                       <button
                         onClick={handleSignOut}
                         style={{
-                          display: "flex", alignItems: "center", gap: "0.75rem",
+                          display: "block",
                           width: "100%", padding: "0.6rem 1.1rem",
                           fontFamily: "var(--font-jost)", fontWeight: 400,
                           fontSize: "0.8rem", color: "var(--muted)",
@@ -292,7 +289,6 @@ export default function Navbar() {
                           e.currentTarget.style.color = "var(--muted)";
                         }}
                       >
-                        <span style={{ fontSize: "0.85rem", opacity: 0.7, width: "16px", textAlign: "center" }}>↪</span>
                         Sign out
                       </button>
                     </div>
@@ -391,14 +387,13 @@ export default function Navbar() {
                   href={item.href}
                   onClick={() => setMenuOpen(false)}
                   style={{
-                    display: "flex", alignItems: "center", gap: "0.75rem",
                     fontFamily: "var(--font-jost)", fontWeight: 400,
                     fontSize: "0.78rem", color: "var(--muted)",
                     textDecoration: "none", padding: "0.65rem 0",
                     borderBottom: "1px solid var(--warm-tan)",
+                    display: "block",
                   }}
                 >
-                  <span style={{ fontSize: "0.85rem", opacity: 0.6, width: "16px", textAlign: "center" }}>{item.icon}</span>
                   {item.label}
                 </Link>
               ))}
@@ -406,14 +401,13 @@ export default function Navbar() {
               <button
                 onClick={handleSignOut}
                 style={{
-                  display: "flex", alignItems: "center", gap: "0.75rem",
                   fontFamily: "var(--font-jost)", fontWeight: 400,
                   fontSize: "0.78rem", color: "var(--muted)",
                   background: "none", border: "none", cursor: "pointer",
                   padding: "0.65rem 0", textAlign: "left",
+                  display: "block",
                 }}
               >
-                <span style={{ fontSize: "0.85rem", opacity: 0.6, width: "16px", textAlign: "center" }}>↪</span>
                 Sign out
               </button>
             </>
