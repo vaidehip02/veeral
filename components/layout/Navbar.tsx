@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { createClient } from "@/lib/supabase/client";
+import type { User } from "@supabase/supabase-js";
 
 const NAV_LINKS = [
   { label: "Browse", href: "/listings" },
@@ -11,6 +13,26 @@ const NAV_LINKS = [
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+  const supabase = createClient();
+
+  useEffect(() => {
+    // Get initial session
+    supabase.auth.getUser().then(({ data }) => setUser(data.user));
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    setUser(null);
+    window.location.href = "/";
+  };
 
   return (
     <nav style={{ background: "var(--cream)", position: "sticky", top: 0, zIndex: 50 }}>
@@ -79,15 +101,15 @@ export default function Navbar() {
               </svg>
             </button>
 
-            {/* Wishlist icon */}
-            <Link href="/dashboard" aria-label="Saved" style={{ color: "var(--muted)" }}>
+            {/* Wishlist / dashboard icon */}
+            <Link href="/dashboard" aria-label="Dashboard" style={{ color: "var(--muted)" }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                 <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
               </svg>
             </Link>
 
-            {/* Account icon */}
-            <Link href="/login" aria-label="Account" style={{ color: "var(--muted)" }}>
+            {/* Account icon — links to dashboard if logged in, login if not */}
+            <Link href={user ? "/dashboard" : "/login"} aria-label="Account" style={{ color: "var(--muted)" }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
               </svg>
@@ -96,19 +118,37 @@ export default function Navbar() {
             {/* Divider */}
             <div style={{ width: "1px", height: "16px", background: "var(--warm-tan)" }} />
 
-            <Link
-              href="/signup"
-              style={{
-                fontFamily: "var(--font-jost)", fontWeight: 600,
-                fontSize: "0.88rem", letterSpacing: "0.18em", textTransform: "uppercase",
-                color: "var(--cream)", background: "var(--burnt-orange)",
-                padding: "0.5rem 1.1rem", textDecoration: "none", transition: "opacity 0.2s"
-              }}
-              onMouseOver={e => (e.currentTarget.style.opacity = "0.8")}
-              onMouseOut={e => (e.currentTarget.style.opacity = "1")}
-            >
-              Sign up
-            </Link>
+            {/* Auth button — sign out if logged in, sign up if not */}
+            {user ? (
+              <button
+                onClick={handleSignOut}
+                style={{
+                  fontFamily: "var(--font-jost)", fontWeight: 600,
+                  fontSize: "0.88rem", letterSpacing: "0.18em", textTransform: "uppercase",
+                  color: "var(--muted)", background: "transparent",
+                  border: "1px solid var(--warm-tan)",
+                  padding: "0.5rem 1.1rem", cursor: "pointer", transition: "opacity 0.2s"
+                }}
+                onMouseOver={e => (e.currentTarget.style.opacity = "0.7")}
+                onMouseOut={e => (e.currentTarget.style.opacity = "1")}
+              >
+                Sign out
+              </button>
+            ) : (
+              <Link
+                href="/signup"
+                style={{
+                  fontFamily: "var(--font-jost)", fontWeight: 600,
+                  fontSize: "0.88rem", letterSpacing: "0.18em", textTransform: "uppercase",
+                  color: "var(--cream)", background: "var(--burnt-orange)",
+                  padding: "0.5rem 1.1rem", textDecoration: "none", transition: "opacity 0.2s"
+                }}
+                onMouseOver={e => (e.currentTarget.style.opacity = "0.8")}
+                onMouseOut={e => (e.currentTarget.style.opacity = "1")}
+              >
+                Sign up
+              </Link>
+            )}
           </div>
 
           {/* Mobile hamburger */}
@@ -129,7 +169,7 @@ export default function Navbar() {
           background: "var(--cream)", borderBottom: "1px solid var(--warm-tan)",
           padding: "1.2rem 1.5rem", display: "flex", flexDirection: "column", gap: "1.2rem"
         }}>
-          {[...NAV_LINKS, { label: "Log in", href: "/login" }, { label: "Sign up", href: "/signup" }].map((l) => (
+          {NAV_LINKS.map((l) => (
             <Link
               key={l.href}
               href={l.href}
@@ -143,6 +183,58 @@ export default function Navbar() {
               {l.label}
             </Link>
           ))}
+          {user ? (
+            <>
+              <Link
+                href="/dashboard"
+                onClick={() => setMenuOpen(false)}
+                style={{
+                  fontFamily: "var(--font-jost)", fontWeight: 500,
+                  fontSize: "0.7rem", letterSpacing: "0.2em",
+                  textTransform: "uppercase", color: "var(--muted)", textDecoration: "none"
+                }}
+              >
+                Dashboard
+              </Link>
+              <button
+                onClick={() => { setMenuOpen(false); handleSignOut(); }}
+                style={{
+                  fontFamily: "var(--font-jost)", fontWeight: 500,
+                  fontSize: "0.7rem", letterSpacing: "0.2em",
+                  textTransform: "uppercase", color: "var(--muted)",
+                  background: "none", border: "none", cursor: "pointer",
+                  padding: 0, textAlign: "left"
+                }}
+              >
+                Sign out
+              </button>
+            </>
+          ) : (
+            <>
+              <Link
+                href="/login"
+                onClick={() => setMenuOpen(false)}
+                style={{
+                  fontFamily: "var(--font-jost)", fontWeight: 500,
+                  fontSize: "0.7rem", letterSpacing: "0.2em",
+                  textTransform: "uppercase", color: "var(--muted)", textDecoration: "none"
+                }}
+              >
+                Log in
+              </Link>
+              <Link
+                href="/signup"
+                onClick={() => setMenuOpen(false)}
+                style={{
+                  fontFamily: "var(--font-jost)", fontWeight: 500,
+                  fontSize: "0.7rem", letterSpacing: "0.2em",
+                  textTransform: "uppercase", color: "var(--muted)", textDecoration: "none"
+                }}
+              >
+                Sign up
+              </Link>
+            </>
+          )}
         </div>
       )}
     </nav>
