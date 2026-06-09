@@ -40,8 +40,8 @@ function getDisplayName(user: User): string {
   );
 }
 
-function getAvatar(user: User): string | null {
-  return user.user_metadata?.avatar_url || user.user_metadata?.picture || null;
+function getAvatar(_user: User): string | null {
+  return null; // always use initials, never pull profile photo
 }
 
 export default function Navbar() {
