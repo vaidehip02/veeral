@@ -3,7 +3,7 @@
 import Link from "next/link";
 
 const STAT_CARDS = [
-  { label: "Total earnings", value: "₹42,500", sub: "across 12 sales" },
+  { label: "Total earnings", value: "$42,500", sub: "across 12 sales" },
   { label: "Active listings", value: "8", sub: "3 for rent, 5 for sale" },
   { label: "Pending orders", value: "2", sub: "awaiting shipment" },
   { label: "Active rentals", value: "1", sub: "return due Jun 14" },
@@ -19,7 +19,7 @@ const ACTIVITY = [
   { icon: "✦", label: "New order received", detail: "Ananya M. purchased Banarasi Silk Lehenga", time: "2h ago", color: "#2D6A4F" },
   { icon: "↗", label: "Item shipped", detail: "Tracking added for Zardozi Saree (Order #1042)", time: "Yesterday", color: "var(--burnt-orange)" },
   { icon: "↩", label: "Rental returned", detail: "Mirror-work Lehenga returned in good condition", time: "2 days ago", color: "#1D4E89" },
-  { icon: "₹", label: "Payout received", detail: "₹8,100 deposited to your bank account", time: "3 days ago", color: "#2D6A4F" },
+  { icon: "$", label: "Payout received", detail: "$8,100 deposited to your bank account", time: "3 days ago", color: "#2D6A4F" },
   { icon: "✦", label: "New order received", detail: "Priya K. purchased Indo-Western Sherwani", time: "4 days ago", color: "#2D6A4F" },
 ];
 

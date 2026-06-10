@@ -13,6 +13,7 @@ interface MockRental {
   deposit: number;
   returnByDate: Date;
   color: string;
+  lateFeePerDay: number; // daily late fee once overdue
 }
 
 const TODAY = new Date("2026-06-09");
@@ -24,11 +25,12 @@ const MOCK_RENTALS: MockRental[] = [
     renter: "sana.rents",
     rentalStart: "Jun 6, 2026",
     rentalEnd: "Jun 14, 2026",
-    dailyRate: 4000,
+    dailyRate: 400,
     totalDays: 8,
-    deposit: 10000,
+    deposit: 1000,
     returnByDate: new Date("2026-06-14"),
     color: "#D4C5B5",
+    lateFeePerDay: 60,
   },
   {
     id: "R198",
@@ -36,11 +38,12 @@ const MOCK_RENTALS: MockRental[] = [
     renter: "kavitha_m",
     rentalStart: "Jun 5, 2026",
     rentalEnd: "Jun 11, 2026",
-    dailyRate: 3200,
+    dailyRate: 320,
     totalDays: 6,
-    deposit: 8000,
+    deposit: 800,
     returnByDate: new Date("2026-06-11"),
     color: "#B8BFCC",
+    lateFeePerDay: 50,
   },
   {
     id: "R195",
@@ -48,11 +51,12 @@ const MOCK_RENTALS: MockRental[] = [
     renter: "riya.wears",
     rentalStart: "May 30, 2026",
     rentalEnd: "Jun 7, 2026",
-    dailyRate: 2500,
+    dailyRate: 250,
     totalDays: 8,
-    deposit: 6000,
+    deposit: 600,
     returnByDate: new Date("2026-06-07"),
     color: "#E8DDD3",
+    lateFeePerDay: 40,
   },
 ];
 
@@ -155,12 +159,12 @@ export default function RentalsPage() {
                       </span>
                     </div>
 
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-1" style={{ marginBottom: "0.75rem" }}>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-1" style={{ marginBottom: daysLeft < 0 ? "0.5rem" : "0.75rem" }}>
                       {[
                         { k: "Renter", v: `@${rental.renter}` },
                         { k: "Period", v: `${rental.rentalStart} – ${rental.rentalEnd}` },
-                        { k: "Daily rate", v: `₹${rental.dailyRate.toLocaleString()}/day` },
-                        { k: "Deposit held", v: `₹${rental.deposit.toLocaleString()}` },
+                        { k: "Daily rate", v: `$${rental.dailyRate.toLocaleString()}/day` },
+                        { k: "Deposit held", v: `$${rental.deposit.toLocaleString()}` },
                       ].map(({ k, v }) => (
                         <div key={k}>
                           <p style={{
@@ -178,6 +182,28 @@ export default function RentalsPage() {
                         </div>
                       ))}
                     </div>
+
+                    {/* Late fee line — only shown when overdue */}
+                    {daysLeft < 0 && (
+                      <div style={{
+                        display: "inline-flex", alignItems: "center", gap: "0.5rem",
+                        background: "#FDECEA", padding: "0.35rem 0.75rem",
+                        marginBottom: "0.75rem",
+                      }}>
+                        <span style={{
+                          fontFamily: "var(--font-jost)", fontWeight: 700,
+                          fontSize: "0.58rem", letterSpacing: "0.14em", textTransform: "uppercase",
+                          color: "#C62828",
+                        }}>
+                          Late fee accruing
+                        </span>
+                        <span style={{
+                          fontFamily: "var(--font-jost)", fontSize: "0.75rem", color: "#C62828",
+                        }}>
+                          ${rental.lateFeePerDay}/day · <strong>${(Math.abs(daysLeft) * rental.lateFeePerDay).toLocaleString()} total so far</strong>
+                        </span>
+                      </div>
+                    )}
                   </div>
 
                   <button
@@ -234,7 +260,7 @@ export default function RentalsPage() {
               fontFamily: "var(--font-jost)", fontSize: "0.78rem",
               color: "var(--muted)", opacity: 0.7, marginBottom: "1.75rem"
             }}>
-              {drawer.item} · Deposit: ₹{drawer.deposit.toLocaleString()}
+              {drawer.item} · Deposit: ${drawer.deposit.toLocaleString()}
             </p>
 
             {/* Condition */}
@@ -279,7 +305,7 @@ export default function RentalsPage() {
                     letterSpacing: "0.18em", textTransform: "uppercase",
                     color: "var(--muted)", marginBottom: "0.5rem"
                   }}>
-                    Deduction amount (₹)
+                    Deduction amount ($)
                   </p>
                   <input
                     type="number"

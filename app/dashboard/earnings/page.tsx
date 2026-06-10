@@ -3,9 +3,9 @@
 import Link from "next/link";
 
 const SUMMARY = [
-  { label: "Total earned to date", value: "₹42,500", sub: "across 12 transactions" },
-  { label: "Pending payouts", value: "₹18,900", sub: "2 sales awaiting release" },
-  { label: "Veeral commission", value: "₹4,250", sub: "10% platform fee" },
+  { label: "Total earned to date", value: "$42,500", sub: "across 12 transactions" },
+  { label: "Pending payouts", value: "$18,900", sub: "2 sales awaiting release" },
+  { label: "Veeral commission", value: "$4,250", sub: "10% platform fee" },
 ];
 
 const PAYOUT_HISTORY = [
@@ -150,19 +150,19 @@ export default function EarningsPage() {
                 fontFamily: "var(--font-cormorant)", fontStyle: "italic",
                 fontSize: "0.95rem", color: "#1A1A18", textAlign: "right"
               }}>
-                ₹{row.gross.toLocaleString()}
+                ${row.gross.toLocaleString()}
               </span>
               <span style={{
                 fontFamily: "var(--font-jost)", fontSize: "0.78rem",
                 color: "#C62828", textAlign: "right"
               }}>
-                −₹{row.commission.toLocaleString()}
+                −${row.commission.toLocaleString()}
               </span>
               <span style={{
                 fontFamily: "var(--font-cormorant)", fontStyle: "italic",
                 fontSize: "1rem", fontWeight: 500, color: "#2D6A4F", textAlign: "right"
               }}>
-                ₹{row.net.toLocaleString()}
+                ${row.net.toLocaleString()}
               </span>
             </div>
 
@@ -179,10 +179,10 @@ export default function EarningsPage() {
                 </div>
                 <div style={{ textAlign: "right" }}>
                   <p style={{ fontFamily: "var(--font-cormorant)", fontStyle: "italic", fontSize: "1rem", color: "#2D6A4F" }}>
-                    ₹{row.net.toLocaleString()}
+                    ${row.net.toLocaleString()}
                   </p>
                   <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.68rem", color: "#C62828" }}>
-                    −₹{row.commission.toLocaleString()} fee
+                    −${row.commission.toLocaleString()} fee
                   </p>
                 </div>
               </div>
@@ -213,19 +213,19 @@ export default function EarningsPage() {
             fontFamily: "var(--font-cormorant)", fontStyle: "italic",
             fontSize: "1rem", color: "#1A1A18", textAlign: "right", fontWeight: 500
           }}>
-            ₹{PAYOUT_HISTORY.reduce((s, r) => s + r.gross, 0).toLocaleString()}
+            ${PAYOUT_HISTORY.reduce((s, r) => s + r.gross, 0).toLocaleString()}
           </span>
           <span style={{
             fontFamily: "var(--font-jost)", fontSize: "0.82rem",
             color: "#C62828", textAlign: "right", fontWeight: 600
           }}>
-            −₹{PAYOUT_HISTORY.reduce((s, r) => s + r.commission, 0).toLocaleString()}
+            −${PAYOUT_HISTORY.reduce((s, r) => s + r.commission, 0).toLocaleString()}
           </span>
           <span style={{
             fontFamily: "var(--font-cormorant)", fontStyle: "italic",
             fontSize: "1.1rem", color: "#2D6A4F", textAlign: "right", fontWeight: 500
           }}>
-            ₹{PAYOUT_HISTORY.reduce((s, r) => s + r.net, 0).toLocaleString()}
+            ${PAYOUT_HISTORY.reduce((s, r) => s + r.net, 0).toLocaleString()}
           </span>
         </div>
       </div>

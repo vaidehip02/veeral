@@ -19,7 +19,7 @@ interface MockOrder {
 
 const MOCK_ORDERS: MockOrder[] = [
   { id: "1043", buyer: "ananya_m",   item: "Banarasi Silk Lehenga",       size: "S (US 4)",   date: "Jun 9, 2026",  total: 18000, status: "pending_shipment", color: "#D4C5B5" },
-  { id: "1042", buyer: "priya_k22",  item: "Zardozi Saree — Ivory & Gold", size: "Free size",  date: "Jun 7, 2026",  total: 12000, status: "shipped",          tracking: "BD123456789IN", carrier: "Blue Dart", color: "#E8DDD3" },
+  { id: "1042", buyer: "priya_k22",  item: "Zardozi Saree — Ivory & Gold", size: "Free size",  date: "Jun 7, 2026",  total: 12000, status: "shipped",          tracking: "1Z999AA10123456784", carrier: "UPS", color: "#E8DDD3" },
   { id: "1040", buyer: "sana.rents", item: "Indo-Western Sherwani Set",    size: "M (US 38)",  date: "Jun 2, 2026",  total: 9500,  status: "delivered",        color: "#C8B9A8" },
   { id: "1038", buyer: "meera_b",    item: "Embroidered Chanderi Saree",   size: "Free size",  date: "May 28, 2026", total: 7800,  status: "completed",        color: "#DDD0C5" },
   { id: "1035", buyer: "divya.looks",item: "Silk Sharara Set",             size: "M (US 8)",   date: "May 20, 2026", total: 8600,  status: "completed",        color: "#CFC0AF" },
@@ -41,6 +41,8 @@ interface ShipDrawerState {
 export default function OrdersPage() {
   const [orders, setOrders] = useState(MOCK_ORDERS);
   const [drawer, setDrawer] = useState<ShipDrawerState | null>(null);
+
+  const US_CARRIERS = ["USPS", "UPS", "FedEx", "Other"];
 
   const submitShipping = () => {
     if (!drawer || !drawer.tracking.trim()) return;
@@ -136,7 +138,7 @@ export default function OrdersPage() {
                   fontFamily: "var(--font-cormorant)", fontStyle: "italic",
                   fontSize: "1rem", color: "#1A1A18"
                 }}>
-                  ₹{order.total.toLocaleString()}
+                  ${order.total.toLocaleString()}
                 </span>
                 <span style={{ fontFamily: "var(--font-jost)", fontSize: "0.72rem", color: "var(--muted)", opacity: 0.6 }}>
                   {order.date}
@@ -153,7 +155,7 @@ export default function OrdersPage() {
                   </span>
                   {order.status === "pending_shipment" && (
                     <button
-                      onClick={() => setDrawer({ orderId: order.id, tracking: "", carrier: "Blue Dart" })}
+                      onClick={() => setDrawer({ orderId: order.id, tracking: "", carrier: "USPS" })}
                       style={{
                         fontFamily: "var(--font-jost)", fontWeight: 600,
                         fontSize: "0.6rem", letterSpacing: "0.12em", textTransform: "uppercase",
@@ -197,13 +199,13 @@ export default function OrdersPage() {
                     @{order.buyer} · {order.size} · {order.date}
                   </p>
                   <p style={{ fontFamily: "var(--font-cormorant)", fontStyle: "italic", fontSize: "1rem", color: "#1A1A18", marginBottom: "0.5rem" }}>
-                    ₹{order.total.toLocaleString()}
+                    ${order.total.toLocaleString()}
                   </p>
                   </div>
                 </div>
                 {order.status === "pending_shipment" && (
                   <button
-                    onClick={() => setDrawer({ orderId: order.id, tracking: "", carrier: "Blue Dart" })}
+                    onClick={() => setDrawer({ orderId: order.id, tracking: "", carrier: "USPS" })}
                     style={{
                       fontFamily: "var(--font-jost)", fontWeight: 600,
                       fontSize: "0.65rem", letterSpacing: "0.14em", textTransform: "uppercase",
@@ -261,7 +263,7 @@ export default function OrdersPage() {
                   outline: "none",
                 }}
               >
-                {["Blue Dart", "DTDC", "Delhivery", "India Post", "Ekart", "Amazon Shipping", "Other"].map(c => (
+                {US_CARRIERS.map(c => (
                   <option key={c} value={c}>{c}</option>
                 ))}
               </select>

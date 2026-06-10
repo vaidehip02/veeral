@@ -30,7 +30,7 @@ const STATUS_COLORS: Record<Status, { bg: string; text: string; label: string }>
   active: { bg: "#E8F5E9", text: "#2D6A4F", label: "Active" },
   draft:  { bg: "#F5F5F5", text: "#666",    label: "Draft" },
   sold:   { bg: "#FFF3E0", text: "#E65100", label: "Sold" },
-  rented: { bg: "#E3F2FD", text: "#1D4E89", label: "Rented" },
+  rented: { bg: "#E3F2FD", text: "#1D4E89", label: "Active (on rent)" },
 };
 
 const FILTERS: { label: string; value: Status | "all" }[] = [
@@ -158,14 +158,14 @@ export default function ListingsPage() {
                       fontFamily: "var(--font-cormorant)", fontStyle: "italic",
                       fontSize: "1.1rem", color: "#1A1A18"
                     }}>
-                      ₹{listing.price.toLocaleString()}
+                      ${listing.price.toLocaleString()}
                     </span>
                     {listing.rent_price && (
                       <span style={{
                         fontFamily: "var(--font-jost)", fontSize: "0.7rem",
                         color: "var(--muted)", opacity: 0.65
                       }}>
-                        · ₹{listing.rent_price.toLocaleString()}/day rent
+                        · ${listing.rent_price.toLocaleString()}/day rent
                       </span>
                     )}
                   </div>
