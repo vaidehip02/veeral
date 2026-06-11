@@ -20,8 +20,6 @@ const SELLER = {
   follower_count: 214,
   following_count: 38,
   verified: true,
-  instagram: "priya.sharma",
-  pinterest: "priyasharma",
 };
 
 type ListingType = "sale" | "rent" | "both";
@@ -291,46 +289,6 @@ export default function SellerProfilePage({
             </svg>
             Member since {SELLER.member_since}
           </span>
-          {SELLER.instagram && (
-            <a
-              href={`https://instagram.com/${SELLER.instagram}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{
-                fontFamily: "var(--font-jost)", fontSize: "0.78rem",
-                color: "var(--muted)", opacity: 0.65, textDecoration: "none",
-                display: "flex", alignItems: "center", gap: "0.35rem",
-                transition: "opacity 0.15s",
-              }}
-              onMouseOver={e => (e.currentTarget.style.opacity = "1")}
-              onMouseOut={e => (e.currentTarget.style.opacity = "0.65")}
-            >
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="0.5" fill="currentColor"/>
-              </svg>
-              @{SELLER.instagram}
-            </a>
-          )}
-          {SELLER.pinterest && (
-            <a
-              href={`https://pinterest.com/${SELLER.pinterest}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{
-                fontFamily: "var(--font-jost)", fontSize: "0.78rem",
-                color: "var(--muted)", opacity: 0.65, textDecoration: "none",
-                display: "flex", alignItems: "center", gap: "0.35rem",
-                transition: "opacity 0.15s",
-              }}
-              onMouseOver={e => (e.currentTarget.style.opacity = "1")}
-              onMouseOut={e => (e.currentTarget.style.opacity = "0.65")}
-            >
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M12 2C6.48 2 2 6.48 2 12c0 4.24 2.65 7.86 6.39 9.29-.09-.78-.17-1.98.04-2.83.18-.77 1.22-5.17 1.22-5.17s-.31-.62-.31-1.54c0-1.45.84-2.53 1.88-2.53.89 0 1.32.67 1.32 1.47 0 .9-.57 2.23-.87 3.47-.25 1.04.52 1.89 1.53 1.89 1.84 0 3.08-2.37 3.08-5.17 0-2.14-1.43-3.63-3.48-3.63-2.37 0-3.76 1.78-3.76 3.61 0 .71.27 1.48.61 1.9.07.08.08.15.06.23-.06.25-.2.79-.22.91-.04.14-.12.18-.28.11-1.03-.48-1.68-1.98-1.68-3.19 0-2.59 1.88-4.97 5.42-4.97 2.85 0 5.06 2.03 5.06 4.74 0 2.83-1.78 5.1-4.25 5.1-.83 0-1.61-.43-1.88-.94l-.51 1.91c-.18.7-.68 1.57-1.01 2.1.76.24 1.57.36 2.4.36 5.52 0 10-4.48 10-10S17.52 2 12 2z"/>
-              </svg>
-              {SELLER.pinterest}
-            </a>
-          )}
         </div>
 
         {/* Stats row */}
