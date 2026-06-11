@@ -135,56 +135,10 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
         </aside>
 
         {/* ── Main content ── */}
-        <main style={{ flex: 1, padding: "2.5rem 2rem 6rem", minWidth: 0 }}>
+        <main style={{ flex: 1, padding: "2.5rem 2rem 4rem", minWidth: 0 }}>
           {children}
         </main>
       </div>
-
-      {/* ── Mobile bottom tab bar ── */}
-      <nav
-        className="md:hidden fixed bottom-0 left-0 right-0"
-        style={{
-          background: "var(--cream)", borderTop: "1px solid var(--warm-tan)",
-          display: "flex", zIndex: 40,
-        }}
-      >
-        {TABS.map((tab) => {
-          const active = isActive(tab.href);
-          return (
-            <Link
-              key={tab.href}
-              href={tab.href}
-              style={{
-                flex: 1, display: "flex", flexDirection: "column",
-                alignItems: "center", justifyContent: "center",
-                gap: "0.2rem", padding: "0.55rem 0",
-                color: active ? "var(--burnt-orange)" : "var(--muted)",
-                textDecoration: "none", fontSize: "0.52rem",
-                fontFamily: "var(--font-jost)", fontWeight: active ? 600 : 400,
-                letterSpacing: "0.06em", textTransform: "uppercase",
-                position: "relative",
-              }}
-            >
-              <span style={{ opacity: active ? 1 : 0.55, position: "relative" }}>
-                {tab.icon}
-                {"badge" in tab && tab.badge ? (
-                  <span style={{
-                    position: "absolute", top: "-4px", right: "-6px",
-                    minWidth: "14px", height: "14px", borderRadius: "7px",
-                    background: "var(--burnt-orange)", color: "var(--cream)",
-                    fontFamily: "var(--font-jost)", fontWeight: 700,
-                    fontSize: "0.5rem", display: "flex",
-                    alignItems: "center", justifyContent: "center",
-                  }}>
-                    {tab.badge}
-                  </span>
-                ) : null}
-              </span>
-              {tab.label}
-            </Link>
-          );
-        })}
-      </nav>
     </div>
   );
 }
