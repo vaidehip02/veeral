@@ -39,13 +39,13 @@ const LISTINGS: MockListing[] = [
   { id: "2",  title: "Zardozi Saree — Ivory & Gold",            price: 980,  rent_price: 65,  type: "both", bg: "#E8DDD3", category: "saree"   },
   { id: "3",  title: "Pink Anarkali Kurta Set",                 price: 320,                   type: "sale", bg: "#DDD0C5", category: "kurta"   },
   { id: "4",  title: "Mirror-work Lehenga (Bridal)",            price: 3800, rent_price: 160, type: "both", bg: "#C8B9A8", category: "lehenga" },
-  { id: "5",  title: "Silk Sharara Set — Sage Green",           price: 540,                   type: "sale", bg: "#CFC0AF", category: "salwar"  },
+  { id: "5",  title: "Silk Sharara Set — Olive Green",          price: 540,                   type: "sale", bg: "#CFC0AF", category: "salwar"  },
   { id: "6",  title: "Blue Banarasi Silk Saree",                price: 1200,                  type: "sale", bg: "#C3B5A8", category: "saree"   },
   { id: "7",  title: "Sequin Lehenga — Midnight Blue",          price: 2200, rent_price: 95,  type: "both", bg: "#B8BFCC", category: "lehenga" },
   { id: "8",  title: "Embroidered Chanderi Saree",              price: 780,  rent_price: 45,  type: "both", bg: "#DDD5CA", category: "saree"   },
-  { id: "9",  title: "Ivory Sharara Set",                       price: 460,                   type: "sale", bg: "#CABDB1", category: "salwar"  },
+  { id: "9",  title: "Cream Sharara Set",                       price: 460,                   type: "sale", bg: "#CABDB1", category: "salwar"  },
   { id: "10", title: "Gold Tissue Lehenga",                     price: 5100, rent_price: 200, type: "both", bg: "#E0DDD8", category: "lehenga" },
-  { id: "11", title: "Mauve Anarkali — Georgette",              price: 290,                   type: "sale", bg: "#D9C9C4", category: "kurta"   },
+  { id: "11", title: "Dusty Pink Anarkali — Georgette",         price: 290,                   type: "sale", bg: "#D9C9C4", category: "kurta"   },
   { id: "12", title: "Bridal Dupatta — Red & Gold",             price: 180,  rent_price: 30,  type: "rent", bg: "#E3D5CA", category: "other"   },
 ];
 
