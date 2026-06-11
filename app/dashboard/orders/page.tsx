@@ -18,11 +18,11 @@ interface MockOrder {
 }
 
 const MOCK_ORDERS: MockOrder[] = [
-  { id: "1043", buyer: "ananya_m",   item: "Banarasi Silk Lehenga",       size: "S (US 4)",   date: "Jun 9, 2026",  total: 18000, status: "pending_shipment", color: "#D4C5B5" },
-  { id: "1042", buyer: "priya_k22",  item: "Zardozi Saree — Ivory & Gold", size: "Free size",  date: "Jun 7, 2026",  total: 12000, status: "shipped",          tracking: "1Z999AA10123456784", carrier: "UPS", color: "#E8DDD3" },
-  { id: "1040", buyer: "sana.rents", item: "Indo-Western Sherwani Set",    size: "M (US 38)",  date: "Jun 2, 2026",  total: 9500,  status: "delivered",        color: "#C8B9A8" },
-  { id: "1038", buyer: "meera_b",    item: "Embroidered Chanderi Saree",   size: "Free size",  date: "May 28, 2026", total: 7800,  status: "completed",        color: "#DDD0C5" },
-  { id: "1035", buyer: "divya.looks",item: "Silk Sharara Set",             size: "M (US 8)",   date: "May 20, 2026", total: 8600,  status: "completed",        color: "#CFC0AF" },
+  { id: "1043", buyer: "ananya_m",   item: "Banarasi Silk Lehenga",       size: "S (US 4)",   date: "Jun 9, 2026",  total: 4500, status: "pending_shipment", color: "#D4C5B5" },
+  { id: "1042", buyer: "priya_k22",  item: "Zardozi Saree — Ivory & Gold", size: "Free size",  date: "Jun 7, 2026",  total: 980,  status: "shipped",          tracking: "1Z999AA10123456784", carrier: "UPS", color: "#E8DDD3" },
+  { id: "1040", buyer: "sana.rents", item: "Indo-Western Sherwani Set",    size: "M (US 38)",  date: "Jun 2, 2026",  total: 540,  status: "delivered",        color: "#C8B9A8" },
+  { id: "1038", buyer: "meera_b",    item: "Embroidered Chanderi Saree",   size: "Free size",  date: "May 28, 2026", total: 780,  status: "completed",        color: "#DDD0C5" },
+  { id: "1035", buyer: "divya.looks",item: "Silk Sharara Set",             size: "M (US 8)",   date: "May 20, 2026", total: 860,  status: "completed",        color: "#CFC0AF" },
 ];
 
 const STATUS_CONFIG: Record<OrderStatus, { label: string; bg: string; text: string }> = {
