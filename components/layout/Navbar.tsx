@@ -48,8 +48,17 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
+  const [customBanner, setCustomBanner] = useState<{ text: string; active: boolean } | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const supabase = createClient();
+
+  // Read admin-set announcement banner from localStorage
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("veeral_banner");
+      if (raw) setCustomBanner(JSON.parse(raw));
+    } catch { /* ignore */ }
+  }, []);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setUser(data.user));
@@ -94,7 +103,9 @@ export default function Navbar() {
         fontFamily: "var(--font-jost)", fontWeight: 500,
         fontSize: "0.88rem", letterSpacing: "0.18em"
       }}>
-        New listings added daily — discover South Asian fashion ✦
+        {customBanner?.active && customBanner.text
+          ? customBanner.text
+          : "New listings added daily — discover South Asian fashion ✦"}
       </div>
 
       {/* ── Main bar ──────────────────────────────────────────── */}

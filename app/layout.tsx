@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { Cormorant_Garamond, Cormorant, Jost } from "next/font/google";
 import "./globals.css";
-import Navbar from "@/components/layout/Navbar";
-import Footer from "@/components/layout/Footer";
+import StorefrontChrome from "@/components/layout/StorefrontChrome";
 
 const cormorant = Cormorant_Garamond({
   subsets: ["latin"],
@@ -40,9 +39,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${cormorant.variable} ${cormorantLogo.variable} ${jost.variable}`}>
       <body className="antialiased" style={{ fontFamily: "var(--font-jost), sans-serif" }}>
-        <Navbar />
-        <main className="min-h-screen">{children}</main>
-        <Footer />
+        <StorefrontChrome>{children}</StorefrontChrome>
       </body>
     </html>
   );
