@@ -1,8 +1,9 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 
-const PROTECTED_ROUTES = ["/dashboard", "/listings/new", "/checkout", "/onboarding"];
-const AUTH_ROUTES = ["/login", "/signup", "/forgot-password"];
+const PROTECTED_ROUTES = ["/dashboard", "/listings/new", "/checkout", "/onboarding", "/account"];
+const AUTH_ROUTES      = ["/login", "/signup", "/forgot-password"];
+const ADMIN_EMAIL      = "vaidehip02@berkeley.edu"; // only this account can access /admin
 
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({ request });
@@ -31,6 +32,13 @@ export async function middleware(request: NextRequest) {
   const isProtected = PROTECTED_ROUTES.some((r) =>
     request.nextUrl.pathname.startsWith(r)
   );
+
+  // Admin guard — must be logged in AND have the owner email
+  if (request.nextUrl.pathname.startsWith("/admin")) {
+    if (!user || user.email !== ADMIN_EMAIL) {
+      return NextResponse.redirect(new URL("/", request.url));
+    }
+  }
 
   // Redirect unauthenticated users away from protected routes
   if (isProtected && !user) {
