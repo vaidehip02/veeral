@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createElement } from "react";
 import { stripe } from "@/lib/stripe";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { sendEmail } from "@/lib/email/send";
+import BuyerReceipt from "@/lib/email/templates/BuyerReceipt";
+import SellerSaleAlert from "@/lib/email/templates/SellerSaleAlert";
 import Stripe from "stripe";
 
 export async function POST(req: NextRequest) {
@@ -22,11 +27,18 @@ export async function POST(req: NextRequest) {
     case "payment_intent.succeeded": {
       const pi = event.data.object as Stripe.PaymentIntent;
       const orderId = pi.metadata.order_id;
+
       if (orderId) {
+        // 1. Mark order as paid
         await supabase
           .from("orders")
           .update({ status: "paid", stripe_payment_intent_id: pi.id })
           .eq("id", orderId);
+
+        // 2. Send transactional emails (fire-and-forget — never block the webhook response)
+        sendOrderEmails(orderId).catch((err) =>
+          console.error("[webhook] Email send error:", err)
+        );
       }
       break;
     }
@@ -47,4 +59,111 @@ export async function POST(req: NextRequest) {
   }
 
   return NextResponse.json({ received: true });
+}
+
+// ── Email helper ──────────────────────────────────────────────────────────────
+/**
+ * Fetches order details from Supabase and sends two branded emails:
+ *   1. A receipt to the buyer
+ *   2. A "you made a sale" alert to the seller
+ *
+ * Uses the service-role admin client so we can read auth.users emails
+ * without a logged-in session (webhook runs server-side with no cookies).
+ */
+async function sendOrderEmails(orderId: string): Promise<void> {
+  const admin = createAdminClient();
+
+  // ── Fetch the order with listing + seller profile ────────────────────────
+  const { data: order, error: orderErr } = await admin
+    .from("orders")
+    .select(`
+      id,
+      buyer_id,
+      seller_id,
+      amount,
+      platform_fee,
+      seller_payout,
+      created_at,
+      listing:listings ( title ),
+      seller:seller_profiles ( display_name )
+    `)
+    .eq("id", orderId)
+    .single();
+
+  if (orderErr || !order) {
+    console.error("[email] Could not fetch order:", orderId, orderErr);
+    return;
+  }
+
+  // ── Resolve buyer + seller auth emails via admin API ─────────────────────
+  const [buyerRes, sellerRes] = await Promise.all([
+    admin.auth.admin.getUserById(order.buyer_id),
+    admin.auth.admin.getUserById(order.seller_id),  // seller_profiles.id = auth.users.id
+  ]);
+
+  const buyerEmail  = buyerRes.data.user?.email;
+  const sellerEmail = sellerRes.data.user?.email;
+
+  const buyerName  = buyerRes.data.user?.user_metadata?.full_name  ?? buyerEmail  ?? "Valued customer";
+  const sellerName = sellerRes.data.user?.user_metadata?.full_name ?? sellerEmail ?? "Seller";
+
+  // ── Resolve listing title (Supabase join returns an object or array) ──────
+  const listing = Array.isArray(order.listing) ? order.listing[0] : order.listing;
+  const itemTitle = (listing as { title?: string } | null)?.title ?? "Your item";
+
+  const sellerProfile = Array.isArray(order.seller) ? order.seller[0] : order.seller;
+  const sellerDisplayName = (sellerProfile as { display_name?: string } | null)?.display_name ?? sellerName;
+
+  // ── Shared values ─────────────────────────────────────────────────────────
+  const shortId   = orderId.slice(0, 8).toUpperCase();
+  const orderDate = new Date(order.created_at).toLocaleDateString("en-US", {
+    year: "numeric", month: "long", day: "numeric",
+  });
+
+  // Amounts stored as cents in DB — convert to dollars for display
+  const grossAmount  = order.amount        / 100;
+  const platformFee  = order.platform_fee  / 100;
+  const sellerPayout = order.seller_payout / 100;
+  // Shipping is not yet in the DB — hardcode $18 to match the checkout page calculation
+  // TODO: store shipping cost in the orders table and read it here
+  const shippingCost = 18;
+  const total        = grossAmount + shippingCost;
+
+  // ── 1. Buyer receipt ──────────────────────────────────────────────────────
+  if (buyerEmail) {
+    await sendEmail({
+      to: buyerEmail,
+      subject: `Your Veeral receipt — Order #${shortId}`,
+      react: createElement(BuyerReceipt, {
+        orderId:           `#${shortId}`,
+        buyerName,
+        itemTitle,
+        itemPrice:         grossAmount,
+        shippingCost,
+        total,
+        sellerDisplayName,
+        orderDate,
+        // shippingAddress omitted until checkout stores it in the orders table
+      }),
+    });
+  }
+
+  // ── 2. Seller sale alert ──────────────────────────────────────────────────
+  if (sellerEmail) {
+    await sendEmail({
+      to: sellerEmail,
+      subject: `You made a sale on Veeral — ${itemTitle}`,
+      react: createElement(SellerSaleAlert, {
+        orderId:          `#${shortId}`,
+        sellerName:       sellerDisplayName,
+        itemTitle,
+        grossAmount,
+        platformFee,
+        sellerPayout,
+        buyerDisplayName: buyerName,
+        orderDate,
+        // shippingAddress omitted until checkout stores it in the orders table
+      }),
+    });
+  }
 }
