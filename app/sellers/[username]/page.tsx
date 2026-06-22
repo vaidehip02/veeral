@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import { createClient } from "@/lib/supabase/client";
 
 // ─── Mock data ────────────────────────────────────────────────────────────────
 
@@ -118,6 +119,15 @@ function Stars({ rating, size = "sm" }: { rating: number; size?: "sm" | "lg" }) 
 
 type FilterTab = "all" | "sale" | "rent";
 
+interface LiveReview {
+  id: string;
+  rating: number;
+  comment: string;
+  created_at: string;
+  reviewer: { username: string } | null;
+  listing: { title: string } | null;
+}
+
 export default function SellerProfilePage({
   params,
 }: {
@@ -127,6 +137,50 @@ export default function SellerProfilePage({
   const [followerCount, setFollowerCount] = useState(SELLER.follower_count);
   const [activeTab, setActiveTab] = useState<FilterTab>("all");
   const [showAllReviews, setShowAllReviews] = useState(false);
+  const [liveReviews, setLiveReviews] = useState<LiveReview[] | null>(null);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase
+      .from("reviews")
+      .select(`
+        id, rating, comment, created_at,
+        reviewer:reviewer_id ( username:id ),
+        listing:order_id ( title:listing_id )
+      `)
+      .eq("seller_id", SELLER.username) // will be replaced when seller data is live
+      .order("created_at", { ascending: false })
+      .then(({ data }) => {
+        if (data && data.length > 0) {
+          // Supabase returns joined rows as arrays — normalise to single objects
+          const normalised: LiveReview[] = (data as unknown[]).map((r: unknown) => {
+            const row = r as Record<string, unknown>;
+            const rev = Array.isArray(row.reviewer) ? row.reviewer[0] : row.reviewer;
+            const lst = Array.isArray(row.listing)  ? row.listing[0]  : row.listing;
+            return {
+              id:         row.id as string,
+              rating:     row.rating as number,
+              comment:    row.comment as string,
+              created_at: row.created_at as string,
+              reviewer:   rev ? { username: (rev as Record<string,string>).username } : null,
+              listing:    lst ? { title:    (lst as Record<string,string>).title    } : null,
+            };
+          });
+          setLiveReviews(normalised);
+        }
+      });
+  }, []);
+
+  // Use live reviews when available, fall back to mock
+  const activeReviews = liveReviews ?? REVIEWS.map(r => ({
+    id: r.id, rating: r.rating, comment: r.text, created_at: r.date,
+    reviewer: { username: r.buyer },
+    listing: { title: r.item },
+  }));
+
+  const avgRating = activeReviews.length > 0
+    ? Math.round((activeReviews.reduce((s, r) => s + r.rating, 0) / activeReviews.length) * 10) / 10
+    : SELLER.avg_rating;
 
   const handleFollow = () => {
     setFollowed(f => !f);
@@ -139,7 +193,7 @@ export default function SellerProfilePage({
     return true;
   });
 
-  const visibleReviews = showAllReviews ? REVIEWS : REVIEWS.slice(0, 3);
+  const visibleReviews = showAllReviews ? activeReviews : activeReviews.slice(0, 3);
 
   const TABS: { id: FilterTab; label: string }[] = [
     { id: "all",  label: "All" },
@@ -488,22 +542,22 @@ export default function SellerProfilePage({
                 fontSize: "3.5rem", fontWeight: 400, color: "#1A1A18",
                 lineHeight: 1, marginBottom: "0.3rem",
               }}>
-                {SELLER.avg_rating}
+                {avgRating}
               </p>
-              <Stars rating={SELLER.avg_rating} size="lg" />
+              <Stars rating={avgRating} size="lg" />
               <p style={{
                 fontFamily: "var(--font-jost)", fontSize: "0.68rem",
                 color: "var(--muted)", opacity: 0.55, marginTop: "0.3rem",
                 letterSpacing: "0.08em",
               }}>
-                {SELLER.review_count} reviews
+                {activeReviews.length} reviews
               </p>
             </div>
 
             <div style={{ flex: 1, minWidth: "160px" }}>
               {[5, 4, 3, 2, 1].map(star => {
-                const count = REVIEWS.filter(r => Math.round(r.rating) === star).length;
-                const pct = REVIEWS.length > 0 ? (count / REVIEWS.length) * 100 : 0;
+                const count = activeReviews.filter(r => Math.round(r.rating) === star).length;
+                const pct = activeReviews.length > 0 ? (count / activeReviews.length) * 100 : 0;
                 return (
                   <div key={star} style={{ display: "flex", alignItems: "center", gap: "0.6rem", marginBottom: "0.3rem" }}>
                     <span style={{
@@ -555,7 +609,7 @@ export default function SellerProfilePage({
                       fontFamily: "var(--font-jost)", fontWeight: 600,
                       fontSize: "0.82rem", color: "#1A1A18", marginBottom: "0.25rem",
                     }}>
-                      @{review.buyer}
+                      @{review.reviewer?.username ?? "buyer"}
                     </p>
                     <Stars rating={review.rating} />
                   </div>
@@ -563,7 +617,7 @@ export default function SellerProfilePage({
                     fontFamily: "var(--font-jost)", fontSize: "0.7rem",
                     color: "var(--muted)", opacity: 0.5,
                   }}>
-                    {review.date}
+                    {new Date(review.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
                   </p>
                 </div>
 
@@ -572,22 +626,24 @@ export default function SellerProfilePage({
                   color: "var(--muted)", lineHeight: 1.75,
                   marginBottom: "0.5rem",
                 }}>
-                  {review.text}
+                  {review.comment}
                 </p>
 
-                <p style={{
-                  fontFamily: "var(--font-jost)", fontSize: "0.7rem",
-                  color: "var(--muted)", opacity: 0.5,
-                  letterSpacing: "0.04em",
-                }}>
-                  Purchased: {review.item}
-                </p>
+                {review.listing?.title && (
+                  <p style={{
+                    fontFamily: "var(--font-jost)", fontSize: "0.7rem",
+                    color: "var(--muted)", opacity: 0.5,
+                    letterSpacing: "0.04em",
+                  }}>
+                    Purchased: {review.listing.title}
+                  </p>
+                )}
               </div>
             ))}
           </div>
 
           {/* Show more / less */}
-          {REVIEWS.length > 3 && (
+          {activeReviews.length > 3 && (
             <button
               onClick={() => setShowAllReviews(v => !v)}
               style={{
@@ -604,7 +660,7 @@ export default function SellerProfilePage({
             >
               {showAllReviews
                 ? `Show less`
-                : `Show all ${REVIEWS.length} reviews`}
+                : `Show all ${activeReviews.length} reviews`}
             </button>
           )}
         </section>

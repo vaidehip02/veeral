@@ -45,10 +45,35 @@ export default function BuyerOrdersPage() {
   const [reviewDrawer, setReviewDrawer] = useState<ReviewDrawer | null>(null);
   const [submitted, setSubmitted]       = useState<Set<string>>(new Set());
 
-  const submitReview = () => {
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+
+  const submitReview = async () => {
     if (!reviewDrawer) return;
-    setSubmitted(prev => new Set(Array.from(prev).concat(reviewDrawer.orderId)));
-    setReviewDrawer(null);
+    setSubmitting(true);
+    setSubmitError(null);
+    try {
+      const res = await fetch("/api/reviews", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          order_id: reviewDrawer.orderId,
+          rating:   reviewDrawer.rating,
+          comment:  reviewDrawer.text,
+        }),
+      });
+      if (!res.ok) {
+        const { error } = await res.json();
+        setSubmitError(error ?? "Something went wrong. Please try again.");
+        return;
+      }
+      setSubmitted(prev => new Set(Array.from(prev).concat(reviewDrawer.orderId)));
+      setReviewDrawer(null);
+    } catch {
+      setSubmitError("Network error. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -239,20 +264,26 @@ export default function BuyerOrdersPage() {
               }}
             />
 
+            {submitError && (
+              <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.75rem", color: "#991B1B", marginBottom: "0.75rem" }}>
+                {submitError}
+              </p>
+            )}
+
             <div style={{ display: "flex", gap: "0.75rem" }}>
               <button
                 onClick={submitReview}
-                disabled={!reviewDrawer.text.trim()}
+                disabled={!reviewDrawer.text.trim() || submitting}
                 style={{
                   flex: 1, padding: "0.75rem",
                   fontFamily: "var(--font-jost)", fontWeight: 600,
                   fontSize: "0.68rem", letterSpacing: "0.16em", textTransform: "uppercase",
-                  background: reviewDrawer.text.trim() ? "var(--burnt-orange)" : "var(--warm-tan)",
-                  color: reviewDrawer.text.trim() ? "var(--cream)" : "var(--muted)",
-                  border: "none", cursor: reviewDrawer.text.trim() ? "pointer" : "not-allowed",
+                  background: reviewDrawer.text.trim() && !submitting ? "var(--burnt-orange)" : "var(--warm-tan)",
+                  color: reviewDrawer.text.trim() && !submitting ? "var(--cream)" : "var(--muted)",
+                  border: "none", cursor: reviewDrawer.text.trim() && !submitting ? "pointer" : "not-allowed",
                 }}
               >
-                Submit review
+                {submitting ? "Submitting…" : "Submit review"}
               </button>
               <button
                 onClick={() => setReviewDrawer(null)}
