@@ -8,12 +8,11 @@ interface RentalDrawerProps {
   title: string;
   pricePerDay: number;       // dollars
   salePrice: number;         // dollars — for deposit calc
+  depositPct?: number;       // 35–50, default 40
   maxDays: number;
   careInstructions?: string;
   onClose: () => void;
 }
-
-const DEPOSIT_RATE = 0.40;
 
 function formatPrice(n: number) {
   return `$${n.toLocaleString("en-US", { minimumFractionDigits: 0 })}`;
@@ -30,7 +29,7 @@ function fmtDate(d: Date) {
 }
 
 export default function RentalDrawer({
-  listingId, title, pricePerDay, salePrice, maxDays, careInstructions, onClose
+  listingId, title, pricePerDay, salePrice, depositPct = 40, maxDays, careInstructions, onClose
 }: RentalDrawerProps) {
   const router = useRouter();
   const [days, setDays] = useState(Math.min(3, maxDays));
@@ -41,7 +40,7 @@ export default function RentalDrawer({
   const startDate  = new Date();
   const returnDate = addDays(startDate, days);
   const rentalCost = pricePerDay * days;
-  const deposit    = Math.round(salePrice * DEPOSIT_RATE);
+  const deposit    = Math.round(salePrice * depositPct / 100);
   const totalDue   = rentalCost + deposit;
 
   function handleClose() {
@@ -53,7 +52,9 @@ export default function RentalDrawer({
     const params = new URLSearchParams({
       type: "rent",
       days: String(days),
+      startDate:  startDate.toISOString(),
       returnDate: returnDate.toISOString(),
+      depositPct: String(depositPct),
     });
     router.push(`/checkout/${listingId}?${params}`);
   }
@@ -205,7 +206,7 @@ export default function RentalDrawer({
             </div>
             <div style={rowStyle}>
               <span style={{ fontFamily: "var(--font-jost)", fontWeight: 500, fontSize: "0.88rem", color: "var(--muted)" }}>
-                Security deposit (40% of sale price, refundable)
+                Security deposit ({depositPct}% of sale price, refundable)
               </span>
               <span style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.88rem", color: "var(--dark)" }}>
                 {formatPrice(deposit)}

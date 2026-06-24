@@ -29,16 +29,26 @@ export async function POST(req: NextRequest) {
       const orderId = pi.metadata.order_id;
 
       if (orderId) {
-        // 1. Mark order as paid
-        await supabase
-          .from("orders")
-          .update({ status: "paid", stripe_payment_intent_id: pi.id })
-          .eq("id", orderId);
+        const piRole = pi.metadata.pi_role ?? "sale";
 
-        // 2. Send transactional emails (fire-and-forget — never block the webhook response)
-        sendOrderEmails(orderId).catch((err) =>
-          console.error("[webhook] Email send error:", err)
-        );
+        if (piRole === "deposit") {
+          // Deposit PI succeeded — mark deposit as captured, don't change order status yet
+          // (order status moves to "paid" when the rental_fee PI succeeds)
+          await supabase
+            .from("orders")
+            .update({ deposit_payment_intent_id: pi.id })
+            .eq("id", orderId);
+        } else {
+          // Sale or rental_fee PI succeeded — order is now fully paid
+          await supabase
+            .from("orders")
+            .update({ status: "paid", stripe_payment_intent_id: pi.id })
+            .eq("id", orderId);
+
+          sendOrderEmails(orderId).catch((err) =>
+            console.error("[webhook] Email send error:", err)
+          );
+        }
       }
       break;
     }

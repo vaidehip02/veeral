@@ -17,6 +17,7 @@ const LISTING = {
   price: 4500,      // USD cents — $45.00 ... actually store as dollars for display simplicity
   rent_price: 120,  // USD per day — $120/day
   rent_duration_days: 14,
+  deposit_pct: 40,
   type: "both" as "sale" | "rent" | "both",
   category: "lehenga" as "lehenga" | "saree" | "salwar_kameez" | "sherwani" | "other",
   condition: "like_new" as const,
@@ -504,6 +505,7 @@ export default function ListingPage({ params: _params }: { params: { id: string 
           title={l.title}
           pricePerDay={l.rent_price}
           salePrice={l.price}
+          depositPct={l.deposit_pct ?? 40}
           maxDays={l.rent_duration_days}
           careInstructions={l.care_instructions}
           onClose={() => setRentalOpen(false)}
