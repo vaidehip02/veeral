@@ -1,308 +1,365 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { Suspense, useEffect, useRef, useState, useCallback } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
+
+// ── Types ─────────────────────────────────────────────────────────────────────
+
+interface CounterpartyProfile {
+  username: string;
+  display_name: string;
+  avatar_url: string | null;
+}
+
+interface ConversationListing {
+  id: string;
+  title: string;
+  images: string[];
+}
+
+interface Conversation {
+  id: string;
+  counterpartyId: string;
+  counterparty: CounterpartyProfile | null;
+  listingId: string | null;
+  listing: ConversationListing | null;
+  orderId: string | null;
+  lastMessageAt: string | null;
+  lastMessagePreview: string | null;
+  myLastReadAt: string | null;
+  createdAt: string;
+}
 
 interface Message {
   id: string;
-  from: "buyer" | "seller";
-  text: string;
-  time: string;
+  conversation_id: string;
+  sender_id: string;
+  body: string;
+  created_at: string;
 }
 
-interface Thread {
-  id: string;
-  seller: string;
-  sellerInitial: string;
-  sellerBg: string;
-  lastMessage: string;
-  lastTime: string;
-  unread: number;
-  item: string;
-  messages: Message[];
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function formatTime(iso: string): string {
+  const d = new Date(iso);
+  const now = new Date();
+  const diffDays = Math.floor((now.getTime() - d.getTime()) / 86400000);
+  if (diffDays === 0) return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  if (diffDays === 1) return "Yesterday";
+  if (diffDays < 7) return d.toLocaleDateString([], { weekday: "short" });
+  return d.toLocaleDateString([], { month: "short", day: "numeric" });
 }
 
-const THREADS: Thread[] = [
-  {
-    id:"t1", seller:"priya_sharma", sellerInitial:"P", sellerBg:"#D4C5B5",
-    lastMessage:"Yes, it fits true to size! The lehenga has a drawstring waist so it's adjustable.",
-    lastTime:"2h ago", unread:2, item:"Red Bridal Lehenga with Gold Embroidery",
-    messages:[
-      { id:"m1", from:"buyer",  text:"Hi! I'm interested in the Red Bridal Lehenga. Does it fit true to size?", time:"Jun 9, 10:42 AM" },
-      { id:"m2", from:"seller", text:"Hi! Yes, it fits true to size — the lehenga has a drawstring waist so it's quite adjustable. What size are you usually?", time:"Jun 9, 11:05 AM" },
-      { id:"m3", from:"buyer",  text:"I'm usually a US 6. Would that work?", time:"Jun 9, 11:20 AM" },
-      { id:"m4", from:"seller", text:"Yes, it fits true to size! The lehenga has a drawstring waist so it's adjustable.", time:"Jun 9, 3:14 PM" },
-    ],
-  },
-  {
-    id:"t2", seller:"meera_b", sellerInitial:"M", sellerBg:"#CFC0AF",
-    lastMessage:"Of course! I can hold it for 24 hours if you'd like to think it over.",
-    lastTime:"Yesterday", unread:0, item:"Silk Sharara Set — Sage Green",
-    messages:[
-      { id:"m1", from:"buyer",  text:"Hi Meera, is this still available?", time:"Jun 8, 2:30 PM" },
-      { id:"m2", from:"seller", text:"Yes it is! Are you interested in buying or renting?", time:"Jun 8, 3:00 PM" },
-      { id:"m3", from:"buyer",  text:"Buying! Can you hold it for a day while I check measurements?", time:"Jun 8, 3:15 PM" },
-      { id:"m4", from:"seller", text:"Of course! I can hold it for 24 hours if you'd like to think it over.", time:"Jun 8, 4:02 PM" },
-    ],
-  },
-  {
-    id:"t3", seller:"kavitha_wears", sellerInitial:"K", sellerBg:"#DDD5CA",
-    lastMessage:"It was dry cleaned professionally before listing, so it's in great condition.",
-    lastTime:"3 days ago", unread:0, item:"Embroidered Chanderi Saree",
-    messages:[
-      { id:"m1", from:"buyer",  text:"Hi! Has the saree been dry cleaned recently?", time:"Jun 8, 9:00 AM" },
-      { id:"m2", from:"seller", text:"It was dry cleaned professionally before listing, so it's in great condition.", time:"Jun 8, 9:45 AM" },
-    ],
-  },
-];
+function isUnread(conv: Conversation): boolean {
+  if (!conv.lastMessageAt) return false;
+  if (!conv.myLastReadAt) return true;
+  return new Date(conv.lastMessageAt) > new Date(conv.myLastReadAt);
+}
+
+const A = {
+  accent: "#C4440A",
+  muted: "var(--muted)",
+  border: "var(--warm-tan)",
+  dark: "#1A1A18",
+};
+
+// ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function MessagesPage() {
-  const [threads, setThreads]           = useState(THREADS);
-  const [activeThread, setActiveThread] = useState<Thread | null>(null);
-  const [input, setInput]               = useState("");
-  const bottomRef = useRef<HTMLDivElement>(null);
+  return (
+    <Suspense fallback={null}>
+      <MessagesInner />
+    </Suspense>
+  );
+}
+
+function MessagesInner() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const threadParam = searchParams.get("thread");
+
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [activeId, setActiveId] = useState<string | null>(threadParam);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [draft, setDraft] = useState("");
+  const [sending, setSending] = useState(false);
+  const [loadingInbox, setLoadingInbox] = useState(true);
+  const [loadingThread, setLoadingThread] = useState(false);
+
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const supabase = createClient();
+
+  const scrollToBottom = useCallback(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, []);
+
+  // Load current user id
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => setCurrentUserId(data.user?.id ?? null));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Load inbox
+  const loadInbox = useCallback(async () => {
+    const res = await fetch("/api/conversations");
+    if (!res.ok) return;
+    const { conversations: data } = await res.json() as { conversations: Conversation[] };
+    setConversations(data ?? []);
+    setLoadingInbox(false);
+    if (!activeId && data?.length > 0) {
+      setActiveId(data[0].id);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => { loadInbox(); }, [loadInbox]);
+
+  // Load messages when active thread changes
+  const loadMessages = useCallback(async (convId: string) => {
+    setLoadingThread(true);
+    const res = await fetch(`/api/conversations/${convId}/messages`);
+    if (res.ok) {
+      const { messages: data } = await res.json() as { messages: Message[] };
+      setMessages(data ?? []);
+    }
+    setLoadingThread(false);
+    fetch(`/api/conversations/${convId}/read`, { method: "POST" }).then(() => {
+      setConversations(prev => prev.map(c =>
+        c.id === convId ? { ...c, myLastReadAt: new Date().toISOString() } : c
+      ));
+    });
+  }, []);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [activeThread?.messages]);
+    if (!activeId) return;
+    loadMessages(activeId);
+    router.replace(`/account/messages?thread=${activeId}`, { scroll: false });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeId]);
 
-  const openThread = (thread: Thread) => {
-    // Mark as read
-    setThreads(prev => prev.map(t => t.id === thread.id ? { ...t, unread: 0 } : t));
-    setActiveThread({ ...thread, unread: 0 });
-    setInput("");
-  };
+  useEffect(() => { scrollToBottom(); }, [messages, scrollToBottom]);
 
-  const sendMessage = () => {
-    if (!activeThread || !input.trim()) return;
-    const newMsg: Message = {
-      id: `m${Date.now()}`,
-      from: "buyer",
-      text: input.trim(),
-      time: "Just now",
-    };
-    const updated = { ...activeThread, messages: [...activeThread.messages, newMsg], lastMessage: input.trim(), lastTime: "Just now" };
-    setActiveThread(updated);
-    setThreads(prev => prev.map(t => t.id === updated.id ? updated : t));
-    setInput("");
-  };
+  // Realtime subscription
+  useEffect(() => {
+    if (!activeId) return;
+    const channel = supabase
+      .channel(`messages:${activeId}`)
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "messages", filter: `conversation_id=eq.${activeId}` },
+        (payload) => {
+          const newMsg = payload.new as Message;
+          setMessages(prev => prev.find(m => m.id === newMsg.id) ? prev : [...prev, newMsg]);
+          if (newMsg.sender_id !== currentUserId) {
+            fetch(`/api/conversations/${activeId}/read`, { method: "POST" }).then(() => {
+              setConversations(prev => prev.map(c =>
+                c.id === activeId
+                  ? { ...c, myLastReadAt: new Date().toISOString(), lastMessageAt: newMsg.created_at, lastMessagePreview: newMsg.body.slice(0, 80) }
+                  : c
+              ));
+            });
+          }
+        }
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeId, currentUserId]);
+
+  async function sendMessage() {
+    if (!draft.trim() || !activeId || sending) return;
+    setSending(true);
+    const body = draft.trim();
+    setDraft("");
+    const res = await fetch(`/api/conversations/${activeId}/messages`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ body }),
+    });
+    if (res.ok) {
+      const { message } = await res.json() as { message: Message };
+      setMessages(prev => prev.find(m => m.id === message.id) ? prev : [...prev, message]);
+      setConversations(prev =>
+        prev.map(c =>
+          c.id === activeId
+            ? { ...c, lastMessageAt: message.created_at, lastMessagePreview: body.slice(0, 80), myLastReadAt: new Date().toISOString() }
+            : c
+        ).sort((a, b) => (b.lastMessageAt ?? "").localeCompare(a.lastMessageAt ?? ""))
+      );
+    } else {
+      setDraft(body);
+    }
+    setSending(false);
+  }
+
+  const activeConv = conversations.find(c => c.id === activeId);
+  const totalUnread = conversations.filter(isUnread).length;
 
   return (
-    <div style={{ maxWidth: "860px" }}>
+    <div style={{ display: "flex", height: "calc(100vh - 140px)", minHeight: "500px", overflow: "hidden", margin: "-2.5rem -2rem -4rem", borderLeft: "1px solid var(--warm-tan)" }}>
 
-      {/* Header */}
-      <div style={{ marginBottom: "2rem" }}>
-        <h1 style={{
-          fontFamily: "var(--font-cormorant)", fontStyle: "italic", fontWeight: 400,
-          fontSize: "2rem", color: "#1A1A18", marginBottom: "0.25rem",
-        }}>
-          Messages
-        </h1>
-        <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.78rem", color: "var(--muted)", opacity: 0.65 }}>
-          {threads.reduce((s, t) => s + t.unread, 0)} unread
-        </p>
-      </div>
+      {/* ── Inbox list ── */}
+      <div style={{ width: "300px", flexShrink: 0, borderRight: `1px solid ${A.border}`, display: "flex", flexDirection: "column", background: "#fff" }}>
 
-      <div style={{ display: "flex", gap: "0", border: "1px solid var(--warm-tan)", background: "#fff", minHeight: "480px" }} className="messages-layout">
-
-        {/* Thread list */}
-        <div style={{
-          width: "280px", flexShrink: 0,
-          borderRight: "1px solid var(--warm-tan)",
-          overflowY: "auto",
-        }} className="thread-list">
-          {threads.map(thread => (
-            <button
-              key={thread.id}
-              onClick={() => openThread(thread)}
-              style={{
-                width: "100%", display: "flex", gap: "0.85rem",
-                alignItems: "flex-start", padding: "1rem 1.1rem",
-                background: activeThread?.id === thread.id ? "rgba(201,92,26,0.05)" : "transparent",
-                borderTop: "none", borderRight: "none",
-                borderLeft: activeThread?.id === thread.id ? "2px solid var(--burnt-orange)" : "2px solid transparent",
-                borderBottom: "1px solid var(--warm-tan)",
-                cursor: "pointer", textAlign: "left",
-                transition: "background 0.15s",
-              }}
-            >
-              {/* Avatar */}
-              <div style={{
-                width: "38px", height: "38px", borderRadius: "50%",
-                background: thread.sellerBg, flexShrink: 0,
-                display: "flex", alignItems: "center", justifyContent: "center",
-                fontFamily: "var(--font-cormorant)", fontStyle: "italic",
-                fontSize: "1.1rem", color: "var(--muted)", position: "relative",
-              }}>
-                {thread.sellerInitial}
-                {thread.unread > 0 && (
-                  <span style={{
-                    position: "absolute", top: "-2px", right: "-2px",
-                    width: "12px", height: "12px", borderRadius: "50%",
-                    background: "var(--burnt-orange)", border: "2px solid #fff",
-                  }} />
-                )}
-              </div>
-
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "0.15rem" }}>
-                  <p style={{
-                    fontFamily: "var(--font-jost)", fontWeight: thread.unread ? 700 : 500,
-                    fontSize: "0.8rem", color: "#1A1A18",
-                  }}>
-                    @{thread.seller}
-                  </p>
-                  <span style={{ fontFamily: "var(--font-jost)", fontSize: "0.62rem", color: "var(--muted)", opacity: 0.5, flexShrink: 0, marginLeft: "0.5rem" }}>
-                    {thread.lastTime}
-                  </span>
-                </div>
-                <p style={{
-                  fontFamily: "var(--font-jost)", fontSize: "0.68rem",
-                  color: "var(--muted)", opacity: 0.5,
-                  marginBottom: "0.25rem", letterSpacing: "0.02em",
-                }}>
-                  Re: {thread.item}
-                </p>
-                <p style={{
-                  fontFamily: "var(--font-jost)", fontSize: "0.72rem",
-                  color: thread.unread ? "#1A1A18" : "var(--muted)",
-                  opacity: thread.unread ? 0.85 : 0.6,
-                  overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-                  fontWeight: thread.unread ? 600 : 400,
-                }}>
-                  {thread.lastMessage}
-                </p>
-              </div>
-            </button>
-          ))}
+        <div style={{ padding: "1.5rem 1.25rem 1rem", borderBottom: `1px solid ${A.border}` }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
+            <h1 style={{ fontFamily: "var(--font-cormorant)", fontStyle: "italic", fontWeight: 400, fontSize: "1.5rem", color: A.dark, margin: 0 }}>
+              Messages
+            </h1>
+            {totalUnread > 0 && (
+              <span style={{ minWidth: "20px", height: "20px", borderRadius: "10px", background: A.accent, color: "#fff", fontFamily: "var(--font-jost)", fontWeight: 700, fontSize: "0.6rem", display: "flex", alignItems: "center", justifyContent: "center", padding: "0 0.35rem" }}>
+                {totalUnread}
+              </span>
+            )}
+          </div>
         </div>
 
-        {/* Chat panel */}
-        {activeThread ? (
-          <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
-            {/* Chat header */}
-            <div style={{
-              padding: "0.9rem 1.25rem",
-              borderBottom: "1px solid var(--warm-tan)",
-              display: "flex", alignItems: "center", gap: "0.75rem",
-            }}>
-              <div style={{
-                width: "32px", height: "32px", borderRadius: "50%",
-                background: activeThread.sellerBg, flexShrink: 0,
-                display: "flex", alignItems: "center", justifyContent: "center",
-                fontFamily: "var(--font-cormorant)", fontStyle: "italic",
-                fontSize: "1rem", color: "var(--muted)",
-              }}>
-                {activeThread.sellerInitial}
-              </div>
-              <div>
-                <p style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.82rem", color: "#1A1A18" }}>
-                  @{activeThread.seller}
-                </p>
-                <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.65rem", color: "var(--muted)", opacity: 0.55 }}>
-                  {activeThread.item}
-                </p>
-              </div>
+        <div style={{ flex: 1, overflowY: "auto" }}>
+          {loadingInbox ? (
+            <div style={{ padding: "2rem 1.25rem", fontFamily: "var(--font-jost)", fontSize: "0.8rem", color: A.muted, opacity: 0.6 }}>Loading…</div>
+          ) : conversations.length === 0 ? (
+            <div style={{ padding: "2rem 1.25rem" }}>
+              <p style={{ fontFamily: "var(--font-cormorant)", fontStyle: "italic", fontSize: "1.1rem", color: A.dark, marginBottom: "0.5rem" }}>No messages yet</p>
+              <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.75rem", color: A.muted, opacity: 0.7, lineHeight: 1.6 }}>When you message a seller or buyer, threads appear here.</p>
             </div>
-
-            {/* Messages */}
-            <div style={{
-              flex: 1, overflowY: "auto",
-              padding: "1.25rem", display: "flex",
-              flexDirection: "column", gap: "0.75rem",
-              minHeight: 0,
-            }}>
-              {activeThread.messages.map(msg => (
-                <div
-                  key={msg.id}
-                  style={{
-                    display: "flex",
-                    justifyContent: msg.from === "buyer" ? "flex-end" : "flex-start",
-                  }}
+          ) : (
+            conversations.map(conv => {
+              const unread = isUnread(conv);
+              const active = conv.id === activeId;
+              return (
+                <button
+                  key={conv.id}
+                  onClick={() => setActiveId(conv.id)}
+                  style={{ width: "100%", textAlign: "left", padding: "1rem 1.25rem", background: active ? "rgba(196,68,10,0.06)" : "transparent", borderBottom: `1px solid ${A.border}`, borderLeft: active ? `3px solid ${A.accent}` : "3px solid transparent", cursor: "pointer", display: "flex", gap: "0.75rem", alignItems: "flex-start" }}
                 >
-                  <div style={{ maxWidth: "72%" }}>
-                    <div style={{
-                      padding: "0.65rem 0.9rem",
-                      background: msg.from === "buyer" ? "var(--burnt-orange)" : "var(--warm-tan)",
-                      color: msg.from === "buyer" ? "var(--cream)" : "#1A1A18",
-                      fontFamily: "var(--font-jost)", fontSize: "0.82rem", lineHeight: 1.6,
-                    }}>
-                      {msg.text}
+                  <div style={{ width: "36px", height: "36px", borderRadius: "50%", flexShrink: 0, background: "#EDE6DE", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    {conv.counterparty?.avatar_url ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={conv.counterparty.avatar_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                    ) : (
+                      <span style={{ fontFamily: "var(--font-jost)", fontWeight: 700, fontSize: "0.75rem", color: A.muted }}>
+                        {(conv.counterparty?.display_name ?? "?")[0].toUpperCase()}
+                      </span>
+                    )}
+                  </div>
+
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: "0.5rem", marginBottom: "0.2rem" }}>
+                      <span style={{ fontFamily: "var(--font-jost)", fontWeight: unread ? 700 : 500, fontSize: "0.82rem", color: A.dark, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {conv.counterparty?.display_name ?? "Unknown"}
+                      </span>
+                      {conv.lastMessageAt && (
+                        <span style={{ fontFamily: "var(--font-jost)", fontSize: "0.62rem", color: A.muted, opacity: 0.6, flexShrink: 0 }}>
+                          {formatTime(conv.lastMessageAt)}
+                        </span>
+                      )}
                     </div>
-                    <p style={{
-                      fontFamily: "var(--font-jost)", fontSize: "0.6rem",
-                      color: "var(--muted)", opacity: 0.45, marginTop: "0.25rem",
-                      textAlign: msg.from === "buyer" ? "right" : "left",
-                    }}>
-                      {msg.time}
+                    {conv.listing && (
+                      <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.65rem", color: A.accent, margin: "0 0 0.15rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {conv.listing.title}
+                      </p>
+                    )}
+                    <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.72rem", color: A.muted, opacity: unread ? 1 : 0.65, fontWeight: unread ? 600 : 400, margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {conv.lastMessagePreview ?? "Start the conversation"}
                     </p>
                   </div>
-                </div>
-              ))}
-              <div ref={bottomRef} />
-            </div>
 
-            {/* Input */}
-            <div style={{
-              padding: "0.9rem 1.25rem",
-              borderTop: "1px solid var(--warm-tan)",
-              display: "flex", gap: "0.6rem",
-            }}>
-              <input
-                type="text"
-                placeholder="Type a message…"
-                value={input}
-                onChange={e => setInput(e.target.value)}
-                onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
-                style={{
-                  flex: 1, padding: "0.6rem 0.85rem",
-                  border: "1px solid var(--warm-tan)", background: "var(--cream)",
-                  fontFamily: "var(--font-jost)", fontSize: "0.82rem", color: "#1A1A18",
-                  outline: "none", minWidth: 0,
-                }}
-                onFocus={e => (e.target.style.borderColor = "var(--burnt-orange)")}
-                onBlur={e => (e.target.style.borderColor = "var(--warm-tan)")}
-              />
-              <button
-                onClick={sendMessage}
-                disabled={!input.trim()}
-                style={{
-                  padding: "0.6rem 1.1rem", flexShrink: 0,
-                  fontFamily: "var(--font-jost)", fontWeight: 600,
-                  fontSize: "0.62rem", letterSpacing: "0.14em", textTransform: "uppercase",
-                  background: input.trim() ? "var(--burnt-orange)" : "var(--warm-tan)",
-                  color: input.trim() ? "var(--cream)" : "var(--muted)",
-                  border: "none", cursor: input.trim() ? "pointer" : "not-allowed",
-                  transition: "all 0.15s",
-                }}
-              >
-                Send
-              </button>
-            </div>
-          </div>
-        ) : (
-          <div style={{
-            flex: 1, display: "flex", alignItems: "center",
-            justifyContent: "center", flexDirection: "column", gap: "0.5rem",
-          }}>
-            <p style={{
-              fontFamily: "var(--font-cormorant)", fontStyle: "italic",
-              fontSize: "1.3rem", color: "#1A1A18",
-            }}>
-              Select a conversation
-            </p>
-            <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.78rem", color: "var(--muted)", opacity: 0.5 }}>
-              Choose a thread on the left to read and reply
-            </p>
-          </div>
-        )}
+                  {unread && (
+                    <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: A.accent, flexShrink: 0, marginTop: "0.35rem" }} />
+                  )}
+                </button>
+              );
+            })
+          )}
+        </div>
       </div>
 
-      <style>{`
-        @media (max-width: 640px) {
-          .messages-layout { flex-direction: column !important; }
-          .thread-list { width: 100% !important; border-right: none !important; border-bottom: 1px solid var(--warm-tan); max-height: 240px; }
-        }
-      `}</style>
+      {/* ── Thread panel ── */}
+      {activeConv ? (
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
+
+          {/* Thread header */}
+          <div style={{ padding: "1.25rem 1.5rem", borderBottom: `1px solid ${A.border}`, background: "#fff", display: "flex", alignItems: "center", gap: "1rem" }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <p style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.9rem", color: A.dark, margin: 0 }}>
+                {activeConv.counterparty?.display_name ?? "Unknown"}
+                {activeConv.counterparty?.username && (
+                  <span style={{ fontWeight: 400, color: A.muted, fontSize: "0.78rem", marginLeft: "0.5rem" }}>
+                    @{activeConv.counterparty.username}
+                  </span>
+                )}
+              </p>
+              {activeConv.listing && (
+                <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.7rem", color: A.accent, margin: "0.15rem 0 0", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  Re: {activeConv.listing.title}
+                </p>
+              )}
+            </div>
+            {activeConv.listing?.images?.[0] && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={activeConv.listing.images[0]} alt="" style={{ width: "40px", height: "40px", objectFit: "cover", borderRadius: "2px", flexShrink: 0 }} />
+            )}
+          </div>
+
+          {/* Messages */}
+          <div style={{ flex: 1, overflowY: "auto", padding: "1.5rem", display: "flex", flexDirection: "column", gap: "0.75rem", background: "#FAF6F1" }}>
+            {loadingThread ? (
+              <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.8rem", color: A.muted, opacity: 0.6, textAlign: "center" }}>Loading…</p>
+            ) : messages.length === 0 ? (
+              <p style={{ fontFamily: "var(--font-cormorant)", fontStyle: "italic", fontSize: "1rem", color: A.muted, textAlign: "center", opacity: 0.7 }}>
+                No messages yet — say hello.
+              </p>
+            ) : (
+              messages.map(msg => {
+                const mine = msg.sender_id === currentUserId;
+                return (
+                  <div key={msg.id} style={{ display: "flex", justifyContent: mine ? "flex-end" : "flex-start" }}>
+                    <div style={{ maxWidth: "68%", padding: "0.65rem 0.9rem", background: mine ? A.accent : "#fff", color: mine ? "#fff" : A.dark, borderRadius: mine ? "12px 12px 2px 12px" : "12px 12px 12px 2px", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
+                      <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.85rem", lineHeight: 1.55, margin: 0, wordBreak: "break-word" }}>{msg.body}</p>
+                      <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.58rem", margin: "0.35rem 0 0", opacity: 0.65, textAlign: mine ? "right" : "left" }}>
+                        {formatTime(msg.created_at)}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+
+          {/* Composer */}
+          <div style={{ padding: "1rem 1.25rem", borderTop: `1px solid ${A.border}`, background: "#fff", display: "flex", gap: "0.75rem", alignItems: "flex-end" }}>
+            <textarea
+              value={draft}
+              onChange={e => setDraft(e.target.value)}
+              onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
+              placeholder="Type a message… (Enter to send, Shift+Enter for new line)"
+              rows={2}
+              style={{ flex: 1, padding: "0.65rem 0.85rem", background: "#FAF6F1", border: `1px solid ${A.border}`, fontFamily: "var(--font-jost)", fontSize: "0.85rem", color: A.dark, resize: "none", outline: "none", borderRadius: "4px", lineHeight: 1.5 }}
+            />
+            <button
+              onClick={sendMessage}
+              disabled={!draft.trim() || sending}
+              style={{ padding: "0.65rem 1.25rem", background: draft.trim() && !sending ? A.accent : "#EDE6DE", color: draft.trim() && !sending ? "#fff" : A.muted, fontFamily: "var(--font-jost)", fontWeight: 700, fontSize: "0.65rem", letterSpacing: "0.14em", textTransform: "uppercase", border: "none", cursor: draft.trim() && !sending ? "pointer" : "not-allowed", flexShrink: 0 }}
+            >
+              {sending ? "…" : "Send"}
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", background: "#FAF6F1" }}>
+          <div style={{ textAlign: "center" }}>
+            <p style={{ fontFamily: "var(--font-cormorant)", fontStyle: "italic", fontWeight: 400, fontSize: "1.5rem", color: A.dark, marginBottom: "0.5rem" }}>
+              Select a conversation
+            </p>
+            <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.78rem", color: A.muted, opacity: 0.65 }}>
+              Choose a thread from the left to read and reply.
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

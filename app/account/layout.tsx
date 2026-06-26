@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 
-const TABS = [
+const NAV_ITEMS = [
   {
     label: "Overview",
     href: "/account",
@@ -51,7 +52,6 @@ const TABS = [
         <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
       </svg>
     ),
-    badge: 2,
   },
   {
     label: "Settings",
@@ -67,6 +67,26 @@ const TABS = [
 
 export default function AccountLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  // Fetch unread message count for the badge
+  useEffect(() => {
+    fetch("/api/conversations")
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (!data?.conversations) return;
+        const unread = data.conversations.filter((c: {
+          lastMessageAt: string | null;
+          myLastReadAt: string | null;
+        }) => {
+          if (!c.lastMessageAt) return false;
+          if (!c.myLastReadAt) return true;
+          return new Date(c.lastMessageAt) > new Date(c.myLastReadAt);
+        }).length;
+        setUnreadCount(unread);
+      })
+      .catch(() => {});
+  }, [pathname]); // re-check when navigating
 
   const isActive = (href: string) =>
     href === "/account" ? pathname === "/account" : pathname.startsWith(href);
@@ -95,8 +115,9 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
           </p>
 
           <nav style={{ display: "flex", flexDirection: "column", gap: "0.15rem" }}>
-            {TABS.map((tab) => {
+            {NAV_ITEMS.map((tab) => {
               const active = isActive(tab.href);
+              const badge = tab.label === "Messages" ? unreadCount : 0;
               return (
                 <Link
                   key={tab.href}
@@ -115,7 +136,7 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
                 >
                   <span style={{ opacity: active ? 1 : 0.6 }}>{tab.icon}</span>
                   {tab.label}
-                  {"badge" in tab && tab.badge ? (
+                  {badge > 0 && (
                     <span style={{
                       marginLeft: "auto",
                       minWidth: "18px", height: "18px", borderRadius: "9px",
@@ -125,9 +146,9 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
                       alignItems: "center", justifyContent: "center",
                       padding: "0 0.3rem",
                     }}>
-                      {tab.badge}
+                      {badge}
                     </span>
-                  ) : null}
+                  )}
                 </Link>
               );
             })}
