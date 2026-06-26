@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { sendEmail } from "@/lib/email/send";
 import NewMessage from "@/lib/email/templates/NewMessage";
 
@@ -99,11 +100,9 @@ export async function POST(
       .eq("id", user.id)
       .single();
 
-    const { data: recipientProfile } = await supabase
-      .from("profiles")
-      .select("email")
-      .eq("id", recipientId)
-      .single();
+    const admin = createAdminClient();
+    const { data: recipientUser } = await admin.auth.admin.getUserById(recipientId);
+    const recipientProfile = recipientUser?.user ? { email: recipientUser.user.email } : null;
 
     const listing = Array.isArray(conversation.listings)
       ? conversation.listings[0]

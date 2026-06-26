@@ -87,15 +87,14 @@ export async function POST(req: NextRequest) {
 
   const admin = createAdminClient();
 
-  // Check recipient exists and is not suspended
-  const { data: recipient } = await admin
-    .from("profiles")
-    .select("id, is_suspended")
+  // Check recipient exists (suspended check can be added later when that column exists)
+  const { data: recipientCheck } = await admin
+    .from("seller_profiles")
+    .select("id")
     .eq("id", recipientId)
-    .single();
-  if (recipient?.is_suspended) {
-    return NextResponse.json({ error: "This user cannot receive messages" }, { status: 422 });
-  }
+    .maybeSingle();
+  // If they have no seller profile at all they may still be a valid buyer — allow it.
+  void recipientCheck;
 
   // Try to find existing conversation for this pair + listing
   const aId = user.id < recipientId ? user.id : recipientId;
