@@ -103,7 +103,6 @@ export async function POST(req: NextRequest) {
   let query = supabase
     .from("conversations")
     .select("id")
-    .or(`participant_a_id.eq.${aId},participant_b_id.eq.${bId}`)
     .eq("participant_a_id", aId)
     .eq("participant_b_id", bId);
 
