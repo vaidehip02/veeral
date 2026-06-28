@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import MessageButton from "@/components/messages/MessageButton";
 
 const A = {
   dark: "#0D0906", muted: "#6B5E52", label: "#9C8B7E",
@@ -16,7 +17,7 @@ const lbl:   React.CSSProperties = {
 type AdminRentalStatus = "active" | "return_pending" | "damage_claimed" | "deposit_released" | "deposit_resolved";
 
 interface AdminRental {
-  id: string; buyer: string; seller: string; item: string;
+  id: string; buyer: string; buyerId: string; seller: string; sellerId: string; item: string;
   start: string; end: string; returnBy: Date;
   dailyRate: number; deposit: number; bg: string;
   status: AdminRentalStatus;
@@ -31,12 +32,12 @@ interface AdminRental {
 const TODAY = new Date("2026-06-24");
 
 const RENTALS: AdminRental[] = [
-  { id:"R201", buyer:"ananya_m",    seller:"priya_sharma", item:"Mirror-work Lehenga (Bridal)",   start:"Jun 6",  end:"Jun 14", returnBy:new Date("2026-06-14"), dailyRate:160, deposit:80000,  bg:"#D4C5B5", status:"active" },
-  { id:"R200", buyer:"kavitha_m",   seller:"priya_sharma", item:"Sequin Lehenga — Midnight Blue", start:"Jun 5",  end:"Jun 11", returnBy:new Date("2026-06-11"), dailyRate:95,  deposit:50000,  bg:"#B8BFCC", status:"return_pending" },
-  { id:"R198", buyer:"sana.rents",  seller:"meera_b",      item:"Gold Tissue Lehenga",            start:"Jun 3",  end:"Jun 10", returnBy:new Date("2026-06-10"), dailyRate:200, deposit:100000, bg:"#E0DDD8", status:"active" },
-  { id:"R195", buyer:"riya.wears",  seller:"priya_sharma", item:"Banarasi Silk Lehenga",          start:"May 30", end:"Jun 7",  returnBy:new Date("2026-06-07"), dailyRate:120, deposit:60000,  bg:"#D4C5B5", status:"deposit_released" },
+  { id:"R201", buyer:"ananya_m",    buyerId:"", seller:"priya_sharma", sellerId:"", item:"Mirror-work Lehenga (Bridal)",   start:"Jun 6",  end:"Jun 14", returnBy:new Date("2026-06-14"), dailyRate:160, deposit:80000,  bg:"#D4C5B5", status:"active" },
+  { id:"R200", buyer:"kavitha_m",   buyerId:"", seller:"priya_sharma", sellerId:"", item:"Sequin Lehenga — Midnight Blue", start:"Jun 5",  end:"Jun 11", returnBy:new Date("2026-06-11"), dailyRate:95,  deposit:50000,  bg:"#B8BFCC", status:"return_pending" },
+  { id:"R198", buyer:"sana.rents",  buyerId:"", seller:"meera_b",      sellerId:"", item:"Gold Tissue Lehenga",            start:"Jun 3",  end:"Jun 10", returnBy:new Date("2026-06-10"), dailyRate:200, deposit:100000, bg:"#E0DDD8", status:"active" },
+  { id:"R195", buyer:"riya.wears",  buyerId:"", seller:"priya_sharma", sellerId:"", item:"Banarasi Silk Lehenga",          start:"May 30", end:"Jun 7",  returnBy:new Date("2026-06-07"), dailyRate:120, deposit:60000,  bg:"#D4C5B5", status:"deposit_released" },
   {
-    id:"R192", buyer:"pooja_k", seller:"meera_b", item:"Sequin Lehenga", start:"May 28", end:"Jun 9", returnBy:new Date("2026-06-09"), dailyRate:95, deposit:50000, bg:"#B8BFCC",
+    id:"R192", buyer:"pooja_k", buyerId:"", seller:"meera_b", sellerId:"", item:"Sequin Lehenga", start:"May 28", end:"Jun 9", returnBy:new Date("2026-06-09"), dailyRate:95, deposit:50000, bg:"#B8BFCC",
     status: "damage_claimed",
     damageClaim: {
       photos: [
@@ -47,7 +48,7 @@ const RENTALS: AdminRental[] = [
       retainAmount: 25000, // $250.00
     },
   },
-  { id:"R189", buyer:"arjun.style", seller:"raj_styles",   item:"Navy Sherwani Brocade",          start:"May 25", end:"Jun 10", returnBy:new Date("2026-06-10"), dailyRate:80,  deposit:40000,  bg:"#C9CDD6", status:"active" },
+  { id:"R189", buyer:"arjun.style", buyerId:"", seller:"raj_styles", sellerId:"", item:"Navy Sherwani Brocade", start:"May 25", end:"Jun 10", returnBy:new Date("2026-06-10"), dailyRate:80, deposit:40000, bg:"#C9CDD6", status:"active" },
 ];
 
 function daysLeft(returnBy: Date): number {
@@ -264,8 +265,8 @@ export default function AdminRentalsPage() {
                   </div>
                   <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap" }}>
                     {rental.status === "active" && days < 0 && <button style={adminBtn("red")}>Escalate</button>}
-                    <button style={adminBtn("dim")}>Message buyer</button>
-                    <button style={adminBtn("dim")}>Message seller</button>
+                    {rental.buyerId && <MessageButton recipientId={rental.buyerId} orderId={rental.id} label="Message buyer" style={{ fontSize: "0.58rem", padding: "0.3rem 0.7rem" }} />}
+                    {rental.sellerId && <MessageButton recipientId={rental.sellerId} orderId={rental.id} label="Message seller" style={{ fontSize: "0.58rem", padding: "0.3rem 0.7rem" }} />}
                   </div>
                 </div>
               </div>

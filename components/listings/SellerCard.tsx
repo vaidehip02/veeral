@@ -1,12 +1,15 @@
 import Link from "next/link";
 import Image from "next/image";
+import MessageButton from "@/components/messages/MessageButton";
 
 interface SellerCardProps {
+  sellerId: string;
   username: string;
   displayName: string;
   avatarUrl?: string;
   totalListings: number;
   rating?: number;
+  listingId?: string;
 }
 
 function Stars({ rating }: { rating: number }) {
@@ -20,7 +23,7 @@ function Stars({ rating }: { rating: number }) {
   );
 }
 
-export default function SellerCard({ username, displayName, avatarUrl, totalListings, rating }: SellerCardProps) {
+export default function SellerCard({ sellerId, username, displayName, avatarUrl, totalListings, rating, listingId }: SellerCardProps) {
   return (
     <div style={{
       border: "1px solid var(--warm-tan)", padding: "1.5rem",
@@ -78,18 +81,7 @@ export default function SellerCard({ username, displayName, avatarUrl, totalList
         >
           View shop
         </Link>
-        <button style={{
-          fontFamily: "var(--font-jost)", fontWeight: 600,
-          fontSize: "0.85rem", letterSpacing: "0.18em", textTransform: "uppercase",
-          color: "#C4440A", background: "transparent",
-          border: "1px solid #C4440A", padding: "0.6rem 1.2rem",
-          cursor: "pointer", transition: "opacity 0.2s"
-        }}
-          onMouseOver={e => (e.currentTarget.style.opacity = "0.65")}
-          onMouseOut={e => (e.currentTarget.style.opacity = "1")}
-        >
-          Message
-        </button>
+        <MessageButton recipientId={sellerId} listingId={listingId} />
       </div>
     </div>
   );

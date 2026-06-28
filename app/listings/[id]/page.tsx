@@ -418,11 +418,13 @@ export default function ListingPage({ params: _params }: { params: { id: string 
             <div style={{ flex: 1, height: "1px", background: "var(--warm-tan)" }} />
           </div>
           <SellerCard
+            sellerId={l.seller.id}
             username={l.seller.username}
             displayName={l.seller.display_name}
             avatarUrl={l.seller.avatar_url}
             totalListings={l.seller.total_listings}
             rating={l.seller.rating}
+            listingId={l.id}
           />
         </div>
 

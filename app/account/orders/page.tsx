@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import MessageButton from "@/components/messages/MessageButton";
 
 type OrderStatus = "processing" | "shipped" | "delivered" | "completed";
 
@@ -9,6 +10,8 @@ interface BuyerOrder {
   id: string;
   item: string;
   seller: string;
+  sellerId: string;   // UUID — empty string in mock, real UUID when wired to Supabase
+  listingId: string;
   size: string;
   date: string;
   total: number;
@@ -19,11 +22,11 @@ interface BuyerOrder {
 }
 
 const MOCK_ORDERS: BuyerOrder[] = [
-  { id:"1043", item:"Red Bridal Lehenga with Gold Embroidery", seller:"priya_sharma",  size:"US 6",      date:"Jun 9, 2026",  total:4500, status:"processing", bg:"#D4C5B5" },
-  { id:"1042", item:"Zardozi Saree — Ivory & Gold",            seller:"priya_sharma",  size:"Free size", date:"Jun 7, 2026",  total:980,  status:"shipped",    tracking:"1Z999AA10123456784", carrier:"UPS", bg:"#E8DDD3" },
-  { id:"1038", item:"Silk Sharara Set — Sage Green",           seller:"meera_b",       size:"US 10",     date:"May 28, 2026", total:540,  status:"delivered",  bg:"#CFC0AF" },
-  { id:"1035", item:"Pink Anarkali Kurta Set",                 seller:"ananya_m",      size:"US 8",      date:"May 20, 2026", total:320,  status:"completed",  bg:"#DDD0C5" },
-  { id:"1030", item:"Blue Banarasi Silk Saree",                seller:"priya_sharma",  size:"Free size", date:"May 5, 2026",  total:1200, status:"completed",  bg:"#C3B5A8" },
+  { id:"1043", item:"Red Bridal Lehenga with Gold Embroidery", seller:"priya_sharma",  sellerId:"", listingId:"", size:"US 6",      date:"Jun 9, 2026",  total:4500, status:"processing", bg:"#D4C5B5" },
+  { id:"1042", item:"Zardozi Saree — Ivory & Gold",            seller:"priya_sharma",  sellerId:"", listingId:"", size:"Free size", date:"Jun 7, 2026",  total:980,  status:"shipped",    tracking:"1Z999AA10123456784", carrier:"UPS", bg:"#E8DDD3" },
+  { id:"1038", item:"Silk Sharara Set — Sage Green",           seller:"meera_b",       sellerId:"", listingId:"", size:"US 10",     date:"May 28, 2026", total:540,  status:"delivered",  bg:"#CFC0AF" },
+  { id:"1035", item:"Pink Anarkali Kurta Set",                 seller:"ananya_m",      sellerId:"", listingId:"", size:"US 8",      date:"May 20, 2026", total:320,  status:"completed",  bg:"#DDD0C5" },
+  { id:"1030", item:"Blue Banarasi Silk Saree",                seller:"priya_sharma",  sellerId:"", listingId:"", size:"Free size", date:"May 5, 2026",  total:1200, status:"completed",  bg:"#C3B5A8" },
 ];
 
 const STATUS_CONFIG: Record<OrderStatus, { label: string; bg: string; text: string }> = {
@@ -173,6 +176,15 @@ export default function BuyerOrdersPage() {
                     >
                       View listing
                     </Link>
+                    {order.sellerId && (
+                      <MessageButton
+                        recipientId={order.sellerId}
+                        listingId={order.listingId}
+                        orderId={order.id}
+                        label="Message seller"
+                        style={{ fontSize: "0.6rem", padding: "0.4rem 0.9rem" }}
+                      />
+                    )}
                     {canReview && (
                       <button
                         onClick={() => setReviewDrawer({ orderId: order.id, item: order.item, seller: order.seller, rating: 5, text: "" })}

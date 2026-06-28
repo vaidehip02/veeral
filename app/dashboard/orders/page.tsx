@@ -1,12 +1,15 @@
 "use client";
 
 import { useState } from "react";
+import MessageButton from "@/components/messages/MessageButton";
 
 type OrderStatus = "pending_shipment" | "shipped" | "delivered" | "completed";
 
 interface MockOrder {
   id: string;
   buyer: string;
+  buyerId: string;   // UUID — empty string in mock, real UUID when wired to Supabase
+  listingId: string;
   item: string;
   size: string;
   date: string;
@@ -14,15 +17,15 @@ interface MockOrder {
   status: OrderStatus;
   tracking?: string;
   carrier?: string;
-  color: string; // placeholder bg color until real images load
+  color: string;
 }
 
 const MOCK_ORDERS: MockOrder[] = [
-  { id: "1043", buyer: "ananya_m",   item: "Banarasi Silk Lehenga",       size: "S (US 4)",   date: "Jun 9, 2026",  total: 4500, status: "pending_shipment", color: "#D4C5B5" },
-  { id: "1042", buyer: "priya_k22",  item: "Zardozi Saree — Ivory & Gold", size: "Free size",  date: "Jun 7, 2026",  total: 980,  status: "shipped",          tracking: "1Z999AA10123456784", carrier: "UPS", color: "#E8DDD3" },
-  { id: "1040", buyer: "sana.rents", item: "Indo-Western Sherwani Set",    size: "M (US 38)",  date: "Jun 2, 2026",  total: 540,  status: "delivered",        color: "#C8B9A8" },
-  { id: "1038", buyer: "meera_b",    item: "Embroidered Chanderi Saree",   size: "Free size",  date: "May 28, 2026", total: 780,  status: "completed",        color: "#DDD0C5" },
-  { id: "1035", buyer: "divya.looks",item: "Silk Sharara Set",             size: "M (US 8)",   date: "May 20, 2026", total: 860,  status: "completed",        color: "#CFC0AF" },
+  { id: "1043", buyer: "ananya_m",    buyerId: "", listingId: "", item: "Banarasi Silk Lehenga",        size: "S (US 4)",   date: "Jun 9, 2026",  total: 4500, status: "pending_shipment", color: "#D4C5B5" },
+  { id: "1042", buyer: "priya_k22",   buyerId: "", listingId: "", item: "Zardozi Saree — Ivory & Gold", size: "Free size",  date: "Jun 7, 2026",  total: 980,  status: "shipped",          tracking: "1Z999AA10123456784", carrier: "UPS", color: "#E8DDD3" },
+  { id: "1040", buyer: "sana.rents",  buyerId: "", listingId: "", item: "Indo-Western Sherwani Set",    size: "M (US 38)",  date: "Jun 2, 2026",  total: 540,  status: "delivered",        color: "#C8B9A8" },
+  { id: "1038", buyer: "meera_b",     buyerId: "", listingId: "", item: "Embroidered Chanderi Saree",   size: "Free size",  date: "May 28, 2026", total: 780,  status: "completed",        color: "#DDD0C5" },
+  { id: "1035", buyer: "divya.looks", buyerId: "", listingId: "", item: "Silk Sharara Set",             size: "M (US 8)",   date: "May 20, 2026", total: 860,  status: "completed",        color: "#CFC0AF" },
 ];
 
 const STATUS_CONFIG: Record<OrderStatus, { label: string; bg: string; text: string }> = {
@@ -173,6 +176,15 @@ export default function OrdersPage() {
                     <span style={{ fontFamily: "var(--font-jost)", fontSize: "0.65rem", color: "var(--muted)", opacity: 0.6 }}>
                       {order.carrier} · {order.tracking}
                     </span>
+                  )}
+                  {order.buyerId && (
+                    <MessageButton
+                      recipientId={order.buyerId}
+                      listingId={order.listingId}
+                      orderId={order.id}
+                      label="Message buyer"
+                      style={{ fontSize: "0.6rem", padding: "0.3rem 0.6rem" }}
+                    />
                   )}
                 </div>
               </div>
