@@ -7,6 +7,7 @@ import SellerCard from "@/components/listings/SellerCard";
 import SizeChart, { WOMENS_SIZES, MENS_SIZES } from "@/components/listings/SizeChart";
 import RentalDrawer from "@/components/listings/RentalDrawer";
 import Reviews from "@/components/listings/Reviews";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 interface Listing {
@@ -82,6 +83,7 @@ function Stars({ rating }: { rating: number }) {
 export default function ListingPage({ params: _params }: { params: { id: string } }) {
   const [saved, setSaved] = useState(false);
   const [rentalOpen, setRentalOpen] = useState(false);
+  const router = useRouter();
   const [sizeChartOpen, setSizeChartOpen] = useState(false);
   const [selectedSize, setSelectedSize] = useState("");
   const [listing, setListing] = useState<Listing | null>(null);
@@ -367,13 +369,15 @@ export default function ListingPage({ params: _params }: { params: { id: string 
             {/* Action buttons */}
             <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
               {(l.type === "sale" || l.type === "both") && (
-                <button style={{
-                  width: "100%", padding: "1rem",
-                  background: "#C4440A", border: "none", cursor: "pointer",
-                  fontFamily: "var(--font-jost)", fontWeight: 600,
-                  fontSize: "0.7rem", letterSpacing: "0.2em", textTransform: "uppercase",
-                  color: "var(--cream)", transition: "opacity 0.2s"
-                }}
+                <button
+                  onClick={() => router.push(`/checkout/${l.id}?type=sale`)}
+                  style={{
+                    width: "100%", padding: "1rem",
+                    background: "#C4440A", border: "none", cursor: "pointer",
+                    fontFamily: "var(--font-jost)", fontWeight: 600,
+                    fontSize: "0.7rem", letterSpacing: "0.2em", textTransform: "uppercase",
+                    color: "var(--cream)", transition: "opacity 0.2s"
+                  }}
                   onMouseOver={e => (e.currentTarget.style.opacity = "0.85")}
                   onMouseOut={e => (e.currentTarget.style.opacity = "1")}
                 >
@@ -383,13 +387,15 @@ export default function ListingPage({ params: _params }: { params: { id: string 
 
               <div style={{ display: "flex", gap: "0.75rem" }}>
                 {(l.type === "sale" || l.type === "both") && (
-                  <button style={{
-                    flex: 1, padding: "1rem",
-                    background: "transparent", border: "1px solid #C4440A", cursor: "pointer",
-                    fontFamily: "var(--font-jost)", fontWeight: 600,
-                    fontSize: "0.7rem", letterSpacing: "0.2em", textTransform: "uppercase",
-                    color: "#C4440A", transition: "opacity 0.2s"
-                  }}
+                  <button
+                    onClick={() => router.push(`/checkout/${l.id}?type=sale`)}
+                    style={{
+                      flex: 1, padding: "1rem",
+                      background: "transparent", border: "1px solid #C4440A", cursor: "pointer",
+                      fontFamily: "var(--font-jost)", fontWeight: 600,
+                      fontSize: "0.7rem", letterSpacing: "0.2em", textTransform: "uppercase",
+                      color: "#C4440A", transition: "opacity 0.2s"
+                    }}
                     onMouseOver={e => (e.currentTarget.style.opacity = "0.65")}
                     onMouseOut={e => (e.currentTarget.style.opacity = "1")}
                   >
