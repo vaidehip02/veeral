@@ -1,59 +1,42 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import PhotoGallery from "@/components/listings/PhotoGallery";
 import SellerCard from "@/components/listings/SellerCard";
 import SizeChart, { WOMENS_SIZES, MENS_SIZES } from "@/components/listings/SizeChart";
 import RentalDrawer from "@/components/listings/RentalDrawer";
 import Reviews from "@/components/listings/Reviews";
+import { createClient } from "@/lib/supabase/client";
 
-// ─── Placeholder data (replace with Supabase fetch) ──────────────────────────
-const LISTING = {
-  id: "1",
-  title: "Red Bridal Lehenga with Gold Embroidery",
-  description:
-    "A stunning red bridal lehenga with intricate gold zari embroidery throughout. The skirt has a full 4-metre flare with a heavily embroidered border. Comes with matching blouse and dupatta. Worn once for a wedding — professionally dry-cleaned and stored.",
-  price: 4500,      // USD cents — $45.00 ... actually store as dollars for display simplicity
-  rent_price: 120,  // USD per day — $120/day
-  rent_duration_days: 14,
-  deposit_pct: 40,
-  type: "both" as "sale" | "rent" | "both",
-  category: "lehenga" as "lehenga" | "saree" | "salwar_kameez" | "sherwani" | "other",
-  condition: "like_new" as const,
-  us_size: "6",
-  color: "Red & Gold",
-  brand: "Anita Dongre",
-  original_price: 5500,
-  location: "New York, NY",
-  images: [],
-  tags: ["bridal", "wedding", "festive", "heavily embroidered"],
-  dry_clean_only: true,
-  included: ["Lehenga skirt", "Blouse", "Dupatta"],
-  care_instructions: "Please dry clean only. Store in the garment bag provided. Avoid direct sunlight.",
+interface Listing {
+  id: string;
+  title: string;
+  description: string | null;
+  price: number;
+  rent_price: number | null;
+  rent_duration_days: number | null;
+  deposit_pct: number;
+  type: "sale" | "rent" | "both";
+  category: string;
+  condition: string;
+  size: string | null;
+  color: string | null;
+  brand: string | null;
+  original_price: number | null;
+  location: string | null;
+  images: string[];
+  tags: string[] | null;
+  dry_clean_only: boolean | null;
+  included: string[] | null;
+  care_instructions: string | null;
   seller: {
-    id: "seller-1",
-    username: "priya_sharma",
-    display_name: "Priya Sharma",
-    avatar_url: "",
-    total_listings: 12,
-    rating: 4.8,
-  },
-};
-
-const SELLER_LISTINGS = [
-  { id: "2", title: "Pink Anarkali",     price: 180,  bg: "#DDD0C5" },
-  { id: "3", title: "Blue Silk Saree",   price: 95,   bg: "#D5C9BE" },
-  { id: "4", title: "Ivory Sharara Set", price: 220,  bg: "#CABDB1" },
-  { id: "5", title: "Green Lehenga",     price: 310,  bg: "#C3B5A8" },
-];
-
-const SIMILAR = [
-  { id: "6", title: "Maroon Bridal Lehenga",    price: 390, bg: "#DDE3D8" },
-  { id: "7", title: "Orange Banarasi Lehenga",  price: 280, bg: "#E3D8DD" },
-  { id: "8", title: "Navy Embroidered Lehenga", price: 420, bg: "#D8DDE0" },
-  { id: "9", title: "Gold Tissue Lehenga",      price: 510, bg: "#E0DDD8" },
-];
+    id: string;
+    username: string;
+    display_name: string | null;
+    avatar_url: string | null;
+  };
+}
 
 // Determined by garment type: sherwanis use men's numeric sizing
 const isMens = (cat: string) => cat === "sherwani";
@@ -100,8 +83,54 @@ export default function ListingPage({ params: _params }: { params: { id: string 
   const [saved, setSaved] = useState(false);
   const [rentalOpen, setRentalOpen] = useState(false);
   const [sizeChartOpen, setSizeChartOpen] = useState(false);
-  const [selectedSize, setSelectedSize] = useState(LISTING.us_size);
-  const l = LISTING;
+  const [selectedSize, setSelectedSize] = useState("");
+  const [listing, setListing] = useState<Listing | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase
+      .from("listings")
+      .select(`
+        id, title, description, price, rent_price, rent_duration_days,
+        deposit_pct, type, category, condition, size, color, brand,
+        original_price, location, images, tags, dry_clean_only,
+        included, care_instructions,
+        seller_profiles ( id, username, display_name, avatar_url )
+      `)
+      .eq("id", _params.id)
+      .single()
+      .then(({ data, error: err }) => {
+        if (err || !data) { setError("Listing not found."); setLoading(false); return; }
+        const sp = Array.isArray(data.seller_profiles) ? data.seller_profiles[0] : data.seller_profiles as { id: string; username: string; display_name: string | null; avatar_url: string | null } | null;
+        const built: Listing = {
+          ...data,
+          seller: {
+            id: sp?.id ?? "",
+            username: sp?.username ?? "unknown",
+            display_name: sp?.display_name ?? null,
+            avatar_url: sp?.avatar_url ?? null,
+          },
+        };
+        setListing(built);
+        setSelectedSize(built.size ?? "");
+        setLoading(false);
+      });
+  }, [_params.id]);
+
+  if (loading) return (
+    <div style={{ background: "var(--cream)", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <p style={{ fontFamily: "var(--font-jost)", color: "#6B5E52", fontSize: "0.85rem", letterSpacing: "0.1em" }}>Loading…</p>
+    </div>
+  );
+  if (error || !listing) return (
+    <div style={{ background: "var(--cream)", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <p style={{ fontFamily: "var(--font-jost)", color: "#991B1B", fontSize: "0.85rem" }}>{error ?? "Listing not found."}</p>
+    </div>
+  );
+
+  const l = listing;
   const US_SIZES = isMens(l.category) ? MENS_SIZES : WOMENS_SIZES;
   const savings = l.original_price ? l.original_price - l.price : 0;
 
@@ -153,7 +182,7 @@ export default function ListingPage({ params: _params }: { params: { id: string 
                   alignItems: "center", justifyContent: "center",
                   fontFamily: "var(--font-cormorant)", fontStyle: "italic", fontSize: "1rem", color: "var(--muted)"
                 }}>
-                  {l.seller.display_name[0]}
+                  {(l.seller.display_name ?? l.seller.username)[0]}
                 </div>
                 <div>
                   <Link href={`/sellers/${l.seller.username}`} style={{
@@ -163,7 +192,6 @@ export default function ListingPage({ params: _params }: { params: { id: string 
                   }}>
                     @{l.seller.username}
                   </Link>
-                  <div><Stars rating={l.seller.rating} /></div>
                 </div>
               </div>
             </div>
@@ -207,9 +235,9 @@ export default function ListingPage({ params: _params }: { params: { id: string 
             {/* Condition + colour + brand + dry clean tags */}
             <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", alignItems: "center" }}>
               <Tag>{CONDITION_LABEL[l.condition]}</Tag>
-              <Tag>{l.color}</Tag>
+              {l.color && <Tag>{l.color}</Tag>}
               {l.brand && <Tag>{l.brand}</Tag>}
-              {l.tags.map(t => <Tag key={t}>{t}</Tag>)}
+              {(l.tags ?? []).map(t => <Tag key={t}>{t}</Tag>)}
               {l.dry_clean_only && (
                 <span style={{
                   fontFamily: "var(--font-jost)", fontWeight: 600,
@@ -269,13 +297,15 @@ export default function ListingPage({ params: _params }: { params: { id: string 
                 ))}
               </div>
 
-              <p style={{
-                fontFamily: "var(--font-jost)", fontWeight: 500,
-                fontSize: "0.88rem", letterSpacing: "0.08em",
-                color: "var(--muted)", marginTop: "0.5rem"
-              }}>
-                Listed as: <strong>US {l.us_size}</strong>
-              </p>
+              {l.size && (
+                <p style={{
+                  fontFamily: "var(--font-jost)", fontWeight: 500,
+                  fontSize: "0.88rem", letterSpacing: "0.08em",
+                  color: "var(--muted)", marginTop: "0.5rem"
+                }}>
+                  Listed as: <strong>US {l.size}</strong>
+                </p>
+              )}
             </div>
 
             {/* What's included */}
@@ -290,7 +320,7 @@ export default function ListingPage({ params: _params }: { params: { id: string 
               {/* 3-column grid: row 1 = Lehenga skirt, Blouse, Dupatta | row 2 = Jacket/Shrug, Belt/Kamarband */}
               <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "0.6rem 1rem" }}>
                 {INCLUDED_OPTIONS.map(item => {
-                  const included = l.included.includes(item);
+                  const included = (l.included ?? []).includes(item);
                   return (
                     <div key={item} style={{ display: "flex", alignItems: "center", gap: "0.45rem" }}>
                       <span style={{
@@ -420,10 +450,10 @@ export default function ListingPage({ params: _params }: { params: { id: string 
           <SellerCard
             sellerId={l.seller.id}
             username={l.seller.username}
-            displayName={l.seller.display_name}
-            avatarUrl={l.seller.avatar_url}
-            totalListings={l.seller.total_listings}
-            rating={l.seller.rating}
+            displayName={l.seller.display_name ?? l.seller.username}
+            avatarUrl={l.seller.avatar_url ?? ""}
+            totalListings={0}
+            rating={0}
             listingId={l.id}
           />
         </div>
@@ -456,13 +486,7 @@ export default function ListingPage({ params: _params }: { params: { id: string 
             </Link>
           </div>
           <div style={{ display: "flex", gap: "1rem", overflowX: "auto", paddingBottom: "0.5rem" }}>
-            {SELLER_LISTINGS.map(item => (
-              <Link key={item.id} href={`/listings/${item.id}`} style={{ flexShrink: 0, width: "160px", textDecoration: "none" }}>
-                <div style={{ background: item.bg, aspectRatio: "3/4", width: "160px", marginBottom: "0.6rem" }} />
-                <p style={{ fontFamily: "var(--font-jost)", fontWeight: 500, fontSize: "0.82rem", color: "var(--dark)", marginBottom: "0.2rem" }}>{item.title}</p>
-                <p style={{ fontFamily: "var(--font-cormorant)", fontWeight: 600, fontSize: "1rem", color: "#C4440A" }}>{formatPrice(item.price)}</p>
-              </Link>
-            ))}
+            {/* TODO: fetch other listings from this seller */}
           </div>
         </div>
 
@@ -485,16 +509,7 @@ export default function ListingPage({ params: _params }: { params: { id: string 
             </Link>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "1rem" }} className="similar-grid">
-            {SIMILAR.map(item => (
-              <Link key={item.id} href={`/listings/${item.id}`} style={{ textDecoration: "none" }}>
-                <div style={{ background: item.bg, aspectRatio: "3/4", marginBottom: "0.6rem", transition: "opacity 0.2s" }}
-                  onMouseOver={e => (e.currentTarget.style.opacity = "0.85")}
-                  onMouseOut={e => (e.currentTarget.style.opacity = "1")}
-                />
-                <p style={{ fontFamily: "var(--font-jost)", fontWeight: 500, fontSize: "0.82rem", color: "var(--dark)", marginBottom: "0.2rem" }}>{item.title}</p>
-                <p style={{ fontFamily: "var(--font-cormorant)", fontWeight: 600, fontSize: "1rem", color: "#C4440A" }}>{formatPrice(item.price)}</p>
-              </Link>
-            ))}
+            {/* TODO: fetch similar listings by category */}
           </div>
         </div>
 
@@ -508,15 +523,15 @@ export default function ListingPage({ params: _params }: { params: { id: string 
           pricePerDay={l.rent_price}
           salePrice={l.price}
           depositPct={l.deposit_pct ?? 40}
-          maxDays={l.rent_duration_days}
-          careInstructions={l.care_instructions}
+          maxDays={l.rent_duration_days ?? 14}
+          careInstructions={l.care_instructions ?? undefined}
           onClose={() => setRentalOpen(false)}
         />
       )}
 
       {sizeChartOpen && (
         <SizeChart
-          garmentType={l.category}
+          garmentType={l.category as "lehenga" | "saree" | "salwar_kameez" | "sherwani" | "other"}
           onClose={() => setSizeChartOpen(false)}
         />
       )}
