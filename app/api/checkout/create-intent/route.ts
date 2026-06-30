@@ -52,7 +52,10 @@ export async function POST(req: NextRequest) {
     .eq("id", listing.seller_id)
     .single();
 
-  if (!seller?.stripe_account_id || !seller.stripe_onboarding_complete) {
+  const isTestMode = process.env.STRIPE_SECRET_KEY?.startsWith("sk_test_");
+  // In test mode, skip stripe_onboarding_complete so we can test without a live webhook.
+  // TODO: remove isTestMode bypass before launch.
+  if (!seller?.stripe_account_id || (!isTestMode && !seller.stripe_onboarding_complete)) {
     return NextResponse.json(
       { error: "Seller has not completed Stripe onboarding" },
       { status: 422 }

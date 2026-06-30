@@ -9,24 +9,22 @@ import {
   useStripe,
   useElements,
 } from "@stripe/react-stripe-js";
+import { createClient } from "@/lib/supabase/client";
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
-// Fee percentages are fetched from /api/platform/fee-settings on mount so the
-// UI always shows the same rates the server will charge. While loading, we
-// show null (no fee line) to avoid ever displaying a stale or wrong number.
-
-// ── Placeholder — replace with Supabase fetch using listingId ─────────────────
-const LISTING = {
-  id: "1",
-  title: "Red Bridal Lehenga with Gold Embroidery",
-  price: 4500,
-  rent_price: 120,
-  us_size: "6",
-  category: "Lehenga",
-  bg: "#DDD0C5",
-  seller_username: "priya_sharma",
-};
+// ── Listing shape fetched from Supabase ───────────────────────────────────────
+interface ListingData {
+  id: string;
+  title: string;
+  price: number;
+  rent_price: number | null;
+  size: string | null;
+  category: string;
+  images: string[];
+  seller_username: string;
+  deposit_pct: number;
+}
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function fmt(cents: number) {
@@ -142,7 +140,43 @@ export default function CheckoutPage({ params: _params }: { params: { listingId:
   const returnDate = sp.get("returnDate") || "";
   const depositPct = Number(sp.get("depositPct") || 40);
 
-  const l = LISTING;
+  // ── Fetch listing from Supabase ──────────────────────────────────────────
+  const [listing, setListing] = useState<ListingData | null>(null);
+  const [listingLoading, setListingLoading] = useState(true);
+  const [listingError, setListingError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase
+      .from("listings")
+      .select(`
+        id, title, price, rent_price, size, category, images, deposit_pct,
+        seller_profiles ( username )
+      `)
+      .eq("id", _params.listingId)
+      .single()
+      .then(({ data, error }) => {
+        if (error || !data) {
+          setListingError("Listing not found.");
+        } else {
+          const sp = Array.isArray(data.seller_profiles) ? data.seller_profiles[0] : data.seller_profiles as { username: string } | null;
+          setListing({
+            id: data.id,
+            title: data.title,
+            price: data.price,
+            rent_price: data.rent_price ?? null,
+            size: data.size ?? null,
+            category: data.category,
+            images: data.images ?? [],
+            seller_username: sp?.username ?? "unknown",
+            deposit_pct: data.deposit_pct ?? 40,
+          });
+        }
+        setListingLoading(false);
+      });
+  }, [_params.listingId]);
+
+  const l = listing;
 
   // ── Fee rates from platform_settings (server is the source of truth) ─────
   // null while loading — the summary hides the fee line until resolved.
@@ -160,17 +194,18 @@ export default function CheckoutPage({ params: _params }: { params: { listingId:
   }, []);
 
   // Display amounts (dollars, for the summary — actual cents used for Stripe)
-  const rentalCostDollars = l.rent_price * days;
-  const depositDollars    = Math.round(l.price * depositPct / 100);
+  const rentPricePerDay   = l?.rent_price ?? 0;
+  const rentalCostDollars = rentPricePerDay * days;
+  const depositDollars    = l ? Math.round(l.price * depositPct / 100) : 0;
   const shipping          = 18;
-  const subtotalDollars   = isRental ? rentalCostDollars : l.price;
+  const subtotalDollars   = isRental ? rentalCostDollars : (l?.price ?? 0);
   const feePercent: number | null = isRental ? rentalFee : saleFee;
 
   // Cents (what Stripe actually charges)
   const rentalCents   = rentalCostDollars * 100;
   const depositCents  = depositDollars * 100;
   const shippingCents = shipping * 100;
-  const saleCents     = l.price * 100;
+  const saleCents     = (l?.price ?? 0) * 100;
 
   // Checkout state machine
   // sale:   "address" → "paying" → "done"
@@ -265,6 +300,21 @@ export default function CheckoutPage({ params: _params }: { params: { listingId:
     }
   }, [stage]);
 
+  if (listingLoading) {
+    return (
+      <div style={{ background: "var(--cream)", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <p style={{ fontFamily: "var(--font-jost)", color: "#6B5E52", fontSize: "0.85rem", letterSpacing: "0.1em" }}>Loading…</p>
+      </div>
+    );
+  }
+  if (listingError || !l) {
+    return (
+      <div style={{ background: "var(--cream)", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <p style={{ fontFamily: "var(--font-jost)", color: "#991B1B", fontSize: "0.85rem" }}>{listingError ?? "Listing not found."}</p>
+      </div>
+    );
+  }
+
   return (
     <div style={{ background: "var(--cream)", minHeight: "100vh" }}>
       <div className="max-w-6xl mx-auto px-6 lg:px-10 py-10">
@@ -289,13 +339,18 @@ export default function CheckoutPage({ params: _params }: { params: { listingId:
             <section>
               <p style={sectionTitle}>Order summary</p>
               <div style={{ display: "flex", gap: "1.2rem", padding: "1.2rem", border: "1px solid #E8DDD3" }}>
-                <div style={{ width: "90px", aspectRatio: "3/4", background: l.bg, flexShrink: 0 }} />
+                <div style={{ width: "90px", aspectRatio: "3/4", background: "#E8DDD3", flexShrink: 0, overflow: "hidden" }}>
+                  {l.images[0] && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={l.images[0]} alt={l.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  )}
+                </div>
                 <div style={{ flex: 1 }}>
                   <p style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.88rem", color: "#1A1A18", marginBottom: "0.3rem", lineHeight: 1.4 }}>
                     {l.title}
                   </p>
                   <p style={{ fontFamily: "var(--font-jost)", fontWeight: 500, fontSize: "0.88rem", color: "#2A2118", marginBottom: "0.2rem" }}>
-                    {l.category} · US Size {l.us_size}
+                    {l.category}{l.size ? ` · US Size ${l.size}` : ""}
                   </p>
                   <p style={{ fontFamily: "var(--font-jost)", fontWeight: 500, fontSize: "0.85rem", color: "#3D3830", marginBottom: "0.6rem" }}>
                     @{l.seller_username}
@@ -316,7 +371,7 @@ export default function CheckoutPage({ params: _params }: { params: { listingId:
                   </p>
                   {isRental && (
                     <p style={{ fontFamily: "var(--font-jost)", fontWeight: 500, fontSize: "0.7rem", color: "#3D3830" }}>
-                      {days} days × ${l.rent_price}/day
+                      {days} days × ${rentPricePerDay}/day
                     </p>
                   )}
                 </div>
@@ -334,7 +389,7 @@ export default function CheckoutPage({ params: _params }: { params: { listingId:
                   <div style={{ display: "flex", flexDirection: "column", gap: "0.45rem" }}>
                     {([
                       ["Duration",                                   `${days} ${days === 1 ? "day" : "days"}`],
-                      ["Daily rate",                                 `$${l.rent_price}/day`],
+                      ["Daily rate",                                 `$${rentPricePerDay}/day`],
                       ["Total rental cost",                          `$${rentalCostDollars.toLocaleString()}`],
                       [`Security deposit (${depositPct}%, refundable)`, `$${depositDollars.toLocaleString()}`],
                       ["Return by",                                  returnDate ? fmtDate(returnDate) : "—"],
