@@ -216,13 +216,24 @@ function StepProfile({ onNext }: { onNext: () => void }) {
 // ── Step 2: Stripe Connect ────────────────────────────────────────────────────
 function StepStripe({ onNext }: { onNext: () => void }) {
   const [connecting, setConnecting] = useState(false);
+  const [error, setError] = useState("");
 
   async function handleConnect() {
     setConnecting(true);
-    const res = await fetch("/api/stripe/connect", { method: "POST" });
-    const { url } = await res.json();
-    if (url) window.location.href = url;
-    else { setConnecting(false); }
+    setError("");
+    try {
+      const res = await fetch("/api/stripe/connect", { method: "POST" });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        setError(data.error || "Something went wrong. Please try again.");
+        setConnecting(false);
+      }
+    } catch {
+      setError("Network error. Please try again.");
+      setConnecting(false);
+    }
   }
 
   return (
@@ -252,6 +263,8 @@ function StepStripe({ onNext }: { onNext: () => void }) {
           </div>
         ))}
       </div>
+
+      {error && <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.82rem", color: "#C4440A" }}>{error}</p>}
 
       <button onClick={handleConnect} disabled={connecting} style={{
         width: "100%", padding: "1rem", background: "#C4440A", border: "none", cursor: "pointer",

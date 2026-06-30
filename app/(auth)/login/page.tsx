@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import SocialAuth from "@/components/auth/SocialAuth";
 
 const inputStyle = {
@@ -33,7 +33,13 @@ const labelStyle = {
 };
 
 export default function LoginPage() {
+  return <Suspense fallback={null}><LoginInner /></Suspense>;
+}
+
+function LoginInner() {
   const router = useRouter();
+  const sp = useSearchParams();
+  const redirectTo = sp.get("redirect") || "/";
   const supabase = createClient();
 
   const [email, setEmail] = useState("");
@@ -65,7 +71,7 @@ export default function LoginPage() {
     if (role === "seller" && !profile?.stripe_onboarding_complete) {
       router.push("/onboarding");
     } else {
-      router.push("/");
+      router.push(redirectTo);
     }
     router.refresh();
   }

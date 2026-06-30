@@ -35,8 +35,7 @@ export async function POST(_req: NextRequest) {
 
       await supabase
         .from("seller_profiles")
-        .update({ stripe_account_id: accountId })
-        .eq("id", user.id);
+        .upsert({ id: user.id, stripe_account_id: accountId });
     }
 
     const accountLink = await stripe.accountLinks.create({
