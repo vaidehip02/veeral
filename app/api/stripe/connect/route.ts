@@ -24,8 +24,9 @@ export async function POST(_req: NextRequest) {
     if (!accountId) {
       const account = await stripe.accounts.create({
         type: "express",
-        country: "US", // TODO: support IN (India) when Stripe India is available
+        country: "US",
         email: user.email,
+        business_type: "individual",
         capabilities: {
           card_payments: { requested: true },
           transfers: { requested: true },
