@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { stripe, calculateFees } from "@/lib/stripe";
+import { stripe } from "@/lib/stripe";
+import { getFeeSettings, calculateFees } from "@/lib/fees";
 import { createClient } from "@/lib/supabase/server";
 
 const SHIPPING_CENTS = 1800; // $18.00
@@ -16,8 +17,8 @@ export async function POST(req: NextRequest) {
     listing_id: string;
     type: "sale" | "rent";
     days?: number;
-    start_date?: string;  // ISO date string
-    return_date?: string; // ISO date string
+    start_date?: string;
+    return_date?: string;
   };
 
   const { listing_id, type } = body;
@@ -58,12 +59,17 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  // ── Fee settings from platform_settings table ─────────────────────────────
+  const feeSettings = await getFeeSettings();
+
   // ── Compute amounts (all in cents) ────────────────────────────────────────
+  // Deposit is based on the item's listed price regardless of transaction type.
+  // Fee applies ONLY to the item/rental cost — never to shipping or deposit.
   const depositPct = listing.deposit_pct ?? 40;
 
-  let rentalFeeCents  = 0;
-  let depositCents    = 0;
-  let itemCents       = 0;
+  let itemCents      = 0;
+  let rentalFeeCents = 0;
+  let depositCents   = 0;
 
   if (type === "rent") {
     rentalFeeCents = (listing.rent_price ?? 0) * (body.days ?? 1) * 100;
@@ -72,9 +78,9 @@ export async function POST(req: NextRequest) {
     itemCents = listing.price * 100;
   }
 
+  // subtotalCents = item/rental cost only (not shipping, not deposit)
   const subtotalCents = type === "rent" ? rentalFeeCents : itemCents;
-  const { platformFee: commissionCents, sellerPayout: sellerPayoutCents } =
-    calculateFees(subtotalCents);
+  const fees = calculateFees(subtotalCents, type, feeSettings);
 
   // ── Create pending order row ──────────────────────────────────────────────
   const { data: order, error: orderErr } = await supabase
@@ -84,11 +90,11 @@ export async function POST(req: NextRequest) {
       buyer_id:    user.id,
       seller_id:   listing.seller_id,
       type,
-      amount:          subtotalCents,
-      platform_fee:    commissionCents,
-      seller_payout:   sellerPayoutCents,
-      deposit_amount:  type === "rent" ? depositCents : null,
-      status:          "pending",
+      amount:         subtotalCents,
+      platform_fee:   fees.applicationFee,
+      seller_payout:  fees.sellerReceives,
+      deposit_amount: type === "rent" ? depositCents : null,
+      status:         "pending",
       ...(type === "rent" && {
         rental_start: body.start_date,
         rental_end:   body.return_date,
@@ -107,14 +113,16 @@ export async function POST(req: NextRequest) {
   try {
     if (type === "rent") {
       // ── TWO PaymentIntents for rental ──────────────────────────────────────
-      // PI 1: rental fee + shipping, transferred to seller (minus commission).
-      // PI 2: deposit, retained by platform — never transferred to seller.
+      // PI 1: rental cost + Veeral fee + shipping — transferred to seller minus fee.
+      //        application_fee_amount = Veeral's cut (applied only to rental cost).
+      // PI 2: deposit — NO transfer, NO fee, retained by platform until return confirmed.
 
       const rentalPi = await stripe.paymentIntents.create({
-        amount:   rentalFeeCents + SHIPPING_CENTS,
+        // Buyer pays: rental cost + fee + shipping
+        amount:   rentalFeeCents + fees.feeAmount + SHIPPING_CENTS,
         currency: "usd",
         automatic_payment_methods: { enabled: true },
-        application_fee_amount: commissionCents,
+        application_fee_amount: fees.applicationFee,
         transfer_data: { destination: seller.stripe_account_id },
         metadata: {
           order_id:    orderId,
@@ -122,6 +130,7 @@ export async function POST(req: NextRequest) {
           listing_id,
           buyer_id:    user.id,
           seller_id:   listing.seller_id,
+          fee_pct:     String(fees.feePct),
         },
       });
 
@@ -129,7 +138,8 @@ export async function POST(req: NextRequest) {
         amount:   depositCents,
         currency: "usd",
         automatic_payment_methods: { enabled: true },
-        // No transfer_data — deposit stays on platform until return confirmed
+        // No application_fee_amount — deposit is fully refundable, no Veeral cut.
+        // No transfer_data — stays on platform until return is confirmed.
         metadata: {
           order_id:    orderId,
           pi_role:     "deposit",
@@ -139,7 +149,6 @@ export async function POST(req: NextRequest) {
         },
       });
 
-      // Store deposit PI id on the order now (rental PI id set by webhook on success)
       await supabase
         .from("orders")
         .update({ deposit_payment_intent_id: depositPi.id })
@@ -149,22 +158,28 @@ export async function POST(req: NextRequest) {
         orderId,
         rentalClientSecret:  rentalPi.client_secret,
         depositClientSecret: depositPi.client_secret,
+        // Expose fee pct so the UI can confirm it matches
+        feePct: fees.feePct,
         amounts: {
-          rentalFee:  rentalFeeCents,
-          shipping:   SHIPPING_CENTS,
-          deposit:    depositCents,
-          commission: commissionCents,
-          sellerPayout: sellerPayoutCents,
+          rentalFee:    rentalFeeCents,
+          veeralFee:    fees.feeAmount,
+          shipping:     SHIPPING_CENTS,
+          deposit:      depositCents,
+          commission:   fees.applicationFee,
+          sellerPayout: fees.sellerReceives,
         },
       });
 
     } else {
       // ── Single PaymentIntent for sale ──────────────────────────────────────
+      // Buyer pays: item price + Veeral fee + shipping.
+      // application_fee_amount = Veeral's cut (on item price only).
+
       const pi = await stripe.paymentIntents.create({
-        amount:   itemCents + SHIPPING_CENTS,
+        amount:   itemCents + fees.feeAmount + SHIPPING_CENTS,
         currency: "usd",
         automatic_payment_methods: { enabled: true },
-        application_fee_amount: commissionCents,
+        application_fee_amount: fees.applicationFee,
         transfer_data: { destination: seller.stripe_account_id },
         metadata: {
           order_id:  orderId,
@@ -172,22 +187,24 @@ export async function POST(req: NextRequest) {
           listing_id,
           buyer_id:  user.id,
           seller_id: listing.seller_id,
+          fee_pct:   String(fees.feePct),
         },
       });
 
       return NextResponse.json({
         orderId,
         clientSecret: pi.client_secret,
+        feePct: fees.feePct,
         amounts: {
           itemPrice:    itemCents,
+          veeralFee:    fees.feeAmount,
           shipping:     SHIPPING_CENTS,
-          commission:   commissionCents,
-          sellerPayout: sellerPayoutCents,
+          commission:   fees.applicationFee,
+          sellerPayout: fees.sellerReceives,
         },
       });
     }
   } catch (err) {
-    // Clean up the pending order if Stripe creation failed
     await supabase.from("orders").delete().eq("id", orderId);
     console.error("[checkout] Stripe PI creation error:", err);
     return NextResponse.json({ error: "Failed to create payment" }, { status: 500 });

@@ -12,6 +12,10 @@ import {
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
+// Fee percentages are fetched from /api/platform/fee-settings on mount so the
+// UI always shows the same rates the server will charge. While loading, we
+// show null (no fee line) to avoid ever displaying a stale or wrong number.
+
 // ── Placeholder — replace with Supabase fetch using listingId ─────────────────
 const LISTING = {
   id: "1",
@@ -140,17 +144,33 @@ export default function CheckoutPage({ params: _params }: { params: { listingId:
 
   const l = LISTING;
 
+  // ── Fee rates from platform_settings (server is the source of truth) ─────
+  // null while loading — the summary hides the fee line until resolved.
+  const [saleFee,   setSaleFee]   = useState<number | null>(null);
+  const [rentalFee, setRentalFee] = useState<number | null>(null);
+
+  useEffect(() => {
+    fetch("/api/platform/fee-settings")
+      .then(r => r.json())
+      .then((d: { saleFee: number; rentalFee: number }) => {
+        setSaleFee(d.saleFee);
+        setRentalFee(d.rentalFee);
+      })
+      .catch(() => { setSaleFee(10); setRentalFee(10); }); // safe fallback
+  }, []);
+
   // Display amounts (dollars, for the summary — actual cents used for Stripe)
   const rentalCostDollars = l.rent_price * days;
   const depositDollars    = Math.round(l.price * depositPct / 100);
   const shipping          = 18;
   const subtotalDollars   = isRental ? rentalCostDollars : l.price;
+  const feePercent: number | null = isRental ? rentalFee : saleFee;
 
   // Cents (what Stripe actually charges)
-  const rentalCents  = rentalCostDollars * 100;
-  const depositCents = depositDollars * 100;
+  const rentalCents   = rentalCostDollars * 100;
+  const depositCents  = depositDollars * 100;
   const shippingCents = shipping * 100;
-  const saleCents    = l.price * 100;
+  const saleCents     = l.price * 100;
 
   // Checkout state machine
   // sale:   "address" → "paying" → "done"
@@ -167,7 +187,13 @@ export default function CheckoutPage({ params: _params }: { params: { listingId:
   const [promoCode,    setPromoCode]    = useState("");
   const [promoApplied, setPromoApplied] = useState(false);
   const [promoError,   setPromoError]   = useState("");
+  const [feeTooltip,   setFeeTooltip]   = useState(false);
+
   const discount = promoApplied ? Math.round(subtotalDollars * 0.10) : 0;
+  // Veeral fee is added ON TOP of the (discounted) subtotal — never on shipping or deposit.
+  const veeralFeeDollars = feePercent !== null
+    ? Math.round((subtotalDollars - discount) * (feePercent / 100))
+    : null;
 
   const [form, setForm] = useState({
     firstName: "", lastName: "", email: "",
@@ -358,6 +384,8 @@ export default function CheckoutPage({ params: _params }: { params: { listingId:
             <section style={{ border: "1px solid #E8DDD3", padding: "1.2rem" }}>
               <p style={sectionTitle}>Order total</p>
               <div style={{ display: "flex", flexDirection: "column", gap: "0.55rem" }}>
+
+                {/* Subtotal */}
                 <div style={rowBetween}>
                   <span style={{ fontFamily: "var(--font-jost)", fontWeight: 500, fontSize: "0.85rem", color: "#2A2118" }}>
                     {isRental ? "Rental cost" : "Item price"}
@@ -366,16 +394,70 @@ export default function CheckoutPage({ params: _params }: { params: { listingId:
                     ${subtotalDollars.toLocaleString()}
                   </span>
                 </div>
+
+                {/* Promo discount */}
                 {promoApplied && (
                   <div style={rowBetween}>
                     <span style={{ fontFamily: "var(--font-jost)", fontWeight: 500, fontSize: "0.85rem", color: "#5a8a5a" }}>Promo (VEERAL10)</span>
                     <span style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.85rem", color: "#5a8a5a" }}>−${discount.toLocaleString()}</span>
                   </div>
                 )}
+
+                {/* Shipping */}
                 <div style={rowBetween}>
                   <span style={{ fontFamily: "var(--font-jost)", fontWeight: 500, fontSize: "0.85rem", color: "#2A2118" }}>Shipping</span>
                   <span style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.85rem", color: "#1A1A18" }}>${shipping}</span>
                 </div>
+
+                {/* Veeral fee — hidden while fee rate is loading */}
+                {feePercent !== null && veeralFeeDollars !== null && (
+                  <div style={rowBetween}>
+                    <span style={{ fontFamily: "var(--font-jost)", fontWeight: 500, fontSize: "0.85rem", color: "#2A2118", display: "flex", alignItems: "center", gap: "0.35rem" }}>
+                      Veeral fee ({feePercent}%)
+                      {/* Tooltip trigger */}
+                      <span style={{ position: "relative", display: "inline-flex" }}>
+                        <button
+                          type="button"
+                          onMouseEnter={() => setFeeTooltip(true)}
+                          onFocus={() => setFeeTooltip(true)}
+                          onMouseLeave={() => setFeeTooltip(false)}
+                          onBlur={() => setFeeTooltip(false)}
+                          aria-label="About the Veeral fee"
+                          style={{
+                            width: "15px", height: "15px", borderRadius: "50%",
+                            border: "1.5px solid #9C8475", background: "transparent",
+                            color: "#9C8475", fontFamily: "var(--font-jost)", fontWeight: 700,
+                            fontSize: "0.55rem", lineHeight: 1, cursor: "default",
+                            display: "flex", alignItems: "center", justifyContent: "center",
+                            padding: 0, flexShrink: 0,
+                          }}
+                        >
+                          ?
+                        </button>
+                        {feeTooltip && (
+                          <span style={{
+                            position: "absolute", bottom: "calc(100% + 6px)", left: "50%",
+                            transform: "translateX(-50%)",
+                            background: "#2A2118", color: "#FAF6F1",
+                            fontFamily: "var(--font-jost)", fontWeight: 400,
+                            fontSize: "0.7rem", lineHeight: 1.5,
+                            padding: "0.55rem 0.75rem", borderRadius: "4px",
+                            width: "220px", whiteSpace: "normal",
+                            zIndex: 10, pointerEvents: "none",
+                            boxShadow: "0 2px 8px rgba(0,0,0,0.18)",
+                          }}>
+                            This fee supports buyer protection, secure payments, and the Veeral marketplace. It is added on top of the seller&apos;s listed price.
+                          </span>
+                        )}
+                      </span>
+                    </span>
+                    <span style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.85rem", color: "#1A1A18" }}>
+                      ${veeralFeeDollars.toLocaleString()}
+                    </span>
+                  </div>
+                )}
+
+                {/* Security deposit (rental only) — refundable, separate Stripe charge */}
                 {isRental && (
                   <div style={rowBetween}>
                     <span style={{ fontFamily: "var(--font-jost)", fontWeight: 500, fontSize: "0.85rem", color: "#2A2118" }}>
@@ -386,18 +468,29 @@ export default function CheckoutPage({ params: _params }: { params: { listingId:
                     </span>
                   </div>
                 )}
+
+                {/* TODO[TAX]: Integrate Stripe Tax before launch to calculate US sales tax
+                    at the correct rate for the buyer's shipping address. Do NOT estimate
+                    or hardcode a rate — use stripe.tax.calculations.create() at checkout
+                    time. Add the tax line here between deposit and Total. */}
+
                 <div style={{ height: "1px", background: "#E8DDD3", margin: "0.4rem 0" }} />
+
+                {/* Total = subtotal − discount + shipping + fee + deposit */}
                 <div style={rowBetween}>
                   <span style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.82rem", letterSpacing: "0.1em", textTransform: "uppercase", color: "#1A1A18" }}>
                     Total
                   </span>
                   <span style={{ fontFamily: "var(--font-cormorant)", fontWeight: 600, fontSize: "1.7rem", color: "#C4440A" }}>
-                    ${(subtotalDollars - discount + shipping + (isRental ? depositDollars : 0)).toLocaleString()}
+                    {veeralFeeDollars !== null
+                      ? `$${(subtotalDollars - discount + shipping + veeralFeeDollars + (isRental ? depositDollars : 0)).toLocaleString()}`
+                      : "—"}
                   </span>
                 </div>
+
                 {isRental && (
                   <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.72rem", color: "#6B5E52", marginTop: "0.25rem" }}>
-                    Charged in two steps: rental fee + shipping first, then the refundable deposit.
+                    Charged in two steps: rental fee + shipping + Veeral fee first, then the refundable deposit separately.
                   </p>
                 )}
               </div>
@@ -457,16 +550,17 @@ export default function CheckoutPage({ params: _params }: { params: { listingId:
                 )}
 
                 <button
-                  type="submit" disabled={creating}
+                  type="submit" disabled={creating || feePercent === null}
                   style={{
                     width: "100%", padding: "1.05rem", border: "none",
-                    background: "#C4440A", color: "var(--cream)", cursor: creating ? "not-allowed" : "pointer",
+                    background: "#C4440A", color: "var(--cream)",
+                    cursor: (creating || feePercent === null) ? "not-allowed" : "pointer",
                     fontFamily: "var(--font-jost)", fontWeight: 600,
                     fontSize: "0.7rem", letterSpacing: "0.2em", textTransform: "uppercase",
-                    opacity: creating ? 0.6 : 1, transition: "opacity 0.2s",
+                    opacity: (creating || feePercent === null) ? 0.6 : 1, transition: "opacity 0.2s",
                   }}
                 >
-                  {creating ? "Preparing payment…" : "Continue to payment →"}
+                  {feePercent === null ? "Loading…" : creating ? "Preparing payment…" : "Continue to payment →"}
                 </button>
 
                 <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.7rem", color: "#3D3830", textAlign: "center", marginTop: "-0.5rem" }}>
@@ -481,9 +575,9 @@ export default function CheckoutPage({ params: _params }: { params: { listingId:
                 <p style={sectionTitle}>Payment</p>
                 <Elements stripe={stripePromise} options={{ clientSecret: saleSecret, appearance: elementsAppearance }}>
                   <PaymentForm
-                    label="Item + shipping"
-                    amount={saleCents + shippingCents}
-                    buttonLabel={`Pay $${(l.price + shipping).toLocaleString()} — complete order`}
+                    label="Item + Veeral fee + shipping"
+                    amount={saleCents + ((veeralFeeDollars ?? 0) * 100) + shippingCents}
+                    buttonLabel={`Pay $${(l.price + (veeralFeeDollars ?? 0) + shipping).toLocaleString()} — complete order`}
                     onSuccess={() => setStage("done")}
                     onError={setApiError}
                   />
@@ -501,9 +595,9 @@ export default function CheckoutPage({ params: _params }: { params: { listingId:
                 </p>
                 <Elements stripe={stripePromise} options={{ clientSecret: rentalSecret, appearance: elementsAppearance }}>
                   <PaymentForm
-                    label="Rental fee + shipping"
-                    amount={rentalCents + shippingCents}
-                    buttonLabel={`Pay $${(rentalCostDollars + shipping).toLocaleString()} — rental fee`}
+                    label="Rental fee + Veeral fee + shipping"
+                    amount={rentalCents + ((veeralFeeDollars ?? 0) * 100) + shippingCents}
+                    buttonLabel={`Pay $${(rentalCostDollars + (veeralFeeDollars ?? 0) + shipping).toLocaleString()} — rental fee`}
                     onSuccess={() => setStage("paying_deposit")}
                     onError={setApiError}
                   />

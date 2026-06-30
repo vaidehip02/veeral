@@ -316,7 +316,7 @@ export default function SellerProfilePage({
           {SELLER.bio}
         </p>
 
-        {/* Meta row: location, member since, socials */}
+        {/* Meta row: location, member since */}
         <div style={{
           display: "flex", flexWrap: "wrap", gap: "1.25rem",
           marginBottom: "1.75rem", alignItems: "center",

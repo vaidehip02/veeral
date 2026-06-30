@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendEmail } from "@/lib/email/send";
 import NewMessage from "@/lib/email/templates/NewMessage";
+import { filterMessageContent } from "@/lib/messages/filterContent";
 
 // GET /api/conversations/[id]/messages
 export async function GET(
@@ -43,6 +44,11 @@ export async function POST(
   }
   if (messageBody.length > 4000) {
     return NextResponse.json({ error: "Message too long (max 4000 chars)" }, { status: 400 });
+  }
+
+  const filter = filterMessageContent(messageBody.trim());
+  if (filter.blocked) {
+    return NextResponse.json({ error: filter.reason }, { status: 422 });
   }
 
   // Verify participant (RLS will also enforce, but we need conversation data for email)

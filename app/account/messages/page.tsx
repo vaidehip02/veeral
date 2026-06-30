@@ -85,6 +85,7 @@ function MessagesInner() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
+  const [sendError, setSendError] = useState<string | null>(null);
   const [loadingInbox, setLoadingInbox] = useState(true);
   const [loadingThread, setLoadingThread] = useState(false);
 
@@ -190,6 +191,12 @@ function MessagesInner() {
       );
     } else {
       setDraft(body);
+      try {
+        const { error } = await res.json() as { error?: string };
+        setSendError(error ?? "Failed to send. Please try again.");
+      } catch {
+        setSendError("Failed to send. Please try again.");
+      }
     }
     setSending(false);
   }
@@ -330,10 +337,16 @@ function MessagesInner() {
           </div>
 
           {/* Composer */}
-          <div style={{ padding: "1rem 1.25rem", borderTop: `1px solid ${A.border}`, background: "#fff", display: "flex", gap: "0.75rem", alignItems: "flex-end" }}>
+          <div style={{ borderTop: `1px solid ${A.border}`, background: "#fff" }}>
+            {sendError && (
+              <p style={{ margin: "0", padding: "0.5rem 1.25rem", fontFamily: "var(--font-jost)", fontSize: "0.72rem", color: "#991B1B", background: "#FEF2F2", borderBottom: `1px solid #FECACA` }}>
+                {sendError}
+              </p>
+            )}
+            <div style={{ padding: "1rem 1.25rem", display: "flex", gap: "0.75rem", alignItems: "flex-end" }}>
             <textarea
               value={draft}
-              onChange={e => setDraft(e.target.value)}
+              onChange={e => { setDraft(e.target.value); if (sendError) setSendError(null); }}
               onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
               placeholder="Type a message… (Enter to send, Shift+Enter for new line)"
               rows={2}
@@ -346,6 +359,7 @@ function MessagesInner() {
             >
               {sending ? "…" : "Send"}
             </button>
+            </div>
           </div>
         </div>
       ) : (

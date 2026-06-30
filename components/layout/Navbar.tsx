@@ -7,8 +7,8 @@ import type { User } from "@supabase/supabase-js";
 
 const NAV_LINKS = [
   { label: "Browse", href: "/listings" },
-  { label: "Sell", href: "/listings/new" },
-  { label: "Rent", href: "/listings?type=rent" },
+  { label: "Sell",   href: "/listings/new" },
+  { label: "Rent",   href: "/listings?type=rent" },
 ];
 
 const DROPDOWN_ITEMS = [

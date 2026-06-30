@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useMemo, useCallback, useRef, useEffect } from "react";
+import { useState, useMemo, useCallback, useRef, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -81,7 +82,7 @@ const SORT_OPTIONS: { value: SortOption; label: string }[] = [
 
 interface Filters {
   garments:      string[];
-  listingType:   ListingType | "all";
+  listingTypes:  ListingType[]; // empty = show all; multiple = show any that match
   occasions:     string[];
   sizes:         string[];
   priceMin:      string;
@@ -93,7 +94,7 @@ interface Filters {
 }
 
 const DEFAULT_FILTERS: Filters = {
-  garments:[], listingType:"all", occasions:[], sizes:[],
+  garments:[], listingTypes:[], occasions:[], sizes:[],
   priceMin:"", priceMax:"", conditions:[], fabrics:[],
   embellishments:[], designer:"",
 };
@@ -173,11 +174,11 @@ function FilterSection({
 
 function FilterPanel({
   filters, setFilters,
-}: { filters: Filters; setFilters: (f: Filters) => void }) {
+}: { filters: Filters; setFilters: React.Dispatch<React.SetStateAction<Filters>> }) {
 
   const update = useCallback(<K extends keyof Filters>(key: K, val: Filters[K]) => {
-    setFilters({ ...filters, [key]: val });
-  }, [filters, setFilters]);
+    setFilters((prev: Filters) => ({ ...prev, [key]: val }));
+  }, [setFilters]);
 
   return (
     <div>
@@ -191,13 +192,21 @@ function FilterPanel({
         ))}
       </FilterSection>
 
-      {/* Listing type */}
+      {/* Listing type — "All" checked when nothing specific selected; others are multi-select */}
       <FilterSection title="Listing type">
-        {(["all","sale","rent","both"] as const).map(t => (
-          <CheckRow key={t}
-            label={t === "all" ? "All" : t === "sale" ? "For Sale" : t === "rent" ? "For Rent" : "Sale + Rent"}
-            checked={filters.listingType === t}
-            onChange={() => update("listingType", t)}
+        {/* All — highlighted only when no specific type is selected */}
+        <CheckRow label="All"
+          checked={filters.listingTypes.length === 0}
+          onChange={() => update("listingTypes", [])}
+        />
+        {([
+          { value: "sale" as ListingType, label: "For Sale" },
+          { value: "rent" as ListingType, label: "For Rent" },
+          { value: "both" as ListingType, label: "Sale + Rent" },
+        ]).map(({ value, label }) => (
+          <CheckRow key={value} label={label}
+            checked={filters.listingTypes.includes(value)}
+            onChange={() => update("listingTypes", toggle(filters.listingTypes, value))}
           />
         ))}
       </FilterSection>
@@ -507,8 +516,25 @@ function EmptyState({ onClear }: { onClear: () => void }) {
 const PAGE_SIZE = 12;
 
 export default function ListingsPage() {
+  return <Suspense fallback={null}><ListingsRouter /></Suspense>;
+}
+
+// Reads typeParam and forces ListingsInner to remount when it changes,
+// so useState initializers always see the correct initial value.
+function ListingsRouter() {
+  const sp = useSearchParams();
+  const typeParam = sp.get("type");
+  return <ListingsInner key={typeParam ?? "all"} typeParam={typeParam} />;
+}
+
+function ListingsInner({ typeParam }: { typeParam: string | null }) {
+  const initialListingTypes: ListingType[] =
+    typeParam === "rent" ? ["rent", "both"] :
+    typeParam === "sale" ? ["sale"] :
+    typeParam === "both" ? ["both"] : [];
+
   const [query,       setQuery]       = useState("");
-  const [filters,     setFilters]     = useState<Filters>(DEFAULT_FILTERS);
+  const [filters,     setFilters]     = useState<Filters>({ ...DEFAULT_FILTERS, listingTypes: initialListingTypes });
   const [sort,        setSort]        = useState<SortOption>("newest");
   const [page,        setPage]        = useState(1);
   const [drawerOpen,  setDrawerOpen]  = useState(false);
@@ -549,7 +575,7 @@ export default function ListingsPage() {
       // Garment type
       if (filters.garments.length && !filters.garments.includes(l.garment)) return false;
       // Listing type
-      if (filters.listingType !== "all" && l.type !== filters.listingType) return false;
+      if (filters.listingTypes.length > 0 && !filters.listingTypes.includes(l.type)) return false;
       // Occasion
       if (filters.occasions.length && !filters.occasions.some(o => l.occasion.includes(o))) return false;
       // Size
@@ -589,7 +615,8 @@ export default function ListingsPage() {
   const activePills: { key: string; label: string; remove: () => void }[] = [];
   if (query) activePills.push({ key:"q", label:`"${query}"`, remove:() => setQuery("") });
   filters.garments.forEach(g => activePills.push({ key:`g-${g}`, label:g, remove:() => setFilters({ ...filters, garments: filters.garments.filter(x => x !== g) }) }));
-  if (filters.listingType !== "all") activePills.push({ key:"lt", label: filters.listingType === "sale" ? "For Sale" : filters.listingType === "rent" ? "For Rent" : "Sale + Rent", remove: () => setFilters({ ...filters, listingType:"all" }) });
+  const TYPE_LABEL: Record<ListingType, string> = { sale: "For Sale", rent: "For Rent", both: "Sale + Rent" };
+  filters.listingTypes.forEach(t => activePills.push({ key:`lt-${t}`, label: TYPE_LABEL[t], remove: () => setFilters({ ...filters, listingTypes: filters.listingTypes.filter(x => x !== t) }) }));
   filters.occasions.forEach(o => activePills.push({ key:`o-${o}`, label:o, remove:() => setFilters({ ...filters, occasions: filters.occasions.filter(x => x !== o) }) }));
   filters.sizes.forEach(s => activePills.push({ key:`s-${s}`, label:`Size ${s}`, remove:() => setFilters({ ...filters, sizes: filters.sizes.filter(x => x !== s) }) }));
   if (filters.priceMin || filters.priceMax) activePills.push({ key:"price", label: filters.priceMin && filters.priceMax ? `$${filters.priceMin}–$${filters.priceMax}` : filters.priceMin ? `From $${filters.priceMin}` : `Under $${filters.priceMax}`, remove:() => setFilters({ ...filters, priceMin:"", priceMax:"" }) });
