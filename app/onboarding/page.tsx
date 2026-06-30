@@ -252,7 +252,7 @@ function StepStripe({ onNext }: { onNext: () => void }) {
         {[
           ["🔒", "Secure", "Your bank details are handled entirely by Stripe — Veeral never sees them."],
           ["⚡", "Fast payouts", "Funds reach your account within 2–3 business days of each completed sale."],
-          ["💸", "No deductions", "Veeral's 10% fee is charged to the buyer on top of your listed price — you receive your full asking price."],
+          ["💸", "You keep what you list", "Buyers pay a small platform fee on top of your listed price. You receive exactly what you listed — no deductions."],
         ].map(([icon, title, desc]) => (
           <div key={title} style={{ display: "flex", gap: "0.9rem", alignItems: "flex-start" }}>
             <span style={{ fontSize: "1.1rem", flexShrink: 0 }}>{icon}</span>
