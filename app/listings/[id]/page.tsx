@@ -90,31 +90,32 @@ export default function ListingPage({ params: _params }: { params: { id: string 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const supabase = createClient();
+
   useEffect(() => {
-    const supabase = createClient();
     supabase
       .from("listings")
       .select(`
-        id, title, description, price, rent_price, rent_duration_days,
+        id, title, description, price, rent_price,
         deposit_pct, type, category, condition, size, color, brand,
         original_price, location, images, tags, dry_clean_only,
-        included, care_instructions,
-        seller_profiles ( id, username, display_name, avatar_url )
+        included, care_instructions, seller_id
       `)
       .eq("id", _params.id)
       .single()
-      .then(({ data, error: err }) => {
+      .then(async ({ data, error: err }) => {
         if (err || !data) { setError("Listing not found."); setLoading(false); return; }
-        const sp = Array.isArray(data.seller_profiles) ? data.seller_profiles[0] : data.seller_profiles as { id: string; username: string; display_name: string | null; avatar_url: string | null } | null;
-        const built: Listing = {
-          ...data,
-          seller: {
-            id: sp?.id ?? "",
-            username: sp?.username ?? "unknown",
-            display_name: sp?.display_name ?? null,
-            avatar_url: sp?.avatar_url ?? null,
-          },
-        };
+        // Fetch seller separately to avoid FK join dependency
+        let seller = { id: "", username: "unknown", display_name: null as string | null, avatar_url: null as string | null };
+        if (data.seller_id) {
+          const { data: sp } = await supabase
+            .from("seller_profiles")
+            .select("id, username, display_name, avatar_url")
+            .eq("id", data.seller_id)
+            .single();
+          if (sp) seller = sp;
+        }
+        const built: Listing = { ...data, rent_duration_days: null, seller };
         setListing(built);
         setSelectedSize(built.size ?? "");
         setLoading(false);

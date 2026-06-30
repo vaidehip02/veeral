@@ -149,29 +149,36 @@ export default function CheckoutPage({ params: _params }: { params: { listingId:
     const supabase = createClient();
     supabase
       .from("listings")
-      .select(`
-        id, title, price, rent_price, size, category, images, deposit_pct,
-        seller_profiles ( username )
-      `)
+      .select("id, title, price, rent_price, size, category, images, deposit_pct, seller_id")
       .eq("id", _params.listingId)
       .single()
-      .then(({ data, error }) => {
+      .then(async ({ data, error }) => {
         if (error || !data) {
           setListingError("Listing not found.");
-        } else {
-          const sp = Array.isArray(data.seller_profiles) ? data.seller_profiles[0] : data.seller_profiles as { username: string } | null;
-          setListing({
-            id: data.id,
-            title: data.title,
-            price: data.price,
-            rent_price: data.rent_price ?? null,
-            size: data.size ?? null,
-            category: data.category,
-            images: data.images ?? [],
-            seller_username: sp?.username ?? "unknown",
-            deposit_pct: data.deposit_pct ?? 40,
-          });
+          setListingLoading(false);
+          return;
         }
+        // Fetch seller username separately to avoid FK join dependency
+        let sellerUsername = "unknown";
+        if (data.seller_id) {
+          const { data: sp } = await supabase
+            .from("seller_profiles")
+            .select("username")
+            .eq("id", data.seller_id)
+            .single();
+          sellerUsername = sp?.username ?? "unknown";
+        }
+        setListing({
+          id: data.id,
+          title: data.title,
+          price: data.price,
+          rent_price: data.rent_price ?? null,
+          size: data.size ?? null,
+          category: data.category,
+          images: data.images ?? [],
+          seller_username: sellerUsername,
+          deposit_pct: data.deposit_pct ?? 40,
+        });
         setListingLoading(false);
       });
   }, [_params.listingId]);
