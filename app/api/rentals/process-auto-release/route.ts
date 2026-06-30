@@ -22,7 +22,9 @@ import DepositReleased from "@/lib/email/templates/DepositReleased";
  * (or you manually). Set CRON_SECRET in your environment variables.
  */
 export async function GET(req: NextRequest) {
-  const secret = req.headers.get("x-cron-secret");
+  // Vercel passes the cron secret as "Authorization: Bearer <CRON_SECRET>"
+  const auth = req.headers.get("authorization") ?? "";
+  const secret = auth.startsWith("Bearer ") ? auth.slice(7) : auth;
   if (process.env.CRON_SECRET && secret !== process.env.CRON_SECRET) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
