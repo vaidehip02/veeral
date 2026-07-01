@@ -60,8 +60,6 @@ export default async function OrderDetailPage({ params }: { params: { id: string
     .eq("id", params.id)
     .single() as { data: OrderRow | null; error: unknown };
 
-  console.error("[order-detail] params.id:", params.id, "user.id:", user.id, "order:", !!order, "error:", orderError);
-
   if (!order || (order as OrderRow).buyer_id !== user.id) notFound();
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
