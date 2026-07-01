@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { getFeeSettings, calculateFees } from "@/lib/fees";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 const SHIPPING_CENTS = 1800; // $18.00
 
@@ -86,7 +87,8 @@ export async function POST(req: NextRequest) {
   const fees = calculateFees(subtotalCents, type, feeSettings);
 
   // ── Create pending order row ──────────────────────────────────────────────
-  const { data: order, error: orderErr } = await supabase
+  const admin = createAdminClient();
+  const { data: order, error: orderErr } = await admin
     .from("orders")
     .insert({
       listing_id,
@@ -152,7 +154,7 @@ export async function POST(req: NextRequest) {
         },
       });
 
-      await supabase
+      await admin
         .from("orders")
         .update({ deposit_payment_intent_id: depositPi.id })
         .eq("id", orderId);
@@ -208,7 +210,7 @@ export async function POST(req: NextRequest) {
       });
     }
   } catch (err) {
-    await supabase.from("orders").delete().eq("id", orderId);
+    await admin.from("orders").delete().eq("id", orderId);
     console.error("[checkout] Stripe PI creation error:", err);
     return NextResponse.json({ error: "Failed to create payment" }, { status: 500 });
   }
