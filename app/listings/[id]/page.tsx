@@ -68,16 +68,6 @@ function Tag({ children }: { children: React.ReactNode }) {
   );
 }
 
-function Stars({ rating }: { rating: number }) {
-  return (
-    <span style={{ color: "#C4440A", fontSize: "0.8rem" }}>
-      {"★".repeat(Math.round(rating))}{"☆".repeat(5 - Math.round(rating))}
-      <span style={{ fontFamily: "var(--font-jost)", fontWeight: 500, fontSize: "0.85rem", color: "var(--muted)", marginLeft: "0.35rem" }}>
-        ({rating})
-      </span>
-    </span>
-  );
-}
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default function ListingPage({ params: _params }: { params: { id: string } }) {
@@ -90,9 +80,8 @@ export default function ListingPage({ params: _params }: { params: { id: string 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const supabase = createClient();
-
   useEffect(() => {
+    const supabase = createClient();
     supabase
       .from("listings")
       .select(`
