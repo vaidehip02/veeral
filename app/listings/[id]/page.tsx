@@ -96,10 +96,9 @@ export default function ListingPage({ params: _params }: { params: { id: string 
     supabase
       .from("listings")
       .select(`
-        id, title, description, price, rent_price,
+        id, title, description, price, rent_price, rent_duration_days,
         deposit_pct, type, category, condition, size, color, brand,
-        original_price, location, images, tags, dry_clean_only,
-        included, care_instructions, seller_id
+        location, images, seller_id
       `)
       .eq("id", _params.id)
       .single()
@@ -115,7 +114,15 @@ export default function ListingPage({ params: _params }: { params: { id: string 
             .single();
           if (sp) seller = sp;
         }
-        const built: Listing = { ...data, rent_duration_days: null, seller };
+        const built: Listing = {
+          ...data,
+          original_price: null,
+          tags: null,
+          dry_clean_only: null,
+          included: null,
+          care_instructions: null,
+          seller,
+        };
         setListing(built);
         setSelectedSize(built.size ?? "");
         setLoading(false);
