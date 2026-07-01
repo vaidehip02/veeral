@@ -46,10 +46,12 @@ export default async function OrderDetailPage({ params }: { params: { id: string
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
+  // Use the user's own client — RLS policy "Buyers and sellers can view their own orders"
+  // already enforces access. Adding .eq("buyer_id", user.id) as an extra explicit guard.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const admin = createAdminClient() as any;
+  const db = supabase as any;
 
-  const { data: order } = await admin
+  const { data: order } = await db
     .from("orders")
     .select(
       "id, type, status, amount, platform_fee, seller_payout, deposit_amount, " +
@@ -58,11 +60,13 @@ export default async function OrderDetailPage({ params }: { params: { id: string
       "paid_at, created_at, listing_id, seller_id, buyer_id"
     )
     .eq("id", params.id)
+    .eq("buyer_id", user.id)   // access control baked into query
     .single() as { data: OrderRow | null };
 
-  // Access control: only the buyer can view their own order.
-  // Return notFound() for both "not found" and "not yours" — never leak order existence.
-  if (!order || order.buyer_id !== user.id) notFound();
+  if (!order) notFound();
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const admin = createAdminClient() as any;
 
   const [{ data: listing }, { data: seller }] = await Promise.all([
     admin
