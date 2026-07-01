@@ -3,6 +3,7 @@
 import { useState, useMemo, useCallback, useRef, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { createClient } from "@/lib/supabase/client";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -14,49 +15,17 @@ interface Listing {
   id: string;
   title: string;
   price: number;
-  rent_price?: number;
+  rent_price: number | null;
   type: ListingType;
-  garment: string;
-  occasion: string[];
-  size: string;
+  category: string;
+  size: string | null;
   condition: Condition;
-  fabric: string;
-  embellishments: string[];
-  designer: string;
-  seller: string;
-  bg: string;
-  views: number;
-  created_at: string; // ISO-ish for sort
+  brand: string | null;
+  color: string | null;
+  images: string[];
+  view_count: number | null;
+  created_at: string;
 }
-
-// ─── Mock data (replace with Supabase) ───────────────────────────────────────
-
-const ALL_LISTINGS: Listing[] = [
-  { id:"1",  title:"Red Bridal Lehenga with Gold Embroidery", price:4500, rent_price:120, type:"both",  garment:"Lehenga",        occasion:["Bridal","Wedding guest"], size:"6",  condition:"like_new", fabric:"Silk",      embellishments:["Zari","Beading"],          designer:"Anita Dongre",     seller:"priya_sharma",  bg:"#D4C5B5", views:412, created_at:"2026-06-01" },
-  { id:"2",  title:"Zardozi Saree — Ivory & Gold",            price:980,  rent_price:65,  type:"both",  garment:"Saree",          occasion:["Wedding guest","Formal"],  size:"Free",condition:"like_new", fabric:"Silk",      embellishments:["Zari","Thread embroidery"],designer:"Sabyasachi",       seller:"priya_sharma",  bg:"#E8DDD3", views:308, created_at:"2026-05-28" },
-  { id:"3",  title:"Pink Anarkali Kurta Set",                  price:320,                 type:"sale",  garment:"Salwar Kameez",  occasion:["Festival","Party"],        size:"8",  condition:"good",     fabric:"Georgette", embellishments:["Thread embroidery"],       designer:"",                 seller:"ananya_m",      bg:"#DDD0C5", views:187, created_at:"2026-06-05" },
-  { id:"4",  title:"Mirror-work Lehenga (Bridal)",             price:3800, rent_price:160, type:"both",  garment:"Lehenga",        occasion:["Bridal"],                  size:"4",  condition:"new",      fabric:"Velvet",    embellishments:["Mirror work","Zari"],       designer:"Manish Malhotra",  seller:"priya_sharma",  bg:"#C8B9A8", views:521, created_at:"2026-05-15" },
-  { id:"5",  title:"Silk Sharara Set — Sage Green",            price:540,                 type:"sale",  garment:"Salwar Kameez",  occasion:["Engagement","Party"],      size:"10", condition:"like_new", fabric:"Silk",      embellishments:["Thread embroidery"],       designer:"",                 seller:"meera_b",       bg:"#CFC0AF", views:143, created_at:"2026-06-08" },
-  { id:"6",  title:"Blue Banarasi Silk Saree",                 price:1200,                type:"sale",  garment:"Saree",          occasion:["Wedding guest","Diwali"],  size:"Free",condition:"good",     fabric:"Silk",      embellishments:["Zari","Brocade"],          designer:"",                 seller:"priya_sharma",  bg:"#C3B5A8", views:229, created_at:"2026-05-20" },
-  { id:"7",  title:"Sequin Lehenga — Midnight Blue",           price:2200, rent_price:95,  type:"both",  garment:"Lehenga",        occasion:["Wedding guest","Party"],   size:"6",  condition:"like_new", fabric:"Net",       embellishments:["Sequins","Beading"],        designer:"",                 seller:"priya_sharma",  bg:"#B8BFCC", views:376, created_at:"2026-05-25" },
-  { id:"8",  title:"Embroidered Chanderi Saree",               price:780,  rent_price:45,  type:"both",  garment:"Saree",          occasion:["Festival","Eid","Casual"], size:"Free",condition:"good",     fabric:"Chiffon",   embellishments:["Thread embroidery"],       designer:"",                 seller:"kavitha_wears", bg:"#DDD5CA", views:165, created_at:"2026-06-02" },
-  { id:"9",  title:"Ivory Sharara Set",                        price:460,                 type:"sale",  garment:"Salwar Kameez",  occasion:["Engagement","Formal"],     size:"12", condition:"like_new", fabric:"Georgette", embellishments:["Stone work"],              designer:"",                 seller:"divya.looks",   bg:"#CABDB1", views:98,  created_at:"2026-06-07" },
-  { id:"10", title:"Gold Tissue Lehenga",                      price:5100, rent_price:200, type:"both",  garment:"Lehenga",        occasion:["Bridal","Wedding guest"], size:"4",  condition:"new",      fabric:"Tissue",    embellishments:["Zari","Stone work"],        designer:"Tarun Tahiliani",  seller:"priya_sharma",  bg:"#E0DDD8", views:489, created_at:"2026-05-10" },
-  { id:"11", title:"Dusty Pink Anarkali — Georgette",          price:290,                 type:"sale",  garment:"Salwar Kameez",  occasion:["Casual","Party"],          size:"8",  condition:"fair",     fabric:"Georgette", embellishments:["Thread embroidery"],       designer:"",                 seller:"sana.rents",    bg:"#D9C9C4", views:72,  created_at:"2026-06-09" },
-  { id:"12", title:"Bridal Dupatta — Red & Gold",              price:180,  rent_price:30,  type:"rent",  garment:"Other",          occasion:["Bridal"],                  size:"Free",condition:"new",      fabric:"Net",       embellishments:["Zari","Stone work"],        designer:"",                 seller:"priya_sharma",  bg:"#E3D5CA", views:134, created_at:"2026-05-30" },
-  { id:"13", title:"Navy Sherwani — Brocade",                  price:1600, rent_price:80,  type:"both",  garment:"Sherwani",       occasion:["Wedding guest","Formal"],  size:"40", condition:"like_new", fabric:"Brocade",   embellishments:["Zari"],                    designer:"Manyavar",         seller:"raj_styles",    bg:"#C9CDD6", views:201, created_at:"2026-05-18" },
-  { id:"14", title:"Yellow Bandhani Saree",                    price:340,                 type:"sale",  garment:"Saree",          occasion:["Festival","Diwali","Eid"],  size:"Free",condition:"good",     fabric:"Cotton",    embellishments:["Bandhani"],                designer:"",                 seller:"kavitha_wears", bg:"#E5DCC6", views:119, created_at:"2026-06-03" },
-  { id:"15", title:"Organza Lehenga — Blush",                  price:1850, rent_price:85,  type:"both",  garment:"Lehenga",        occasion:["Engagement","Wedding guest"],size:"6", condition:"like_new", fabric:"Organza",   embellishments:["Thread embroidery","Sequins"],designer:"",              seller:"meera_b",       bg:"#E0CECC", views:284, created_at:"2026-05-22" },
-  { id:"16", title:"Ikkat Silk Saree — Rust",                  price:620,                 type:"sale",  garment:"Saree",          occasion:["Casual","Festival"],       size:"Free",condition:"good",     fabric:"Silk",      embellishments:["Ikkat"],                   designer:"",                 seller:"divya.looks",   bg:"#D4A89A", views:93,  created_at:"2026-06-06" },
-  { id:"17", title:"Indo-Western Jumpsuit — Emerald",          price:490,                 type:"sale",  garment:"Indo-Western",   occasion:["Party","Formal"],          size:"8",  condition:"like_new", fabric:"Crepe",     embellishments:["Stone work"],              designer:"",                 seller:"ananya_m",      bg:"#B5C4B1", views:156, created_at:"2026-06-04" },
-  { id:"18", title:"Velvet Lehenga — Burgundy",                price:2800, rent_price:110, type:"both",  garment:"Lehenga",        occasion:["Bridal","Wedding guest"], size:"10", condition:"like_new", fabric:"Velvet",    embellishments:["Zari","Beading"],          designer:"",                 seller:"sana.rents",    bg:"#C4A8A8", views:318, created_at:"2026-05-12" },
-  { id:"19", title:"Block Print Kurta Set — Indigo",           price:180,                 type:"sale",  garment:"Salwar Kameez",  occasion:["Casual","Festival"],       size:"12", condition:"good",     fabric:"Cotton",    embellishments:["Block print"],             designer:"",                 seller:"kavitha_wears", bg:"#A8B4C4", views:67,  created_at:"2026-06-08" },
-  { id:"20", title:"Cream Chikankari Saree",                   price:540,  rent_price:40,  type:"both",  garment:"Saree",          occasion:["Eid","Casual","Formal"],   size:"Free",condition:"like_new", fabric:"Chiffon",   embellishments:["Thread embroidery"],       designer:"",                 seller:"meera_b",       bg:"#EDE8E0", views:211, created_at:"2026-05-27" },
-  { id:"21", title:"Kundan Jewellery Set — Bridal",            price:890,  rent_price:55,  type:"both",  garment:"Jewellery",      occasion:["Bridal","Engagement"],     size:"Free",condition:"new",      fabric:"",          embellishments:["Stone work","Beading"],    designer:"",                 seller:"raj_styles",    bg:"#E8D8B8", views:342, created_at:"2026-05-05" },
-  { id:"22", title:"Pastel Lehenga — Floral Appliqué",         price:1380, rent_price:70,  type:"both",  garment:"Lehenga",        occasion:["Wedding guest","Engagement"],size:"8", condition:"like_new", fabric:"Net",       embellishments:["Thread embroidery"],       designer:"",                 seller:"ananya_m",      bg:"#D8C8D0", views:195, created_at:"2026-05-24" },
-  { id:"23", title:"Linen Salwar Suit — Sage",                 price:210,                 type:"sale",  garment:"Salwar Kameez",  occasion:["Casual"],                  size:"14", condition:"good",     fabric:"Linen",     embellishments:["Plain"],                   designer:"",                 seller:"divya.looks",   bg:"#C8D4C0", views:44,  created_at:"2026-06-09" },
-  { id:"24", title:"White Chiffon Saree — Silver Border",      price:720,  rent_price:50,  type:"both",  garment:"Saree",          occasion:["Formal","Wedding guest"],  size:"Free",condition:"like_new", fabric:"Chiffon",   embellishments:["Stone work"],              designer:"",                 seller:"priya_sharma",  bg:"#E8E8E8", views:177, created_at:"2026-05-16" },
-];
 
 // ─── Filter options ───────────────────────────────────────────────────────────
 
@@ -335,7 +304,11 @@ function ListingCard({ listing }: { listing: Listing }) {
         onMouseOut={e => (e.currentTarget.style.boxShadow = "none")}
       >
         {/* Photo */}
-        <div style={{ aspectRatio:"3/4", background:listing.bg, position:"relative" }}>
+        <div style={{ aspectRatio:"3/4", background:"#E8DDD3", position:"relative", overflow:"hidden" }}>
+          {listing.images?.[0] && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={listing.images[0]} alt={listing.title} style={{ width:"100%", height:"100%", objectFit:"cover" }} />
+          )}
           {/* Listing type pill top-left */}
           <span style={{
             position:"absolute", top:"0.6rem", left:"0.6rem",
@@ -402,9 +375,9 @@ function ListingCard({ listing }: { listing: Listing }) {
               fontFamily:"var(--font-jost)", fontSize:"0.7rem",
               color:"var(--muted)", opacity:0.6,
             }}>
-              @{listing.seller}
+              {listing.color ?? listing.category}
             </span>
-            {listing.size !== "Free" && (
+            {listing.size && listing.size !== "Free" && (
               <span style={{
                 fontFamily:"var(--font-jost)", fontSize:"0.68rem", fontWeight:500,
                 color:"var(--muted)", opacity:0.7,
@@ -538,7 +511,17 @@ function ListingsInner({ typeParam }: { typeParam: string | null }) {
   const [sort,        setSort]        = useState<SortOption>("newest");
   const [page,        setPage]        = useState(1);
   const [drawerOpen,  setDrawerOpen]  = useState(false);
+  const [allListings, setAllListings] = useState<Listing[]>([]);
   const drawerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase
+      .from("listings")
+      .select("id, title, price, rent_price, type, category, size, condition, brand, color, images, view_count, created_at")
+      .eq("status", "active")
+      .then(({ data }) => { if (data) setAllListings(data as Listing[]); });
+  }, []);
 
   // Close drawer on outside click
   useEffect(() => {
@@ -563,35 +546,26 @@ function ListingsInner({ typeParam }: { typeParam: string | null }) {
   // ── Derived: filtered + sorted results ──────────────────────────────────────
   const results = useMemo(() => {
     const q = query.toLowerCase().trim();
-    let list = ALL_LISTINGS.filter(l => {
+    let list = allListings.filter(l => {
       // Search
       if (q) {
-        const searchable = [
-          l.title, l.garment, l.designer, l.fabric,
-          ...l.occasion, ...l.embellishments, l.seller,
-        ].join(" ").toLowerCase();
+        const searchable = [l.title, l.category, l.brand ?? "", l.color ?? ""].join(" ").toLowerCase();
         if (!searchable.includes(q)) return false;
       }
-      // Garment type
-      if (filters.garments.length && !filters.garments.includes(l.garment)) return false;
+      // Garment type (category in DB is lowercase, filter options are title case)
+      if (filters.garments.length && !filters.garments.some(g => g.toLowerCase() === l.category?.toLowerCase())) return false;
       // Listing type
       if (filters.listingTypes.length > 0 && !filters.listingTypes.includes(l.type)) return false;
-      // Occasion
-      if (filters.occasions.length && !filters.occasions.some(o => l.occasion.includes(o))) return false;
+      // Occasion — not in DB yet, skip
       // Size
-      if (filters.sizes.length && !filters.sizes.includes(l.size)) return false;
+      if (filters.sizes.length && !filters.sizes.includes(l.size ?? "")) return false;
       // Price
       const effectivePrice = l.type === "rent" ? (l.rent_price ?? 0) : l.price;
       if (filters.priceMin && effectivePrice < Number(filters.priceMin)) return false;
       if (filters.priceMax && effectivePrice > Number(filters.priceMax)) return false;
       // Condition
       if (filters.conditions.length && !filters.conditions.includes(l.condition)) return false;
-      // Fabric
-      if (filters.fabrics.length && !filters.fabrics.includes(l.fabric)) return false;
-      // Embellishments
-      if (filters.embellishments.length && !filters.embellishments.some(e => l.embellishments.includes(e))) return false;
-      // Designer
-      if (filters.designer.trim() && !l.designer.toLowerCase().includes(filters.designer.toLowerCase())) return false;
+      // Fabric / embellishments / designer — not in DB yet, skip
       return true;
     });
 
@@ -599,7 +573,7 @@ function ListingsInner({ typeParam }: { typeParam: string | null }) {
     list = [...list].sort((a, b) => {
       if (sort === "price_asc")  return a.price - b.price;
       if (sort === "price_desc") return b.price - a.price;
-      if (sort === "popular")    return b.views - a.views;
+      if (sort === "popular")    return (b.view_count ?? 0) - (a.view_count ?? 0);
       // newest
       return a.created_at < b.created_at ? 1 : -1;
     });
