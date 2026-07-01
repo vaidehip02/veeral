@@ -35,6 +35,7 @@ function SuccessContent() {
   const days       = Number(sp.get("days") || 0);
   const returnDate = sp.get("returnDate") || "";
   const address    = sp.get("address") || "Your shipping address";
+  const orderId    = sp.get("orderId") || "";
 
   const o = ORDER;
   const rentalCost = o.rent_price * days;
@@ -205,7 +206,7 @@ function SuccessContent() {
 
         {/* CTAs */}
         <div style={{ display: "flex", gap: "0.75rem" }}>
-          <Link href="/dashboard" style={{
+          <Link href={orderId ? `/account/orders/${orderId}` : "/account/orders"} style={{
             flex: 1, padding: "0.95rem", textAlign: "center",
             background: "#C4440A", textDecoration: "none",
             fontFamily: "var(--font-jost)", fontWeight: 600,
