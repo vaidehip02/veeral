@@ -54,9 +54,10 @@ export async function POST(req: NextRequest) {
     .single();
 
   const isTestMode = process.env.STRIPE_SECRET_KEY?.startsWith("sk_test_");
-  // In test mode, skip stripe_onboarding_complete so we can test without a live webhook.
+  // In test mode, skip Connect onboarding checks so we can test end-to-end
+  // without setting up a real connected account.
   // TODO: remove isTestMode bypass before launch.
-  if (!seller?.stripe_account_id || (!isTestMode && !seller.stripe_onboarding_complete)) {
+  if (!isTestMode && (!seller?.stripe_account_id || !seller.stripe_onboarding_complete)) {
     return NextResponse.json(
       { error: "Seller has not completed Stripe onboarding" },
       { status: 422 }
@@ -122,13 +123,16 @@ export async function POST(req: NextRequest) {
       //        application_fee_amount = Veeral's cut (applied only to rental cost).
       // PI 2: deposit — NO transfer, NO fee, retained by platform until return confirmed.
 
+      const hasConnectedAccount = !!seller?.stripe_account_id;
       const rentalPi = await stripe.paymentIntents.create({
         // Buyer pays: rental cost + fee + shipping
         amount:   rentalFeeCents + fees.feeAmount + SHIPPING_CENTS,
         currency: "usd",
         automatic_payment_methods: { enabled: true },
-        application_fee_amount: fees.applicationFee,
-        transfer_data: { destination: seller.stripe_account_id },
+        ...(hasConnectedAccount && {
+          application_fee_amount: fees.applicationFee,
+          transfer_data: { destination: seller.stripe_account_id },
+        }),
         metadata: {
           order_id:    orderId,
           pi_role:     "rental_fee",
@@ -184,8 +188,10 @@ export async function POST(req: NextRequest) {
         amount:   itemCents + fees.feeAmount + SHIPPING_CENTS,
         currency: "usd",
         automatic_payment_methods: { enabled: true },
-        application_fee_amount: fees.applicationFee,
-        transfer_data: { destination: seller.stripe_account_id },
+        ...(seller?.stripe_account_id && {
+          application_fee_amount: fees.applicationFee,
+          transfer_data: { destination: seller.stripe_account_id },
+        }),
         metadata: {
           order_id:  orderId,
           pi_role:   "sale",
