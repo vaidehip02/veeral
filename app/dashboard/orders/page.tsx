@@ -311,8 +311,8 @@ function OrderCard({
                 ? [{ k: "Renter ships back by", v: fmtRentalDate(order.rental_end) }]
                 : []),
             ].map(({ k, v }) => (
-              <span key={k} style={{ fontFamily: "var(--font-jost)", fontSize: "0.75rem", color: "var(--muted)", opacity: 0.75 }}>
-                <span style={{ fontWeight: 600, opacity: 0.55, textTransform: "uppercase", letterSpacing: "0.1em", fontSize: "0.6rem" }}>{k} </span>
+              <span key={k} style={{ fontFamily: "var(--font-jost)", fontSize: "0.85rem", color: "var(--muted)", opacity: 0.75 }}>
+                <span style={{ fontWeight: 600, opacity: 0.55, textTransform: "uppercase", letterSpacing: "0.1em", fontSize: "0.72rem" }}>{k} </span>
                 {v}
               </span>
             ))}
@@ -333,8 +333,8 @@ function OrderCard({
           {/* Deposit context — rental only, never part of payout */}
           {order.type === "rent" && order.deposit_amount != null && (
             <div style={{ marginBottom: "0.65rem", padding: "0.5rem 0.75rem", background: "#F9F6F2", border: "1px solid var(--warm-tan)", display: "inline-block" }}>
-              <span style={{ fontFamily: "var(--font-jost)", fontSize: "0.7rem", color: "var(--muted)", opacity: 0.8 }}>
-                <span style={{ fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", fontSize: "0.6rem" }}>Deposit held </span>
+              <span style={{ fontFamily: "var(--font-jost)", fontSize: "0.82rem", color: "var(--muted)", opacity: 0.8 }}>
+                <span style={{ fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", fontSize: "0.72rem" }}>Deposit held </span>
                 {fmt(order.deposit_amount)} — refundable to renter; claimable if returned damaged
               </span>
             </div>
@@ -352,7 +352,7 @@ function OrderCard({
             <div style={{ marginBottom: "0.65rem" }}>
               <button
                 onClick={() => setExpandedAddress(showAddress ? null : order.id)}
-                style={{ fontFamily: "var(--font-jost)", fontSize: "0.68rem", fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", color: "#C4440A", background: "none", border: "none", cursor: "pointer", padding: 0 }}
+                style={{ fontFamily: "var(--font-jost)", fontSize: "0.78rem", fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", color: "#C4440A", background: "none", border: "none", cursor: "pointer", padding: 0 }}
               >
                 {showAddress ? "Hide address ▲" : "Show shipping address ▼"}
               </button>
