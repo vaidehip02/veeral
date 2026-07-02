@@ -14,6 +14,7 @@ export async function POST(
   const tracking = (body.tracking ?? "").trim();
   if (!tracking) return NextResponse.json({ error: "Tracking number is required" }, { status: 400 });
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const admin = createAdminClient() as any;
 
   // Fetch the order and verify the authenticated user is the seller

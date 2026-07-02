@@ -49,7 +49,7 @@ export default async function OrderDetailPage({ params }: { params: { id: string
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = supabase as any;
 
-  const { data: order, error: orderError } = await db
+  const { data: order, error: _orderError } = await db
     .from("orders")
     .select(
       "id, type, status, amount, platform_fee, seller_payout, deposit_amount, " +

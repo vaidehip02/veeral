@@ -102,6 +102,7 @@ export default function SellerOrdersPage() {
         supabase.from("seller_profiles").select("id, username").in("id", buyerIds),
       ]);
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const rows = rawOrders as any[];
       const merged: SellerOrder[] = rows.map((o) => {
         const l = listings?.find((x) => x.id === o.listing_id);
