@@ -357,9 +357,9 @@ export default function BuyerRentalsPage() {
             </h2>
             {[
               { n: 1, title: "Pack carefully", body: "Fold the garment gently and use the original garment bag if provided. Do not return without protective packaging." },
-              { n: 2, title: "Ship within the return window", body: "Drop off at any USPS, UPS, or FedEx location before your return date. Keep your receipt." },
-              { n: 3, title: 'Click "Mark as returned"', body: 'Once shipped, click the "Mark as returned" button and optionally enter your tracking number so the seller knows it\'s on the way.' },
-              { n: 4, title: "Deposit release", body: "Your deposit will be released within 5 business days after the seller confirms the item is in good condition, or automatically if the seller takes no action." },
+              { n: 2, title: "Ship back by your return date", body: "Drop off at any USPS, UPS, or FedEx location by your ship-back date. Late fees are based on the carrier postmark — not the delivery date — so keep your receipt." },
+              { n: 3, title: 'Click "Mark as returned"', body: 'Once you\'ve dropped it off, click "Mark as returned" and enter your tracking number. This notifies the seller to expect the package.' },
+              { n: 4, title: "Deposit release", body: "Your deposit is released within 5 business days after the seller confirms they received the item in good condition, or automatically if the seller takes no action." },
             ].map(step => (
               <div key={step.n} style={{ display: "flex", gap: "1rem", marginBottom: "1.25rem" }}>
                 <div style={{ width: "28px", height: "28px", borderRadius: "50%", flexShrink: 0, background: "rgba(196,68,10,0.1)", color: "var(--burnt-orange)", fontFamily: "var(--font-cormorant)", fontStyle: "italic", fontSize: "1rem", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -387,7 +387,7 @@ export default function BuyerRentalsPage() {
               Mark as returned
             </h2>
             <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.78rem", color: "var(--muted)", opacity: 0.7, marginBottom: "1.75rem", lineHeight: 1.6 }}>
-              Only do this once you&apos;ve shipped the item back. The seller will have 5 business days to confirm receipt before your deposit is automatically released.
+              Only do this once you&apos;ve dropped the item off with the carrier. The seller will have 5 business days to confirm receipt before your deposit is automatically released.
             </p>
             <p style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.62rem", letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--muted)", marginBottom: "0.5rem" }}>
               Tracking number <span style={{ fontWeight: 400, opacity: 0.55 }}>(optional)</span>

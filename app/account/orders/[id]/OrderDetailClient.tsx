@@ -244,7 +244,15 @@ export default function OrderDetailClient({
             {fmtDateShort(order.rental_start)} – {fmtDateShort(order.rental_end)}
           </p>
           <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.78rem", color: "var(--muted)", opacity: 0.65 }}>
-            Return by <strong style={{ color: "#C4440A" }}>{fmtDateShort(order.rental_end)}</strong> to avoid late fees
+            Ship back by{" "}
+            <strong style={{ color: "#C4440A" }}>{fmtDateShort(order.rental_end)}</strong>
+            {" "}
+            <span
+              title="Drop off with the carrier by this date. Late fees apply if you ship after this date — based on postmark, not delivery date."
+              style={{ cursor: "help", borderBottom: "1px dotted currentColor", fontSize: "0.72rem" }}
+            >
+              ⓘ
+            </span>
           </p>
         </section>
       )}

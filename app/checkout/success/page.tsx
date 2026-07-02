@@ -182,11 +182,12 @@ function SuccessContent() {
               ✦ Return reminder
             </p>
             <p style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.85rem", color: "#C4440A", marginBottom: "0.3rem" }}>
-              Return by {fmtDate(returnDate)} to avoid late fees
+              Ship back by {fmtDate(returnDate)}
             </p>
             <p style={{ fontFamily: "var(--font-jost)", fontWeight: 500, fontSize: "0.82rem", color: "#2A2118", lineHeight: 1.7 }}>
-              A prepaid return label will be emailed to you 2 days before your return date.
-              Your {fmt(depositCents)} deposit is refunded within 3 business days of the seller receiving the item.
+              Drop off with the carrier by this date — late fees are based on the postmark, not delivery date.
+              A prepaid return label will be emailed to you 2 days before this date.
+              Your {fmt(depositCents)} deposit is refunded within 5 business days after the seller confirms receipt.
             </p>
           </div>
         )}
@@ -212,7 +213,7 @@ function SuccessContent() {
               "The seller ships your item within 2–3 business days",
               "You'll receive a tracking number by email once dispatched",
               isRental && returnDate
-                ? `Return the item using the prepaid label we'll email you before ${fmtDate(returnDate)}`
+                ? `Ship the item back using the prepaid label we'll email you — drop off by ${fmtDate(returnDate)} (postmark counts)`
                 : "Leave a review once your item arrives to help other buyers",
             ].map((text, i) => (
               <div key={i} style={{ display: "flex", gap: "0.85rem", alignItems: "flex-start" }}>

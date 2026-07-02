@@ -308,7 +308,7 @@ function OrderCard({
                 ? [{ k: "Rental", v: `${fmtRentalDate(order.rental_start)} – ${fmtRentalDate(order.rental_end)}` }]
                 : []),
               ...(order.type === "rent" && order.rental_end
-                ? [{ k: "Return by", v: fmtRentalDate(order.rental_end) }]
+                ? [{ k: "Renter ships back by", v: fmtRentalDate(order.rental_end) }]
                 : []),
             ].map(({ k, v }) => (
               <span key={k} style={{ fontFamily: "var(--font-jost)", fontSize: "0.75rem", color: "var(--muted)", opacity: 0.75 }}>
@@ -329,6 +329,16 @@ function OrderCard({
               </span>
             ) : null}
           </div>
+
+          {/* Deposit context — rental only, never part of payout */}
+          {order.type === "rent" && order.deposit_amount != null && (
+            <div style={{ marginBottom: "0.65rem", padding: "0.5rem 0.75rem", background: "#F9F6F2", border: "1px solid var(--warm-tan)", display: "inline-block" }}>
+              <span style={{ fontFamily: "var(--font-jost)", fontSize: "0.7rem", color: "var(--muted)", opacity: 0.8 }}>
+                <span style={{ fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", fontSize: "0.6rem" }}>Deposit held </span>
+                {fmt(order.deposit_amount)} — refundable to renter; claimable if returned damaged
+              </span>
+            </div>
+          )}
 
           {/* Tracking */}
           {order.tracking && (
