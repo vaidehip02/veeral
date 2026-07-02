@@ -512,6 +512,7 @@ function ListingsInner({ typeParam }: { typeParam: string | null }) {
   const [page,        setPage]        = useState(1);
   const [drawerOpen,  setDrawerOpen]  = useState(false);
   const [allListings, setAllListings] = useState<Listing[]>([]);
+  const [loading,     setLoading]     = useState(true);
   const drawerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -520,7 +521,10 @@ function ListingsInner({ typeParam }: { typeParam: string | null }) {
       .from("listings")
       .select("id, title, price, rent_price, type, category, size, condition, brand, color, images, view_count, created_at")
       .eq("status", "active")
-      .then(({ data }) => { if (data) setAllListings(data as Listing[]); });
+      .then(({ data }) => {
+        if (data) setAllListings(data as Listing[]);
+        setLoading(false);
+      });
   }, []);
 
   // Close drawer on outside click
@@ -779,7 +783,11 @@ function ListingsInner({ typeParam }: { typeParam: string | null }) {
             </div>
 
             {/* Results */}
-            {results.length === 0 ? (
+            {loading ? (
+              <div style={{ padding: "5rem 2rem", textAlign: "center", fontFamily: "var(--font-jost)", fontSize: "0.85rem", color: "var(--muted)", opacity: 0.5 }}>
+                Loading…
+              </div>
+            ) : results.length === 0 ? (
               <EmptyState onClear={clearAll} />
             ) : (
               <>
@@ -812,6 +820,7 @@ function ListingsInner({ typeParam }: { typeParam: string | null }) {
                 )}
               </>
             )}
+
           </div>
         </div>
       </div>

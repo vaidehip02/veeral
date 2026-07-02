@@ -20,6 +20,7 @@ export async function POST(req: NextRequest) {
     days?: number;
     start_date?: string;
     return_date?: string;
+    shipping_address?: string;
   };
 
   const { listing_id, type } = body;
@@ -100,7 +101,8 @@ export async function POST(req: NextRequest) {
       platform_fee:   fees.applicationFee,
       seller_payout:  fees.sellerReceives,
       deposit_amount: type === "rent" ? depositCents : null,
-      status:         "pending",
+      status:           "pending",
+      shipping_address: body.shipping_address ?? null,
       ...(type === "rent" && {
         rental_start: body.start_date,
         rental_end:   body.return_date,

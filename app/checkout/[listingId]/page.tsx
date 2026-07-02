@@ -265,6 +265,12 @@ export default function CheckoutPage({ params: _params }: { params: { listingId:
         body: JSON.stringify({
           listing_id: _params.listingId,
           type: isRental ? "rent" : "sale",
+          shipping_address: [
+            `${form.firstName} ${form.lastName}`.trim(),
+            form.address1,
+            form.address2 || undefined,
+            `${form.city}, ${form.state} ${form.zip}`.trim(),
+          ].filter(Boolean).join("\n"),
           ...(isRental && {
             days,
             start_date:  startDate  ? new Date(startDate).toISOString().slice(0, 10)  : undefined,

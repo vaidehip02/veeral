@@ -83,6 +83,27 @@ export async function POST(req: NextRequest) {
           break;
         }
 
+        // Capture the actual Stripe processing fee from the balance transaction.
+        // Fire-and-forget — failure here must never fail the webhook response.
+        if (pi.latest_charge) {
+          (async () => {
+            try {
+              const charge = await stripe.charges.retrieve(pi.latest_charge as string);
+              if (charge.balance_transaction) {
+                const txn = await stripe.balanceTransactions.retrieve(
+                  charge.balance_transaction as string,
+                );
+                await admin
+                  .from("orders")
+                  .update({ stripe_processing_fee: txn.fee })
+                  .eq("id", orderId);
+              }
+            } catch (err) {
+              console.error("[webhook] Failed to capture Stripe fee:", orderId, err);
+            }
+          })();
+        }
+
         // Fire-and-forget — email failure must NOT cause a non-200 response
         // (that would make Stripe retry indefinitely).
         sendOrderEmails(orderId).catch((err) =>
