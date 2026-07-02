@@ -10,6 +10,10 @@
   --muted: #2A2118;
 }
 
+html {
+  font-size: 17px; /* base up from 16px — scales all rem values site-wide */
+}
+
 body {
   background: var(--cream);
   color: var(--dark);
