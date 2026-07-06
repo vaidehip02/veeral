@@ -284,8 +284,7 @@ export default function AdminRentalsPage() {
             background: A.card, zIndex: 70,
             padding: "2rem", borderTop: `1px solid ${A.border}`,
             maxWidth: "560px", margin: "0 auto",
-            maxHeight: "80vh", overflowY: "auto",
-            paddingBottom: "calc(2rem + env(safe-area-inset-bottom, 80px))",
+            maxHeight: "75vh", overflowY: "auto",
             boxShadow: "0 -8px 32px rgba(13,9,6,0.12)",
           }}>
             <h2 style={{ fontFamily: "var(--font-cormorant)", fontStyle: "italic", fontWeight: 400, fontSize: "1.5rem", color: A.dark, marginBottom: "0.25rem" }}>
