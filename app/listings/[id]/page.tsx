@@ -249,63 +249,25 @@ export default function ListingPage({ params: _params }: { params: { id: string 
               )}
             </div>
 
-            {/* ── US Size selector ── */}
-            <div>
-              <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: "0.75rem" }}>
-                <label style={{
-                  fontFamily: "var(--font-jost)", fontWeight: 500,
-                  fontSize: "0.7rem", letterSpacing: "0.22em", textTransform: "uppercase",
-                  color: "var(--muted)"
-                }}>
-                  US Size
-                </label>
+            {/* ── US Size (display only — one-of-a-kind items) ── */}
+            {l.size && (
+              <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between" }}>
+                <div>
+                  <span style={{ fontFamily: "var(--font-jost)", fontWeight: 500, fontSize: "0.7rem", letterSpacing: "0.22em", textTransform: "uppercase", color: "var(--muted)" }}>
+                    Size
+                  </span>
+                  <span style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.92rem", color: "#1A1A18", marginLeft: "0.75rem" }}>
+                    US {l.size}
+                  </span>
+                </div>
                 <button
                   onClick={() => setSizeChartOpen(true)}
-                  style={{
-                    background: "none", border: "none", cursor: "pointer",
-                    fontFamily: "var(--font-jost)", fontWeight: 500,
-                    fontSize: "0.88rem", letterSpacing: "0.12em",
-                    color: "#C4440A", textDecoration: "underline",
-                    textUnderlineOffset: "3px", padding: 0
-                  }}
+                  style={{ background: "none", border: "none", cursor: "pointer", fontFamily: "var(--font-jost)", fontWeight: 500, fontSize: "0.82rem", letterSpacing: "0.08em", color: "#C4440A", textDecoration: "underline", textUnderlineOffset: "3px", padding: 0 }}
                 >
                   Size chart
                 </button>
               </div>
-
-              <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-                {US_SIZES.map(size => (
-                  <button
-                    key={size}
-                    onClick={() => setSelectedSize(size)}
-                    style={{
-                      minWidth: "52px", height: "44px", padding: "0 0.5rem",
-                      border: selectedSize === size
-                        ? "1.5px solid #C4440A"
-                        : "1px solid var(--warm-tan)",
-                      background: selectedSize === size ? "rgba(196,68,10,0.06)" : "transparent",
-                      cursor: "pointer",
-                      fontFamily: "var(--font-jost)", fontWeight: selectedSize === size ? 600 : 300,
-                      fontSize: "0.7rem", letterSpacing: "0.04em",
-                      color: selectedSize === size ? "#C4440A" : "var(--muted)",
-                      transition: "all 0.15s",
-                    }}
-                  >
-                    {size}
-                  </button>
-                ))}
-              </div>
-
-              {l.size && (
-                <p style={{
-                  fontFamily: "var(--font-jost)", fontWeight: 500,
-                  fontSize: "0.88rem", letterSpacing: "0.08em",
-                  color: "var(--muted)", marginTop: "0.5rem"
-                }}>
-                  Listed as: <strong>US {l.size}</strong>
-                </p>
-              )}
-            </div>
+            )}
 
             {/* What's included */}
             <div>
