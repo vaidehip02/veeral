@@ -498,7 +498,7 @@ export default function SellerRentalsPage() {
       {drawerRental && (
         <>
           <div onClick={() => setDrawer(null)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.35)", zIndex: 60 }} />
-          <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, background: "var(--cream)", zIndex: 70, padding: "2rem", borderTop: "1px solid var(--warm-tan)", maxWidth: "520px", margin: "0 auto", maxHeight: "88vh", overflowY: "auto" }}>
+          <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, background: "var(--cream)", zIndex: 70, padding: "2rem 2rem calc(2rem + env(safe-area-inset-bottom, 80px))", borderTop: "1px solid var(--warm-tan)", maxWidth: "520px", margin: "0 auto", maxHeight: "80vh", overflowY: "auto" }}>
 
             {!showClaimForm ? (
               <>
