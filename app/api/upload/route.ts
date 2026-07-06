@@ -11,19 +11,28 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const formData = await req.formData();
-    const file = formData.get("file") as File;
+    const contentType = req.headers.get("content-type") ?? "";
 
-    if (!file) {
-      return NextResponse.json({ error: "No file provided" }, { status: 400 });
+    let base64: string;
+    let folder = `veeral/listings/${user.id}`;
+
+    if (contentType.includes("application/json")) {
+      // Base64 JSON payload (used by damage claim uploader)
+      const body = await req.json();
+      if (!body.image) return NextResponse.json({ error: "No image provided" }, { status: 400 });
+      base64 = body.image;
+      if (body.folder) folder = body.folder;
+    } else {
+      // FormData payload (used by listing image uploader)
+      const formData = await req.formData();
+      const file = formData.get("file") as File;
+      if (!file) return NextResponse.json({ error: "No file provided" }, { status: 400 });
+      const bytes = await file.arrayBuffer();
+      const buffer = Buffer.from(bytes);
+      base64 = `data:${file.type};base64,${buffer.toString("base64")}`;
     }
 
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-    const base64 = `data:${file.type};base64,${buffer.toString("base64")}`;
-
-    const url = await uploadImage(base64, `veeral/listings/${user.id}`);
-
+    const url = await uploadImage(base64, folder);
     return NextResponse.json({ url });
   } catch (error) {
     console.error("Upload error:", error);
