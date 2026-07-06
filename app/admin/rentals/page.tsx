@@ -280,12 +280,12 @@ export default function AdminRentalsPage() {
         <>
           <div onClick={() => !resolveDrawer.submitting && setResolveDrawer(null)} style={{ position: "fixed", inset: 0, background: "rgba(13,9,6,0.35)", zIndex: 60 }} />
           <div style={{
-            position: "fixed", bottom: 0, left: 0, right: 0,
+            position: "fixed", top: "50%", left: "50%", transform: "translate(-50%, -50%)",
             background: A.card, zIndex: 70,
-            padding: "2rem", borderTop: `1px solid ${A.border}`,
-            maxWidth: "560px", margin: "0 auto",
-            maxHeight: "75vh", overflowY: "auto",
-            boxShadow: "0 -8px 32px rgba(13,9,6,0.12)",
+            padding: "2rem", border: `1px solid ${A.border}`,
+            width: "90%", maxWidth: "540px",
+            maxHeight: "85vh", overflowY: "auto",
+            boxShadow: "0 8px 40px rgba(13,9,6,0.18)",
           }}>
             <h2 style={{ fontFamily: "var(--font-cormorant)", fontStyle: "italic", fontWeight: 400, fontSize: "1.5rem", color: A.dark, marginBottom: "0.25rem" }}>
               Resolve damage claim

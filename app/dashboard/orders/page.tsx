@@ -213,7 +213,7 @@ export default function SellerOrdersPage() {
       {drawer && (
         <>
           <div onClick={() => setDrawer(null)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.35)", zIndex: 60 }} />
-          <div style={{ position: "fixed", bottom: "60px", left: 0, right: 0, background: "var(--cream)", zIndex: 70, padding: "2rem", borderTop: "1px solid var(--warm-tan)", maxWidth: "520px", margin: "0 auto", maxHeight: "75vh", overflowY: "auto" }}>
+          <div style={{ position: "fixed", top: "50%", left: "50%", transform: "translate(-50%, -50%)", background: "var(--cream)", zIndex: 70, padding: "2rem", border: "1px solid var(--warm-tan)", width: "90%", maxWidth: "480px", maxHeight: "85vh", overflowY: "auto", boxShadow: "0 8px 40px rgba(0,0,0,0.18)" }}>
             <h2 style={{ fontFamily: "var(--font-cormorant)", fontStyle: "italic", fontWeight: 400, fontSize: "1.5rem", color: "#1A1A18", marginBottom: "1.5rem" }}>
               Mark as shipped
             </h2>
