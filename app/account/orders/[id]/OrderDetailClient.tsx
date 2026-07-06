@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import MessageButton from "@/components/messages/MessageButton";
+import { BUYER_DETAIL_STATUS } from "@/lib/orderStatus";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -63,31 +64,6 @@ function fmtDateShort(iso: string) {
   });
 }
 
-const STATUS_LABEL: Record<string, string> = {
-  pending:          "Processing",
-  paid:             "Paid",
-  shipped:          "Shipped",
-  delivered:        "Delivered",
-  cancelled:        "Cancelled",
-  refunded:         "Refunded",
-  return_pending:   "Return Pending",
-  deposit_released: "Deposit Released",
-  damage_claimed:   "Damage Claimed",
-  deposit_resolved: "Resolved",
-};
-
-const STATUS_STYLE: Record<string, { bg: string; text: string }> = {
-  pending:          { bg: "#F5F5F5",              text: "#555"     },
-  paid:             { bg: "#E3F2FD",              text: "#1D4E89"  },
-  shipped:          { bg: "#EEF2FF",              text: "#3730A3"  },
-  delivered:        { bg: "#E8F5E9",              text: "#2D6A4F"  },
-  cancelled:        { bg: "#FEE2E2",              text: "#991B1B"  },
-  refunded:         { bg: "#EDE9FE",              text: "#5B21B6"  },
-  return_pending:   { bg: "#FEF3C7",              text: "#92400E"  },
-  deposit_released: { bg: "#D1FAE5",              text: "#065F46"  },
-  damage_claimed:   { bg: "#FFF5F5",              text: "#991B1B"  },
-  deposit_resolved: { bg: "rgba(196,68,10,0.08)", text: "#C4440A"  },
-};
 
 // Steps shown on the timeline. "current" = highlighted, "done" = completed.
 function getTimelineSteps(status: string, isRental: boolean) {
@@ -98,7 +74,7 @@ function getTimelineSteps(status: string, isRental: boolean) {
   const currentIdx = steps.indexOf(status);
   return steps.map((s, i) => ({
     key:     s,
-    label:   STATUS_LABEL[s] ?? s,
+    label:   BUYER_DETAIL_STATUS[s]?.label ?? s,
     done:    i < currentIdx,
     current: i === currentIdx,
   }));
@@ -127,7 +103,7 @@ export default function OrderDetailClient({
   const depositCents  = order.deposit_amount ?? 0;
   const totalCents    = order.amount + order.platform_fee + SHIPPING_CENTS + (isRental ? depositCents : 0);
   const canReview     = (order.status === "delivered") && !reviewed;
-  const statusStyle   = STATUS_STYLE[order.status] ?? { bg: "#F5F5F5", text: "#555" };
+  const statusStyle   = BUYER_DETAIL_STATUS[order.status] ?? { bg: "#F5F5F5", text: "#555" };
   const timelineSteps = getTimelineSteps(order.status, isRental);
   const thumbnail     = listing?.images?.[0] ?? null;
   const sellerName    = seller?.display_name ?? `@${seller?.username ?? "seller"}`;
@@ -187,7 +163,7 @@ export default function OrderDetailClient({
           fontSize: "0.58rem", letterSpacing: "0.14em", textTransform: "uppercase",
           alignSelf: "center",
         }}>
-          {STATUS_LABEL[order.status] ?? order.status}
+          {BUYER_DETAIL_STATUS[order.status]?.label ?? order.status}
         </span>
       </div>
       <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.75rem", color: "var(--muted)", opacity: 0.6, marginBottom: "2rem" }}>

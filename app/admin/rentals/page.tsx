@@ -407,7 +407,7 @@ export default function AdminRentalsPage() {
 
             <div style={{ background: "#FFFBEB", border: "1px solid #FDE68A", padding: "0.75rem 1rem", marginBottom: "1.25rem" }}>
               <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.72rem", color: "#92400E", lineHeight: 1.6, margin: 0 }}>
-                <strong>Reminder:</strong> No money moves until Stripe is wired. This records the decision and sends email notifications only. The action is logged to the admin audit log.
+                <strong>This moves real money.</strong> Confirming will immediately refund the renter and (if the seller has a connected Stripe account) transfer any retained amount to the seller. Any applicable late fee is deducted automatically. The action is logged to the admin audit log.
               </p>
             </div>
 

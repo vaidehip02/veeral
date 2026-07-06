@@ -492,22 +492,24 @@ export default function ListingsPage() {
   return <Suspense fallback={null}><ListingsRouter /></Suspense>;
 }
 
-// Reads typeParam and forces ListingsInner to remount when it changes,
-// so useState initializers always see the correct initial value.
 function ListingsRouter() {
   const sp = useSearchParams();
   const typeParam = sp.get("type");
-  return <ListingsInner key={typeParam ?? "all"} typeParam={typeParam} />;
+  return <ListingsInner typeParam={typeParam} />;
 }
 
 function ListingsInner({ typeParam }: { typeParam: string | null }) {
-  const initialListingTypes: ListingType[] =
-    typeParam === "rent" ? ["rent", "both"] :
-    typeParam === "sale" ? ["sale"] :
-    typeParam === "both" ? ["both"] : [];
-
   const [query,       setQuery]       = useState("");
-  const [filters,     setFilters]     = useState<Filters>({ ...DEFAULT_FILTERS, listingTypes: initialListingTypes });
+  const [filters,     setFilters]     = useState<Filters>(DEFAULT_FILTERS);
+
+  // Sync URL ?type param → listingTypes filter without remounting
+  useEffect(() => {
+    const types: ListingType[] =
+      typeParam === "rent" ? ["rent", "both"] :
+      typeParam === "sale" ? ["sale"] :
+      typeParam === "both" ? ["both"] : [];
+    setFilters(f => ({ ...f, listingTypes: types }));
+  }, [typeParam]);
   const [sort,        setSort]        = useState<SortOption>("newest");
   const [page,        setPage]        = useState(1);
   const [drawerOpen,  setDrawerOpen]  = useState(false);
@@ -521,8 +523,9 @@ function ListingsInner({ typeParam }: { typeParam: string | null }) {
       .from("listings")
       .select("id, title, price, rent_price, type, category, size, condition, brand, color, images, view_count, created_at")
       .eq("status", "active")
-      .then(({ data }) => {
-        if (data) setAllListings(data as Listing[]);
+      .then(({ data, error }) => {
+        if (error) console.error("[listings] fetch error:", error);
+        setAllListings((data ?? []) as Listing[]);
         setLoading(false);
       });
   }, []);
@@ -743,7 +746,7 @@ function ListingsInner({ typeParam }: { typeParam: string | null }) {
                 fontSize:"0.62rem", letterSpacing:"0.18em", textTransform:"uppercase",
                 color:"var(--muted)", opacity:0.6,
               }}>
-                {results.length} item{results.length !== 1 ? "s" : ""} found
+                {loading ? "Loading…" : `${results.length} item${results.length !== 1 ? "s" : ""} found`}
               </p>
 
               <div style={{ display:"flex", alignItems:"center", gap:"0.5rem" }}>

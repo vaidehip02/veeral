@@ -10,9 +10,10 @@ import Footer from "./Footer";
  */
 export default function StorefrontChrome({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const isAdmin = pathname.startsWith("/admin");
+  const isAdmin     = pathname.startsWith("/admin");
+  const isDashboard = pathname.startsWith("/dashboard");
 
-  if (isAdmin) return <>{children}</>;
+  if (isAdmin || isDashboard) return <>{children}</>;
 
   return (
     <>

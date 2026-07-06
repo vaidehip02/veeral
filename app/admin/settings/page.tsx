@@ -73,6 +73,7 @@ export default function AdminSettingsPage() {
   const [lateFeeType,  setLateFeeType]  = useState<"flat" | "multiplier">("multiplier");
   const [lateFeeValue, setLateFeeValue] = useState("1.5");
   const [lateFeeSaved, setLateFeeSaved] = useState(false);
+  const [lateFeeError, setLateFeeError] = useState<string | null>(null);
 
   const [bannerText,   setBannerText]   = useState("");
   const [bannerActive, setBannerActive] = useState(false);
@@ -88,6 +89,17 @@ export default function AdminSettingsPage() {
         setBannerActive(parsed.active ?? false);
       }
     } catch { /* ignore */ }
+  }, []);
+
+  // Load late-fee settings from DB on mount
+  useEffect(() => {
+    fetch("/api/admin/settings/late-fee")
+      .then(r => r.json())
+      .then(d => {
+        if (d.late_fee_multiplier) setLateFeeValue(String(d.late_fee_multiplier));
+        if (d.late_fee_type)       setLateFeeType(d.late_fee_type as "multiplier" | "flat");
+      })
+      .catch(() => { /* use defaults */ });
   }, []);
 
   const save = (setter: (v: boolean) => void) => {
@@ -180,7 +192,28 @@ export default function AdminSettingsPage() {
             <LightInput value={lateFeeValue} onChange={setLateFeeValue} type="number" prefix={lateFeeType === "multiplier" ? "×" : "$"} />
           </div>
         </Field>
-        <SaveButton onClick={() => save(setLateFeeSaved)} saved={lateFeeSaved} />
+        {lateFeeError && (
+          <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.72rem", color: "#991B1B", marginBottom: "0.75rem" }}>
+            {lateFeeError}
+          </p>
+        )}
+        <SaveButton
+          onClick={async () => {
+            setLateFeeError(null);
+            const mult = parseFloat(lateFeeValue);
+            if (isNaN(mult) || mult <= 0) { setLateFeeError("Enter a valid multiplier (e.g. 1.5)."); return; }
+            try {
+              const res = await fetch("/api/admin/settings/late-fee", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ lateFeeMultiplier: mult }),
+              });
+              if (!res.ok) { const d = await res.json(); setLateFeeError(d.error ?? "Save failed."); return; }
+              save(setLateFeeSaved);
+            } catch { setLateFeeError("Network error — try again."); }
+          }}
+          saved={lateFeeSaved}
+        />
       </div>
 
       {/* Announcement banner */}

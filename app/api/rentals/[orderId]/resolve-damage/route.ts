@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient as createServerClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { releaseDeposit } from "@/lib/rentals/releaseDeposit";
+import { getLateFeeSettings, computeLateFee, computeDaysOverdue } from "@/lib/rentals/lateFee";
 import { sendEmail } from "@/lib/email/send";
 import DepositReleased from "@/lib/email/templates/DepositReleased";
 
@@ -42,15 +43,33 @@ export async function POST(
 
   const admin = createAdminClient();
 
-  const { data: order, error: orderErr } = await admin
+  // ── Fetch order (includes listing for late-fee calculation) ───────
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: rawOrder, error: orderErr } = await (admin as any)
     .from("orders")
-    .select("id, status, deposit_amount, buyer_id, listing_id, listings(title, seller_id)")
+    .select(`
+      id, status, seller_id, deposit_amount, buyer_id, listing_id,
+      rental_end, return_noted_at,
+      listings(title, rent_price)
+    `)
     .eq("id", params.orderId)
     .single();
 
-  if (orderErr || !order) {
+  if (orderErr || !rawOrder) {
     return NextResponse.json({ error: "Order not found" }, { status: 404 });
   }
+
+  const order = rawOrder as {
+    id: string;
+    status: string;
+    seller_id: string;
+    deposit_amount: number | null;
+    buyer_id: string;
+    rental_end: string | null;
+    return_noted_at: string | null;
+    listings: { title: string; rent_price: number } | { title: string; rent_price: number }[] | null;
+  };
+
   if (order.status !== "damage_claimed") {
     return NextResponse.json(
       { error: `Cannot resolve — status is '${order.status}'` },
@@ -59,89 +78,139 @@ export async function POST(
   }
 
   const depositAmount = order.deposit_amount ?? 0;
+  const listing       = Array.isArray(order.listings) ? order.listings[0] : order.listings;
+  const itemTitle     = (listing as { title?: string } | null)?.title ?? "your rental";
+  const rentPricePerDay = (listing as { rent_price?: number } | null)?.rent_price ?? 0;
 
-  let releaseAmountCents: number;
-  let adminRetainAmount: number;
+  // ── Late-fee calculation ──────────────────────────────────────────
+  const lfSettings  = await getLateFeeSettings();
+  const overdueDays = computeDaysOverdue(order.rental_end, order.return_noted_at);
+  const rawLateFee  = computeLateFee(rentPricePerDay, overdueDays, lfSettings);
+  // Late fee is capped so it never pushes the renter below $0.
+  // Combined damage + late fee is also capped at the deposit.
+  const damageRetain = outcome === "retain_part" ? retainAmount! : outcome === "retain_all" ? depositAmount : 0;
+  const lateFee      = Math.min(rawLateFee, Math.max(0, depositAmount - damageRetain));
 
-  if (outcome === "release_all") {
-    releaseAmountCents = depositAmount;
-    adminRetainAmount = 0;
-  } else if (outcome === "retain_all") {
-    releaseAmountCents = 0;
-    adminRetainAmount = depositAmount;
-  } else {
-    // retain_part
-    const retain = retainAmount!;
-    if (retain > depositAmount) {
-      return NextResponse.json(
-        { error: "Retain amount exceeds deposit" },
-        { status: 422 }
-      );
-    }
-    adminRetainAmount = retain;
-    releaseAmountCents = depositAmount - retain;
-  }
+  const renterRefund = Math.max(0, depositAmount - damageRetain - lateFee);
+  const sellerAmount = depositAmount - renterRefund; // reconciles to the penny
 
-  // Release deposit (stub — never moves real money)
-  if (releaseAmountCents > 0) {
-    const result = await releaseDeposit(params.orderId, releaseAmountCents, reason.trim());
-    if (!result.ok) {
-      return NextResponse.json({ error: result.error }, { status: 500 });
-    }
-  } else {
-    // retain_all — just update status + amounts, no release
-    const { error: updateErr } = await admin
-      .from("orders")
-      .update({
-        status: "deposit_resolved",
-        deposit_release_amount: 0,
-        deposit_release_reason: reason.trim(),
-        deposit_released_at: new Date().toISOString(),
-        deposit_refund_processed: false,
-      })
-      .eq("id", params.orderId);
-    if (updateErr) {
-      console.error("resolve-damage retain_all error:", updateErr);
-      return NextResponse.json({ error: "Failed to update order" }, { status: 500 });
-    }
-  }
+  // Shortfall check: log if the seller was owed more than the deposit holds.
+  const shortfallCents = (damageRetain + rawLateFee) - depositAmount;
 
-  // Log admin action
-  await admin.from("admin_audit_log").insert({
-    admin_id: user.id,
-    action: "resolve_damage_claim",
-    entity_type: "order",
-    entity_id: params.orderId,
-    details: {
-      outcome,
-      deposit_amount: depositAmount,
-      release_amount: releaseAmountCents,
-      retain_amount: adminRetainAmount,
-      reason: reason.trim(),
+  // ── Seller's Stripe Connect account ──────────────────────────────
+  const { data: sellerProfile } = await admin
+    .from("seller_profiles")
+    .select("stripe_account_id")
+    .eq("id", order.seller_id)
+    .single();
+
+  const connectedAccountId = (sellerProfile as { stripe_account_id?: string } | null)?.stripe_account_id ?? null;
+
+  // ── Release / transfer ────────────────────────────────────────────
+  const releaseReason = [
+    outcome === "release_all"  ? "damage claim resolved — no damage found" :
+    outcome === "retain_part"  ? `damage claim resolved — $${(damageRetain / 100).toFixed(2)} retained` :
+                                 "damage claim resolved — full deposit retained",
+    overdueDays > 0 ? `${overdueDays} day${overdueDays !== 1 ? "s" : ""} late` : "",
+    reason.trim(),
+  ].filter(Boolean).join("; ");
+
+  const result = await releaseDeposit({
+    orderId:           params.orderId,
+    renterRefundCents: renterRefund,
+    reason:            releaseReason,
+    sellerTransfer: connectedAccountId && sellerAmount > 0
+      ? { amountCents: sellerAmount, connectedAccountId }
+      : undefined,
+    tracking: {
+      lateFeeAmountCents: lateFee,
+      daysOverdue:        overdueDays,
+      damageRetainCents:  damageRetain,
     },
   });
 
-  // Notify buyer
-  const listing = Array.isArray(order.listings) ? order.listings[0] : (order.listings as { title: string; seller_id: string } | null);
+  if (!result.ok) {
+    return NextResponse.json({ error: result.error }, { status: 500 });
+  }
+
+  if (result.warning) {
+    console.warn("[resolve-damage] releaseDeposit warning:", result.warning);
+  }
+
+  // ── Update status to deposit_resolved ─────────────────────────────
+  // (releaseDeposit only writes the deposit columns — status is the caller's job)
+  await admin
+    .from("orders")
+    .update({ status: "deposit_resolved" })
+    .eq("id", params.orderId);
+
+  // ── Audit log ─────────────────────────────────────────────────────
+  await admin.from("admin_audit_log").insert({
+    admin_id:    user.id,
+    action:      "resolve_damage_claim",
+    entity_type: "order",
+    entity_id:   params.orderId,
+    details: {
+      outcome,
+      deposit_amount:    depositAmount,
+      damage_retain:     damageRetain,
+      late_fee:          lateFee,
+      late_fee_days:     overdueDays,
+      renter_refund:     renterRefund,
+      seller_amount:     sellerAmount,
+      shortfall:         shortfallCents > 0 ? shortfallCents : 0,
+      reason:            reason.trim(),
+      connected_account: connectedAccountId ?? "none",
+      warning:           result.warning ?? null,
+    },
+  });
+
+  // ── Shortfall flag to console (manual follow-up) ──────────────────
+  if (shortfallCents > 0) {
+    console.warn(
+      `[resolve-damage] Shortfall on order ${params.orderId}: ` +
+      `seller was owed $${((damageRetain + rawLateFee) / 100).toFixed(2)} but deposit was only ` +
+      `$${(depositAmount / 100).toFixed(2)}. ` +
+      `Shortfall of $${(shortfallCents / 100).toFixed(2)} requires manual follow-up.`
+    );
+  }
+
+  // ── Email buyer ───────────────────────────────────────────────────
   const buyerProfile = await admin
     .from("profiles")
-    .select("email, full_name")
+    .select("email")
     .eq("id", order.buyer_id)
     .single();
 
-  const buyerEmail = buyerProfile.data?.email;
-  if (buyerEmail && releaseAmountCents > 0) {
+  const buyerEmail = (buyerProfile.data as { email?: string } | null)?.email;
+  if (buyerEmail && renterRefund > 0) {
+    const emailReason = [
+      outcome === "release_all"  ? "No damage was found." :
+      outcome === "retain_part"  ? `$${(damageRetain / 100).toFixed(2)} was retained for damage.` :
+                                   "The full deposit was retained for damage.",
+      overdueDays > 0 ? `A late fee of $${(lateFee / 100).toFixed(2)} was also applied for ${overdueDays} day${overdueDays !== 1 ? "s" : ""} late return.` : "",
+      `You will receive $${(renterRefund / 100).toFixed(2)} back.`,
+    ].filter(Boolean).join(" ");
+
     sendEmail({
       to: buyerEmail,
-      subject: `Deposit resolution — ${listing?.title ?? "your rental"}`,
+      subject: `Deposit resolution — ${itemTitle}`,
       react: DepositReleased({
-        itemTitle: listing?.title ?? "your rental",
-        orderId: params.orderId,
-        depositAmount: releaseAmountCents / 100,
-        reason: reason.trim(),
+        itemTitle,
+        orderId:       params.orderId,
+        depositAmount: renterRefund / 100,
+        reason:        emailReason,
       }),
     }).catch(() => {});
   }
 
-  return NextResponse.json({ ok: true, releaseAmountCents, adminRetainAmount });
+  return NextResponse.json({
+    ok:                true,
+    renterRefundCents: renterRefund,
+    sellerAmount,
+    lateFee,
+    overdueDays,
+    shortfall:         shortfallCents > 0 ? shortfallCents : 0,
+    warning:           result.warning,
+  });
 }

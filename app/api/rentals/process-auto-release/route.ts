@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { releaseDeposit } from "@/lib/rentals/releaseDeposit";
+import { getLateFeeSettings, computeLateFee, computeDaysOverdue } from "@/lib/rentals/lateFee";
 import { reviewWindowLapsed } from "@/lib/rentals/businessDays";
 import { sendEmail } from "@/lib/email/send";
 import { createElement } from "react";
@@ -9,21 +10,14 @@ import DepositReleased from "@/lib/email/templates/DepositReleased";
 /**
  * GET /api/rentals/process-auto-release
  *
- * Finds all rentals in return_pending status whose 5-business-day review
- * window has lapsed and releases the full deposit automatically.
+ * Finds all rentals in return_pending whose 5-business-day review window has
+ * lapsed and releases the full deposit (minus any late fee) automatically.
  *
- * Safe to call repeatedly — only processes orders still in return_pending.
- *
- * TODO: schedule this as a daily cron job (e.g. via Vercel Cron or an
- * external scheduler). Until then, it can be triggered manually or called
- * from a test script.
- *
- * Protected by a shared secret so it can only be called by the scheduler
- * (or you manually). Set CRON_SECRET in your environment variables.
+ * Safe to call repeatedly — guarded by deposit_refund_processed idempotency.
+ * Protected by CRON_SECRET env var; set that on Vercel and call daily.
  */
 export async function GET(req: NextRequest) {
-  // Vercel passes the cron secret as "Authorization: Bearer <CRON_SECRET>"
-  const auth = req.headers.get("authorization") ?? "";
+  const auth   = req.headers.get("authorization") ?? "";
   const secret = auth.startsWith("Bearer ") ? auth.slice(7) : auth;
   if (process.env.CRON_SECRET && secret !== process.env.CRON_SECRET) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -32,10 +26,13 @@ export async function GET(req: NextRequest) {
   const admin = createAdminClient();
   const now   = new Date();
 
-  // Fetch all return_pending rentals
-  const { data: orders, error } = await admin
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: rawOrders, error } = await (admin as any)
     .from("orders")
-    .select("id, buyer_id, deposit_amount, return_noted_at, listing:listings(title)")
+    .select(`
+      id, buyer_id, seller_id, deposit_amount, return_noted_at, rental_end,
+      listing:listings(title, rent_price)
+    `)
     .eq("type", "rent")
     .eq("status", "return_pending");
 
@@ -44,21 +41,62 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Failed to fetch orders" }, { status: 500 });
   }
 
-  const lapsed = (orders ?? []).filter(o => {
+  const orders = (rawOrders ?? []) as Array<{
+    id: string;
+    buyer_id: string;
+    seller_id: string;
+    deposit_amount: number | null;
+    return_noted_at: string | null;
+    rental_end: string | null;
+    listing: { title?: string; rent_price?: number } | { title?: string; rent_price?: number }[] | null;
+  }>;
+
+  const lapsed = orders.filter(o => {
     if (!o.return_noted_at) return false;
     return reviewWindowLapsed(new Date(o.return_noted_at), now);
   });
 
+  const lfSettings = await getLateFeeSettings();
   let released = 0;
   const errors: string[] = [];
 
   for (const order of lapsed) {
-    const depositCents = order.deposit_amount ?? 0;
-    const result = await releaseDeposit(
-      order.id,
-      depositCents,
-      "auto-released: review window lapsed",
-    );
+    const depositCents  = order.deposit_amount ?? 0;
+    const listing       = Array.isArray(order.listing) ? order.listing[0] : order.listing;
+    const itemTitle     = (listing as { title?: string } | null)?.title ?? "your rental";
+    const rentPricePerDay = (listing as { rent_price?: number } | null)?.rent_price ?? 0;
+
+    const overdueDays = computeDaysOverdue(order.rental_end, order.return_noted_at);
+    const rawLateFee  = computeLateFee(rentPricePerDay, overdueDays, lfSettings);
+    const lateFee     = Math.min(rawLateFee, depositCents);
+    const renterRefund = Math.max(0, depositCents - lateFee);
+    const sellerAmount = depositCents - renterRefund;
+
+    // Look up seller's connected Stripe account
+    const { data: sellerProfile } = await admin
+      .from("seller_profiles")
+      .select("stripe_account_id")
+      .eq("id", order.seller_id)
+      .single();
+    const connectedAccountId = (sellerProfile as { stripe_account_id?: string } | null)?.stripe_account_id ?? null;
+
+    const releaseReason = overdueDays > 0
+      ? `auto-released: review window lapsed — ${overdueDays} day${overdueDays !== 1 ? "s" : ""} late`
+      : "auto-released: review window lapsed";
+
+    const result = await releaseDeposit({
+      orderId:           order.id,
+      renterRefundCents: renterRefund,
+      reason:            releaseReason,
+      sellerTransfer: connectedAccountId && sellerAmount > 0
+        ? { amountCents: sellerAmount, connectedAccountId }
+        : undefined,
+      tracking: {
+        lateFeeAmountCents: lateFee,
+        daysOverdue:        overdueDays,
+        damageRetainCents:  0,
+      },
+    });
 
     if (!result.ok) {
       errors.push(`${order.id}: ${result.error}`);
@@ -75,27 +113,31 @@ export async function GET(req: NextRequest) {
     // Email buyer (fire-and-forget)
     admin.auth.admin.getUserById(order.buyer_id).then(({ data }) => {
       const buyerEmail = data.user?.email;
-      const listing = Array.isArray(order.listing) ? order.listing[0] : order.listing;
-      const itemTitle = (listing as { title?: string } | null)?.title ?? "your rental";
-      if (buyerEmail) {
-        sendEmail({
-          to: buyerEmail,
-          subject: `Deposit automatically released — ${itemTitle}`,
-          react: createElement(DepositReleased, {
-            itemTitle,
-            depositAmount: depositCents / 100,
-            reason:
-              "The seller's 5-day review window lapsed without action, so your deposit was automatically released.",
-            orderId: order.id.slice(0, 8).toUpperCase(),
-          }),
-        }).catch(err => console.error("[auto-release] Email error:", err));
-      }
+      if (!buyerEmail) return;
+
+      const lateNote = overdueDays > 0
+        ? ` A late fee of $${(lateFee / 100).toFixed(2)} was applied for ${overdueDays} day${overdueDays !== 1 ? "s" : ""} late return.`
+        : "";
+
+      sendEmail({
+        to: buyerEmail,
+        subject: `Deposit automatically released — ${itemTitle}`,
+        react: createElement(DepositReleased, {
+          itemTitle,
+          depositAmount: renterRefund / 100,
+          reason:
+            `The seller's 5-day review window lapsed without action, so your deposit was automatically released.` +
+            lateNote,
+          orderId: order.id.slice(0, 8).toUpperCase(),
+        }),
+      }).catch(err => console.error("[auto-release] Email error:", err));
     });
   }
 
   return NextResponse.json({
-    checked: orders?.length ?? 0,
+    checked:  orders.length,
+    lapsed:   lapsed.length,
     released,
-    errors: errors.length > 0 ? errors : undefined,
+    errors:   errors.length > 0 ? errors : undefined,
   });
 }

@@ -233,6 +233,19 @@ export default function BuyerRentalsPage() {
                             </span>
                           ))}
                         </div>
+                        {rental.rental_end && (
+                          <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.78rem", color: "var(--muted)", marginBottom: "0.75rem" }}>
+                            <span style={{ fontWeight: 600, color: days <= 2 ? "#C62828" : "#1A1A18" }}>
+                              Ship back by {fmtDate(rental.rental_end)}
+                            </span>{" "}
+                            <span
+                              title="Drop off with the carrier by this date. Late fees are based on your ship/postmark date, not the delivery date."
+                              style={{ cursor: "help", borderBottom: "1px dotted currentColor", fontSize: "0.72rem", opacity: 0.6 }}
+                            >
+                              ⓘ
+                            </span>
+                          </p>
+                        )}
                         <div style={{ display: "flex", gap: "0.6rem", flexWrap: "wrap" }}>
                           <Link href={`/account/orders/${rental.id}`} style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.6rem", letterSpacing: "0.14em", textTransform: "uppercase", padding: "0.4rem 0.9rem", background: "transparent", color: "var(--muted)", border: "1px solid var(--warm-tan)", textDecoration: "none" }}>
                             View order

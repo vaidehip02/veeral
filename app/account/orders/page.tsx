@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import MessageButton from "@/components/messages/MessageButton";
+import { BUYER_LIST_STATUS } from "@/lib/orderStatus";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -25,14 +26,6 @@ interface BuyerOrder {
   tracking?: string;
 }
 
-const STATUS_CONFIG: Record<DBStatus, { label: string; bg: string; text: string }> = {
-  pending:   { label: "Processing", bg: "#F5F5F5",  text: "#555"     },
-  paid:      { label: "Processing", bg: "#F5F5F5",  text: "#555"     },
-  shipped:   { label: "Shipped",    bg: "#EEF2FF",  text: "#3730A3"  },
-  delivered: { label: "Delivered",  bg: "#E8F5E9",  text: "#2D6A4F"  },
-  cancelled: { label: "Cancelled",  bg: "#FEE2E2",  text: "#991B1B"  },
-  refunded:  { label: "Refunded",   bg: "#EDE9FE",  text: "#5B21B6"  },
-};
 
 function fmtDate(iso: string) {
   return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
@@ -156,7 +149,7 @@ export default function BuyerOrdersPage() {
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: "1px", background: "var(--warm-tan)" }}>
           {orders.map((order) => {
-            const cfg       = STATUS_CONFIG[order.status] ?? STATUS_CONFIG.pending;
+            const cfg       = BUYER_LIST_STATUS[order.status] ?? BUYER_LIST_STATUS.pending;
             const canReview = order.status === "delivered" && !submitted.has(order.id);
             const reviewed  = submitted.has(order.id);
             const thumbnail = order.images[0] ?? null;

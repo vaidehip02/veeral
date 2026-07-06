@@ -242,8 +242,10 @@ export default function CheckoutPage({ params: _params }: { params: { listingId:
     address1: "", address2: "", city: "", state: "", zip: "",
   });
   function setField(k: string) {
-    return (e: React.ChangeEvent<HTMLInputElement>) =>
-      setForm(f => ({ ...f, [k]: e.target.value }));
+    return (e: React.ChangeEvent<HTMLInputElement>) => {
+      const v = k === "state" ? e.target.value.toUpperCase() : e.target.value;
+      setForm(f => ({ ...f, [k]: v }));
+    };
   }
 
   function applyPromo() {

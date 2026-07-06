@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import MessageButton from "@/components/messages/MessageButton";
+import { SELLER_SALE_STATUS, SELLER_RENT_STATUS } from "@/lib/orderStatus";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -30,26 +31,6 @@ interface SellerOrder {
   tracking?: string;
 }
 
-const SALE_STATUS: Partial<Record<DBStatus, { label: string; bg: string; text: string }>> = {
-  pending:   { label: "Processing",  bg: "#F5F5F5",  text: "#555"     },
-  paid:      { label: "Ready to ship", bg: "#FFF8E1", text: "#E65100" },
-  shipped:   { label: "Shipped",     bg: "#EEF2FF",  text: "#3730A3"  },
-  delivered: { label: "Delivered",   bg: "#E8F5E9",  text: "#2D6A4F"  },
-  cancelled: { label: "Cancelled",   bg: "#FEE2E2",  text: "#991B1B"  },
-  refunded:  { label: "Refunded",    bg: "#EDE9FE",  text: "#5B21B6"  },
-};
-
-const RENT_STATUS: Partial<Record<DBStatus, { label: string; bg: string; text: string }>> = {
-  pending:          { label: "Processing",       bg: "#F5F5F5",  text: "#555"    },
-  paid:             { label: "Ready to ship",    bg: "#FFF8E1",  text: "#E65100" },
-  shipped:          { label: "Shipped",          bg: "#EEF2FF",  text: "#3730A3" },
-  delivered:        { label: "Out on rental",    bg: "#E8F5E9",  text: "#2D6A4F" },
-  return_pending:   { label: "Return pending",   bg: "#FEF3C7",  text: "#92400E" },
-  deposit_released: { label: "Deposit released", bg: "#D1FAE5",  text: "#065F46" },
-  damage_claimed:   { label: "Claim filed",      bg: "#FEF3C7",  text: "#92400E" },
-  deposit_resolved: { label: "Resolved",         bg: "#EDE9FE",  text: "#5B21B6" },
-  cancelled:        { label: "Cancelled",        bg: "#FEE2E2",  text: "#991B1B" },
-};
 
 function fmtDate(iso: string) {
   return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
@@ -135,7 +116,9 @@ export default function SellerOrdersPage() {
 
   const sales   = orders.filter((o) => o.type === "sale");
   const rentals = orders.filter((o) => o.type === "rent");
-  const pendingShip = orders.filter((o) => o.status === "paid").length;
+  const pendingShipSales   = sales.filter((o) => o.status === "paid").length;
+  const pendingShipRentals = rentals.filter((o) => o.status === "paid").length;
+  const pendingShip = pendingShipSales + pendingShipRentals;
 
   async function markShipped() {
     if (!drawer || !drawer.tracking.trim()) return;
@@ -176,7 +159,14 @@ export default function SellerOrdersPage() {
           Orders
         </h1>
         <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.78rem", color: "var(--muted)", opacity: 0.65 }}>
-          {loading ? "Loading…" : `${pendingShip} ready to ship`}
+          {loading ? "Loading…" : (
+            pendingShip === 0
+              ? "No orders ready to ship"
+              : [
+                  pendingShipSales   > 0 && `${pendingShipSales} sale${pendingShipSales   !== 1 ? "s" : ""} ready to ship`,
+                  pendingShipRentals > 0 && `${pendingShipRentals} rental${pendingShipRentals !== 1 ? "s" : ""} to dispatch`,
+                ].filter(Boolean).join(" · ")
+          )}
         </p>
       </div>
 
@@ -200,7 +190,7 @@ export default function SellerOrdersPage() {
                 Sales ({sales.length})
               </p>
               <div style={{ display: "flex", flexDirection: "column", gap: "1px", background: "var(--warm-tan)" }}>
-                {sales.map((order) => <OrderCard key={order.id} order={order} statusMap={SALE_STATUS} onShip={() => { setDrawer({ orderId: order.id, tracking: "" }); setShipError(null); }} expandedAddress={expandedAddress} setExpandedAddress={setExpandedAddress} />)}
+                {sales.map((order) => <OrderCard key={order.id} order={order} statusMap={SELLER_SALE_STATUS} onShip={() => { setDrawer({ orderId: order.id, tracking: "" }); setShipError(null); }} expandedAddress={expandedAddress} setExpandedAddress={setExpandedAddress} />)}
               </div>
             </section>
           )}
@@ -212,7 +202,7 @@ export default function SellerOrdersPage() {
                 Rentals ({rentals.length})
               </p>
               <div style={{ display: "flex", flexDirection: "column", gap: "1px", background: "var(--warm-tan)" }}>
-                {rentals.map((order) => <OrderCard key={order.id} order={order} statusMap={RENT_STATUS} onShip={() => { setDrawer({ orderId: order.id, tracking: "" }); setShipError(null); }} expandedAddress={expandedAddress} setExpandedAddress={setExpandedAddress} />)}
+                {rentals.map((order) => <OrderCard key={order.id} order={order} statusMap={SELLER_RENT_STATUS} onShip={() => { setDrawer({ orderId: order.id, tracking: "" }); setShipError(null); }} expandedAddress={expandedAddress} setExpandedAddress={setExpandedAddress} />)}
               </div>
             </section>
           )}
@@ -265,7 +255,7 @@ function OrderCard({
   setExpandedAddress,
 }: {
   order: SellerOrder;
-  statusMap: Partial<Record<DBStatus, { label: string; bg: string; text: string }>>;
+  statusMap: Record<string, { label: string; bg: string; text: string }>;
   onShip: () => void;
   expandedAddress: string | null;
   setExpandedAddress: (id: string | null) => void;

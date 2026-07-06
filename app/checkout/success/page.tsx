@@ -186,7 +186,7 @@ function SuccessContent() {
             </p>
             <p style={{ fontFamily: "var(--font-jost)", fontWeight: 500, fontSize: "0.82rem", color: "#2A2118", lineHeight: 1.7 }}>
               Drop off with the carrier by this date — late fees are based on the postmark, not delivery date.
-              A prepaid return label will be emailed to you 2 days before this date.
+              You&apos;ll receive return instructions before your ship-back date.
               Your {fmt(depositCents)} deposit is refunded within 5 business days after the seller confirms receipt.
             </p>
           </div>
@@ -213,7 +213,7 @@ function SuccessContent() {
               "The seller ships your item within 2–3 business days",
               "You'll receive a tracking number by email once dispatched",
               isRental && returnDate
-                ? `Ship the item back using the prepaid label we'll email you — drop off by ${fmtDate(returnDate)} (postmark counts)`
+                ? `Return the item to the seller — drop off with a carrier by ${fmtDate(returnDate)} (postmark counts, not delivery date)`
                 : "Leave a review once your item arrives to help other buyers",
             ].map((text, i) => (
               <div key={i} style={{ display: "flex", gap: "0.85rem", alignItems: "flex-start" }}>
