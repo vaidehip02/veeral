@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import MessageButton from "@/components/messages/MessageButton";
+import { createClient } from "@/lib/supabase/client";
 
 const A = {
   dark: "#0D0906", muted: "#6B5E52", label: "#9C8B7E",
@@ -29,30 +30,9 @@ interface AdminRental {
   };
 }
 
-const TODAY = new Date("2026-06-24");
-
-const RENTALS: AdminRental[] = [
-  { id:"R201", buyer:"ananya_m",    buyerId:"", seller:"priya_sharma", sellerId:"", item:"Mirror-work Lehenga (Bridal)",   start:"Jun 6",  end:"Jun 14", returnBy:new Date("2026-06-14"), dailyRate:160, deposit:80000,  bg:"#D4C5B5", status:"active" },
-  { id:"R200", buyer:"kavitha_m",   buyerId:"", seller:"priya_sharma", sellerId:"", item:"Sequin Lehenga — Midnight Blue", start:"Jun 5",  end:"Jun 11", returnBy:new Date("2026-06-11"), dailyRate:95,  deposit:50000,  bg:"#B8BFCC", status:"return_pending" },
-  { id:"R198", buyer:"sana.rents",  buyerId:"", seller:"meera_b",      sellerId:"", item:"Gold Tissue Lehenga",            start:"Jun 3",  end:"Jun 10", returnBy:new Date("2026-06-10"), dailyRate:200, deposit:100000, bg:"#E0DDD8", status:"active" },
-  { id:"R195", buyer:"riya.wears",  buyerId:"", seller:"priya_sharma", sellerId:"", item:"Banarasi Silk Lehenga",          start:"May 30", end:"Jun 7",  returnBy:new Date("2026-06-07"), dailyRate:120, deposit:60000,  bg:"#D4C5B5", status:"deposit_released" },
-  {
-    id:"R192", buyer:"pooja_k", buyerId:"", seller:"meera_b", sellerId:"", item:"Sequin Lehenga", start:"May 28", end:"Jun 9", returnBy:new Date("2026-06-09"), dailyRate:95, deposit:50000, bg:"#B8BFCC",
-    status: "damage_claimed",
-    damageClaim: {
-      photos: [
-        "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=200",
-        "https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=200",
-      ],
-      description: "There is a 3-inch tear along the hem on the back panel, and a beading section is missing near the waist. The item was returned without the dupatta.",
-      retainAmount: 25000, // $250.00
-    },
-  },
-  { id:"R189", buyer:"arjun.style", buyerId:"", seller:"raj_styles", sellerId:"", item:"Navy Sherwani Brocade", start:"May 25", end:"Jun 10", returnBy:new Date("2026-06-10"), dailyRate:80, deposit:40000, bg:"#C9CDD6", status:"active" },
-];
 
 function daysLeft(returnBy: Date): number {
-  return Math.ceil((returnBy.getTime() - TODAY.getTime()) / (1000 * 60 * 60 * 24));
+  return Math.ceil((returnBy.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
 }
 
 function returnStatusBadge(days: number) {
@@ -90,8 +70,57 @@ interface ResolveDrawerState {
 }
 
 export default function AdminRentalsPage() {
-  const [rentals, setRentals] = useState(RENTALS);
+  const [rentals, setRentals] = useState<AdminRental[]>([]);
+  const [loading, setLoading] = useState(true);
   const [resolveDrawer, setResolveDrawer] = useState<ResolveDrawerState | null>(null);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase
+      .from("orders")
+      .select(`
+        id, status, deposit_amount, rental_start_date, rental_end_date,
+        damage_claim_photos, damage_claim_description, damage_claim_retain_amount,
+        rent_price_per_day,
+        buyer:buyer_id ( id, username ),
+        seller_profile:seller_profiles!inner ( id, username ),
+        listing:listing_id ( id, title, images )
+      `)
+      .in("status", ["active", "return_pending", "damage_claimed", "deposit_released", "deposit_resolved"])
+      .not("rental_start_date", "is", null)
+      .order("created_at", { ascending: false })
+      .then(({ data, error }) => {
+        if (error) { console.error("admin rentals fetch:", error); setLoading(false); return; }
+        const mapped: AdminRental[] = (data ?? []).map((o) => {
+          const buyer = Array.isArray(o.buyer) ? o.buyer[0] : o.buyer as { id: string; username: string } | null;
+          const seller = Array.isArray(o.seller_profile) ? o.seller_profile[0] : o.seller_profile as { id: string; username: string } | null;
+          const listing = Array.isArray(o.listing) ? o.listing[0] : o.listing as { id: string; title: string; images: string[] } | null;
+          const returnBy = o.rental_end_date ? new Date(o.rental_end_date) : new Date();
+          return {
+            id: o.id,
+            buyer: buyer?.username ?? "unknown",
+            buyerId: buyer?.id ?? "",
+            seller: seller?.username ?? "unknown",
+            sellerId: seller?.id ?? "",
+            item: listing?.title ?? "Unknown item",
+            start: o.rental_start_date ?? "",
+            end: o.rental_end_date ?? "",
+            returnBy,
+            dailyRate: o.rent_price_per_day ?? 0,
+            deposit: o.deposit_amount ?? 0,
+            bg: "#EDE6DE",
+            status: o.status as AdminRentalStatus,
+            damageClaim: o.damage_claim_description ? {
+              photos: o.damage_claim_photos ?? [],
+              description: o.damage_claim_description,
+              retainAmount: o.damage_claim_retain_amount ?? 0,
+            } : undefined,
+          };
+        });
+        setRentals(mapped);
+        setLoading(false);
+      });
+  }, []);
 
   const damageClaimed = rentals.filter(r => r.status === "damage_claimed");
   const overdue       = rentals.filter(r => r.status === "active" && daysLeft(r.returnBy) < 0);
@@ -143,6 +172,8 @@ export default function AdminRentalsPage() {
       setResolveDrawer(d => d ? { ...d, submitting: false, error: "Network error. Please try again." } : d);
     }
   }
+
+  if (loading) return <div style={{ padding: "2rem", fontFamily: "var(--font-jost)", color: A.muted }}>Loading…</div>;
 
   return (
     <div>
