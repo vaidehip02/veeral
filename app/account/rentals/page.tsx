@@ -403,7 +403,10 @@ export default function BuyerRentalsPage() {
               Only do this once you&apos;ve dropped the item off with the carrier. The seller will have 5 business days to confirm receipt before your deposit is automatically released.
             </p>
             <p style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.62rem", letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--muted)", marginBottom: "0.5rem" }}>
-              Tracking number <span style={{ fontWeight: 400, opacity: 0.55 }}>(optional)</span>
+              Tracking number <span style={{ fontWeight: 400, color: "#991B1B" }}>*</span>
+            </p>
+            <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.72rem", color: "var(--muted)", opacity: 0.7, marginBottom: "0.5rem" }}>
+              Required — this stops the late-fee clock. Enter it as soon as you drop off the item.
             </p>
             <input
               type="text"
@@ -414,7 +417,7 @@ export default function BuyerRentalsPage() {
             />
             {submitError && <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.75rem", color: "#991B1B", marginBottom: "0.75rem" }}>{submitError}</p>}
             <div style={{ display: "flex", gap: "0.75rem" }}>
-              <button onClick={() => markReturned(returnDrawerId!)} disabled={submitting} style={{ flex: 1, padding: "0.75rem", fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.68rem", letterSpacing: "0.16em", textTransform: "uppercase", background: submitting ? "var(--warm-tan)" : "var(--burnt-orange)", color: submitting ? "var(--muted)" : "var(--cream)", border: "none", cursor: submitting ? "not-allowed" : "pointer" }}>
+              <button onClick={() => markReturned(returnDrawerId!)} disabled={submitting || !trackingInput.trim()} style={{ flex: 1, padding: "0.75rem", fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.68rem", letterSpacing: "0.16em", textTransform: "uppercase", background: (submitting || !trackingInput.trim()) ? "var(--warm-tan)" : "var(--burnt-orange)", color: (submitting || !trackingInput.trim()) ? "var(--muted)" : "var(--cream)", border: "none", cursor: (submitting || !trackingInput.trim()) ? "not-allowed" : "pointer" }}>
                 {submitting ? "Submitting…" : "Confirm — item shipped back"}
               </button>
               <button onClick={() => setReturnDrawerId(null)} style={{ padding: "0.75rem 1.25rem", fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.68rem", letterSpacing: "0.14em", textTransform: "uppercase", background: "transparent", color: "var(--muted)", border: "1px solid var(--warm-tan)", cursor: "pointer" }}>

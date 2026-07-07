@@ -1,9 +1,11 @@
 /**
  * Late-fee helpers — server-side only.
  *
- * getLateFeeSettings()  reads late_fee_type / late_fee_multiplier from platform_settings.
+ * getLateFeeSettings()  reads late_fee_type / late_fee_multiplier / grace_period_days
+ *                       from platform_settings.
  * computeLateFee()      pure function: dailyRate × daysOverdue × multiplier.
- * computeDaysOverdue()  how many days late the renter shipped (or is still shipping).
+ * computeDaysOverdue()  how many days late the renter shipped (or is still shipping),
+ *                       after subtracting the grace period.
  *
  * Late fees are ONLY ever deducted from the renter's deposit — never charged separately.
  * If the late fee would exceed the deposit, it is capped at the deposit amount.
@@ -16,7 +18,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 
 export interface LateFeeSettings {
   type: "multiplier";
-  multiplier: number; // e.g. 1.5 → 1.5× daily rate per overdue day
+  multiplier: number;      // e.g. 1.5 → 1.5× daily rate per overdue day
+  gracePeriodDays: number; // 0 = no grace period (default)
 }
 
 // ── Read settings ─────────────────────────────────────────────────────────────
@@ -26,13 +29,14 @@ export async function getLateFeeSettings(): Promise<LateFeeSettings> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data } = await (admin as any)
     .from("platform_settings")
-    .select("late_fee_multiplier")
+    .select("late_fee_multiplier, grace_period_days")
     .eq("id", 1)
     .single();
 
   return {
-    type: "multiplier",
-    multiplier: Number(data?.late_fee_multiplier ?? 1.5),
+    type:            "multiplier",
+    multiplier:      Number(data?.late_fee_multiplier ?? 1.5),
+    gracePeriodDays: Number(data?.grace_period_days   ?? 0),
   };
 }
 
@@ -53,17 +57,22 @@ export function computeLateFee(
 
 /**
  * How many days late did the renter return the item?
- * Uses the postmark proxy: return_noted_at (when the renter marked it shipped in the app).
- * Falls back to now() if return_noted_at is null (item still in transit — for auto-release).
- * Returns 0 if on time.
+ *
+ * - Clock STARTS at rental_end date.
+ * - Clock STOPS when the renter logs a tracking number (return_noted_at timestamp).
+ * - If return_noted_at is null and today is past rental_end, accrues against now().
+ * - grace_period_days is subtracted before returning (0 = no grace period).
+ * - Returns 0 if on time or within the grace period.
  */
 export function computeDaysOverdue(
   rentalEnd: string | null,
   returnNotedAt: string | null,
+  gracePeriodDays = 0,
 ): number {
   if (!rentalEnd) return 0;
-  const endDate = new Date(rentalEnd);
+  const endDate    = new Date(rentalEnd);
   const returnDate = returnNotedAt ? new Date(returnNotedAt) : new Date();
-  const diffMs = returnDate.getTime() - endDate.getTime();
-  return Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
+  const diffMs     = returnDate.getTime() - endDate.getTime();
+  const rawDays    = Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
+  return Math.max(0, rawDays - gracePeriodDays);
 }

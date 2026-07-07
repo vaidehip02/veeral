@@ -16,6 +16,10 @@ export async function POST(
   const { tracking_number } = (await req.json()) as { tracking_number?: string };
   const { orderId } = params;
 
+  if (!tracking_number?.trim()) {
+    return NextResponse.json({ error: "A return tracking number is required." }, { status: 400 });
+  }
+
   // Verify this order belongs to this buyer and is an active rental
   const { data: order, error: orderErr } = await supabase
     .from("orders")

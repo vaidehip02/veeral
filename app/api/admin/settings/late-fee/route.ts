@@ -8,12 +8,12 @@ export async function GET() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (admin as any)
     .from("platform_settings")
-    .select("late_fee_type, late_fee_multiplier")
+    .select("late_fee_type, late_fee_multiplier, grace_period_days")
     .eq("id", 1)
     .single();
 
   if (error || !data) {
-    return NextResponse.json({ late_fee_type: "multiplier", late_fee_multiplier: 1.5 });
+    return NextResponse.json({ late_fee_type: "multiplier", late_fee_multiplier: 1.5, grace_period_days: 0 });
   }
   return NextResponse.json(data);
 }
@@ -34,15 +34,20 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { lateFeeMultiplier } = body as { lateFeeMultiplier: number };
+  const { lateFeeMultiplier, gracePeriodDays } = body as {
+    lateFeeMultiplier: number;
+    gracePeriodDays: number;
+  };
 
-  if (
-    typeof lateFeeMultiplier !== "number" ||
-    lateFeeMultiplier <= 0 ||
-    lateFeeMultiplier > 20
-  ) {
+  if (typeof lateFeeMultiplier !== "number" || lateFeeMultiplier <= 0 || lateFeeMultiplier > 20) {
     return NextResponse.json(
       { error: "lateFeeMultiplier must be a number between 0 and 20" },
+      { status: 400 },
+    );
+  }
+  if (typeof gracePeriodDays !== "number" || gracePeriodDays < 0 || !Number.isInteger(gracePeriodDays)) {
+    return NextResponse.json(
+      { error: "gracePeriodDays must be a non-negative integer" },
       { status: 400 },
     );
   }
@@ -54,6 +59,7 @@ export async function POST(req: NextRequest) {
     .update({
       late_fee_type:       "multiplier",
       late_fee_multiplier: lateFeeMultiplier,
+      grace_period_days:   gracePeriodDays,
       updated_at:          new Date().toISOString(),
     })
     .eq("id", 1);

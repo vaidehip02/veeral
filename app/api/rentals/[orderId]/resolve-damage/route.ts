@@ -84,7 +84,7 @@ export async function POST(
 
   // ── Late-fee calculation ──────────────────────────────────────────
   const lfSettings  = await getLateFeeSettings();
-  const overdueDays = computeDaysOverdue(order.rental_end, order.return_noted_at);
+  const overdueDays = computeDaysOverdue(order.rental_end, order.return_noted_at, lfSettings.gracePeriodDays);
   const rawLateFee  = computeLateFee(rentPricePerDay, overdueDays, lfSettings);
   // Late fee is capped so it never pushes the renter below $0.
   // Combined damage + late fee is also capped at the deposit.

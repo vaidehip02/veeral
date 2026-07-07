@@ -89,7 +89,8 @@ const EMPTY_DRAFT: ClaimDraft = { photos: [], description: "", retainAmount: "" 
 export default function SellerRentalsPage() {
   const [rentals,  setRentals]  = useState<SellerRental[]>([]);
   const [loading,  setLoading]  = useState(true);
-  const [lateFeeMultiplier, setLateFeeMultiplier] = useState(1.5);
+  const [lateFeeMultiplier,  setLateFeeMultiplier]  = useState(1.5);
+  const [gracePeriodDays,    setGracePeriodDays]    = useState(0);
 
   // Review-return drawer
   const [drawer,       setDrawer]       = useState<string | null>(null);
@@ -107,7 +108,10 @@ export default function SellerRentalsPage() {
   useEffect(() => {
     fetch("/api/admin/settings/late-fee")
       .then(r => r.json())
-      .then(d => { if (d.late_fee_multiplier) setLateFeeMultiplier(Number(d.late_fee_multiplier)); })
+      .then(d => {
+        if (d.late_fee_multiplier != null) setLateFeeMultiplier(Number(d.late_fee_multiplier));
+        if (d.grace_period_days   != null) setGracePeriodDays(Number(d.grace_period_days));
+      })
       .catch(() => { /* keep default 1.5 */ });
   }, []);
 
@@ -350,9 +354,9 @@ export default function SellerRentalsPage() {
                             </span>
                           </div>
                           {days < 0 && (() => {
-                            const overdue = Math.abs(days);
-                            const estFee = rental.rent_price_per_day > 0
-                              ? Math.round(rental.rent_price_per_day * overdue * lateFeeMultiplier)
+                            const overdue = Math.max(0, Math.abs(days) - gracePeriodDays);
+                            const estFee = overdue > 0 && rental.rent_price_per_day > 0
+                              ? Math.min(Math.round(rental.rent_price_per_day * overdue * lateFeeMultiplier), rental.deposit_amount)
                               : null;
                             return (
                               <div style={{ marginTop: "0.5rem", display: "inline-flex", alignItems: "center", gap: "0.5rem", background: "#FDECEA", padding: "0.35rem 0.75rem" }}>
@@ -507,7 +511,7 @@ export default function SellerRentalsPage() {
 
                 {(() => {
                   const overdueDays = drawerRental.rental_end
-                    ? Math.max(0, -getDaysUntilShipBack(drawerRental.rental_end))
+                    ? Math.max(0, -getDaysUntilShipBack(drawerRental.rental_end) - gracePeriodDays)
                     : 0;
                   const estLateFee = overdueDays > 0 && drawerRental.rent_price_per_day > 0
                     ? Math.min(Math.round(drawerRental.rent_price_per_day * overdueDays * lateFeeMultiplier), drawerRental.deposit_amount)

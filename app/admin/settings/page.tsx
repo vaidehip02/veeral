@@ -70,10 +70,11 @@ export default function AdminSettingsPage() {
   const [depositMax,        setDepositMax]        = useState("2000");
   const [depositSaved,      setDepositSaved]      = useState(false);
 
-  const [lateFeeType,  setLateFeeType]  = useState<"flat" | "multiplier">("multiplier");
-  const [lateFeeValue, setLateFeeValue] = useState("1.5");
-  const [lateFeeSaved, setLateFeeSaved] = useState(false);
-  const [lateFeeError, setLateFeeError] = useState<string | null>(null);
+  const [lateFeeType,       setLateFeeType]       = useState<"flat" | "multiplier">("multiplier");
+  const [lateFeeValue,      setLateFeeValue]      = useState("1.5");
+  const [gracePeriodDays,   setGracePeriodDays]   = useState("0");
+  const [lateFeeSaved,      setLateFeeSaved]      = useState(false);
+  const [lateFeeError,      setLateFeeError]      = useState<string | null>(null);
 
   const [bannerText,   setBannerText]   = useState("");
   const [bannerActive, setBannerActive] = useState(false);
@@ -96,8 +97,9 @@ export default function AdminSettingsPage() {
     fetch("/api/admin/settings/late-fee")
       .then(r => r.json())
       .then(d => {
-        if (d.late_fee_multiplier) setLateFeeValue(String(d.late_fee_multiplier));
-        if (d.late_fee_type)       setLateFeeType(d.late_fee_type as "multiplier" | "flat");
+        if (d.late_fee_multiplier != null) setLateFeeValue(String(d.late_fee_multiplier));
+        if (d.late_fee_type)               setLateFeeType(d.late_fee_type as "multiplier" | "flat");
+        if (d.grace_period_days != null)   setGracePeriodDays(String(d.grace_period_days));
       })
       .catch(() => { /* use defaults */ });
   }, []);
@@ -192,6 +194,11 @@ export default function AdminSettingsPage() {
             <LightInput value={lateFeeValue} onChange={setLateFeeValue} type="number" prefix={lateFeeType === "multiplier" ? "×" : "$"} />
           </div>
         </Field>
+        <Field label="Grace period (days)" hint="Renter has this many days past the return date before the late fee starts. Default 0.">
+          <div style={{ width: "100px" }}>
+            <LightInput value={gracePeriodDays} onChange={setGracePeriodDays} type="number" />
+          </div>
+        </Field>
         {lateFeeError && (
           <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.72rem", color: "#991B1B", marginBottom: "0.75rem" }}>
             {lateFeeError}
@@ -201,12 +208,14 @@ export default function AdminSettingsPage() {
           onClick={async () => {
             setLateFeeError(null);
             const mult = parseFloat(lateFeeValue);
+            const grace = parseInt(gracePeriodDays, 10);
             if (isNaN(mult) || mult <= 0) { setLateFeeError("Enter a valid multiplier (e.g. 1.5)."); return; }
+            if (isNaN(grace) || grace < 0) { setLateFeeError("Grace period must be 0 or more days."); return; }
             try {
               const res = await fetch("/api/admin/settings/late-fee", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ lateFeeMultiplier: mult }),
+                body: JSON.stringify({ lateFeeMultiplier: mult, gracePeriodDays: grace }),
               });
               if (!res.ok) { const d = await res.json(); setLateFeeError(d.error ?? "Save failed."); return; }
               save(setLateFeeSaved);
