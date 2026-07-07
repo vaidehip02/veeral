@@ -87,8 +87,10 @@ export default function AdminRentalsPage() {
       if (error) { console.error("admin rentals fetch:", error); setLoading(false); return; }
       if (!orders?.length) { setLoading(false); return; }
 
-      const profileIds = [...new Set([...orders.map(o => o.buyer_id), ...orders.map(o => o.seller_id)].filter(Boolean))];
-      const listingIds = [...new Set(orders.map(o => o.listing_id).filter(Boolean))];
+      const allProfileIds = [...orders.map(o => o.buyer_id), ...orders.map(o => o.seller_id)].filter(Boolean);
+      const profileIds = allProfileIds.filter((id, i) => allProfileIds.indexOf(id) === i);
+      const allListingIds = orders.map(o => o.listing_id).filter(Boolean);
+      const listingIds = allListingIds.filter((id, i) => allListingIds.indexOf(id) === i);
 
       const [{ data: profiles }, { data: listings }] = await Promise.all([
         supabase.from("seller_profiles").select("id, username").in("id", profileIds),
