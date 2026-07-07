@@ -109,7 +109,6 @@ export default function ListingPage({ params: _params }: { params: { id: string 
           seller,
         };
         setListing(built);
-        setSelectedSize(built.size ?? "");
         setLoading(false);
       });
   }, [_params.id]);
