@@ -224,16 +224,12 @@ export default function SellerRentalsPage() {
   async function uploadPhoto(file: File) {
     setUploadingPhoto(true);
     try {
-      const reader = new FileReader();
-      const base64: string = await new Promise((resolve, reject) => {
-        reader.onload  = () => resolve(reader.result as string);
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-      });
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("folder", "veeral/damage-claims");
       const res = await fetch("/api/upload", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ image: base64, folder: "veeral/damage-claims" }),
+        body: formData,
       });
       if (!res.ok) throw new Error("Upload failed");
       const { url } = await res.json();
