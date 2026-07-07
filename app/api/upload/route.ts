@@ -16,13 +16,7 @@ export async function POST(req: NextRequest) {
     let base64: string;
     let folder = `veeral/listings/${user.id}`;
 
-    if (contentType.includes("application/json")) {
-      // Base64 JSON payload (used by damage claim uploader)
-      const body = await req.json();
-      if (!body.image) return NextResponse.json({ error: "No image provided" }, { status: 400 });
-      base64 = body.image;
-      if (body.folder) folder = body.folder;
-    } else {
+    if (contentType.includes("multipart/form-data") || contentType.includes("application/x-www-form-urlencoded")) {
       // FormData payload (used by listing image uploader)
       const formData = await req.formData();
       const file = formData.get("file") as File;
@@ -30,6 +24,12 @@ export async function POST(req: NextRequest) {
       const bytes = await file.arrayBuffer();
       const buffer = Buffer.from(bytes);
       base64 = `data:${file.type};base64,${buffer.toString("base64")}`;
+    } else {
+      // Base64 JSON payload (used by damage claim uploader and others)
+      const body = await req.json();
+      if (!body.image) return NextResponse.json({ error: "No image provided" }, { status: 400 });
+      base64 = body.image;
+      if (body.folder) folder = body.folder;
     }
 
     const url = await uploadImage(base64, folder);
