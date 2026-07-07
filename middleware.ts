@@ -3,7 +3,7 @@ import { createServerClient } from "@supabase/ssr";
 
 const PROTECTED_ROUTES = ["/dashboard", "/listings/new", "/checkout", "/onboarding", "/account"];
 const AUTH_ROUTES      = ["/login", "/signup", "/forgot-password"];
-const ADMIN_EMAIL      = "vaidehip02@berkeley.edu"; // only this account can access /admin
+const ADMIN_EMAIL      = "vaidehip02@gmail.com"; // only this account can access /admin
 
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({ request });
