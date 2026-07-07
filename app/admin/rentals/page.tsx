@@ -76,7 +76,9 @@ export default function AdminRentalsPage() {
   useEffect(() => {
     fetch("/api/admin/rentals")
       .then(r => r.json())
-      .then(({ rentals: data }) => {
+      .then((json) => {
+        console.log("admin rentals response:", json);
+        const data = json.rentals;
         const mapped: AdminRental[] = (data ?? []).map((o: {
           id: string; buyerUsername: string; buyerId: string; sellerUsername: string; sellerId: string;
           item: string; start: string; end: string; dailyRate: number; deposit: number; status: string;
