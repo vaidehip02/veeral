@@ -4,6 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { sendEmail } from "@/lib/email/send";
 import { createElement } from "react";
 import ReturnReceived from "@/lib/email/templates/ReturnReceived";
+import { validateTrackingNumber } from "@/lib/rentals/validateTracking";
 
 export async function POST(
   req: NextRequest,
@@ -16,8 +17,9 @@ export async function POST(
   const { tracking_number } = (await req.json()) as { tracking_number?: string };
   const { orderId } = params;
 
-  if (!tracking_number?.trim()) {
-    return NextResponse.json({ error: "A return tracking number is required." }, { status: 400 });
+  const trackingValidation = validateTrackingNumber(tracking_number ?? "");
+  if (!trackingValidation.valid) {
+    return NextResponse.json({ error: trackingValidation.error }, { status: 400 });
   }
 
   // Verify this order belongs to this buyer and is an active rental

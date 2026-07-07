@@ -21,6 +21,8 @@ interface AdminRental {
   start: string; end: string; returnBy: Date;
   dailyRate: number; deposit: number; bg: string;
   status: AdminRentalStatus;
+  trackingNumber: string | null;
+  returnNotedAt: string | null;
   // damage claim fields
   damageClaim?: {
     photos: string[];
@@ -72,6 +74,7 @@ export default function AdminRentalsPage() {
   const [rentals, setRentals] = useState<AdminRental[]>([]);
   const [loading, setLoading] = useState(true);
   const [resolveDrawer, setResolveDrawer] = useState<ResolveDrawerState | null>(null);
+  const [invalidatingId, setInvalidatingId] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/admin/rentals")
@@ -82,6 +85,7 @@ export default function AdminRentalsPage() {
         const mapped: AdminRental[] = (data ?? []).map((o: {
           id: string; buyerUsername: string; buyerId: string; sellerUsername: string; sellerId: string;
           item: string; start: string; end: string; dailyRate: number; deposit: number; status: string;
+          trackingNumber: string | null; returnNotedAt: string | null;
           damageClaim: { photos: string[]; description: string; retainAmount: number } | null;
         }) => ({
           id: o.id,
@@ -97,6 +101,8 @@ export default function AdminRentalsPage() {
           deposit: o.deposit,
           bg: "#EDE6DE",
           status: o.status as AdminRentalStatus,
+          trackingNumber: o.trackingNumber ?? null,
+          returnNotedAt: o.returnNotedAt ?? null,
           damageClaim: o.damageClaim ?? undefined,
         }));
         setRentals(mapped);
@@ -153,6 +159,28 @@ export default function AdminRentalsPage() {
       setResolveDrawer(null);
     } catch {
       setResolveDrawer(d => d ? { ...d, submitting: false, error: "Network error. Please try again." } : d);
+    }
+  }
+
+  async function invalidateTracking(rentalId: string) {
+    if (!window.confirm("Mark this tracking number as invalid? The renter will be emailed to re-submit and the late-fee clock will restart.")) return;
+    setInvalidatingId(rentalId);
+    try {
+      const res = await fetch(`/api/admin/rentals/${rentalId}/invalidate-tracking`, { method: "POST" });
+      if (!res.ok) {
+        const { error } = await res.json().catch(() => ({}));
+        alert(error ?? "Failed to invalidate tracking.");
+        return;
+      }
+      setRentals(prev => prev.map(r =>
+        r.id === rentalId
+          ? { ...r, status: "active" as AdminRentalStatus, trackingNumber: null, returnNotedAt: null }
+          : r,
+      ));
+    } catch {
+      alert("Network error. Please try again.");
+    } finally {
+      setInvalidatingId(null);
     }
   }
 
@@ -277,6 +305,26 @@ export default function AdminRentalsPage() {
                       </span>
                     ))}
                   </div>
+                  {rental.status === "return_pending" && rental.trackingNumber && (
+                    <div style={{ background: "#FFFBEB", border: "1px solid #FDE68A", padding: "0.5rem 0.75rem", marginBottom: "0.6rem", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "0.75rem", flexWrap: "wrap" }}>
+                      <span style={{ fontFamily: "var(--font-jost)", fontSize: "0.72rem", color: "#92400E" }}>
+                        <span style={{ ...lbl, marginRight: "0.3rem", display: "inline", color: "#92400E" }}>Tracking</span>
+                        {rental.trackingNumber}
+                        {rental.returnNotedAt && (
+                          <span style={{ marginLeft: "0.6rem", opacity: 0.65 }}>
+                            · submitted {new Date(rental.returnNotedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                          </span>
+                        )}
+                      </span>
+                      <button
+                        onClick={() => invalidateTracking(rental.id)}
+                        disabled={invalidatingId === rental.id}
+                        style={{ ...adminBtn("red"), opacity: invalidatingId === rental.id ? 0.5 : 1, cursor: invalidatingId === rental.id ? "not-allowed" : "pointer" }}
+                      >
+                        {invalidatingId === rental.id ? "Resetting…" : "Mark invalid"}
+                      </button>
+                    </div>
+                  )}
                   <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap" }}>
                     {rental.status === "active" && days < 0 && <button style={adminBtn("red")}>Escalate</button>}
                     {rental.buyerId && <MessageButton recipientId={rental.buyerId} orderId={rental.id} label="Message buyer" style={{ fontSize: "0.58rem", padding: "0.3rem 0.7rem" }} />}

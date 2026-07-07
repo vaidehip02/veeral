@@ -14,7 +14,7 @@ export async function GET() {
   const { data: orders, error } = await admin
     .from("orders")
     .select("*")
-    .in("status", ["active", "return_pending", "damage_claimed", "deposit_released", "deposit_resolved"])
+    .in("status", ["paid", "shipped", "delivered", "return_pending", "damage_claimed", "deposit_released", "deposit_resolved"])
     .not("rental_start", "is", null)
     .order("created_at", { ascending: false });
 
@@ -49,7 +49,9 @@ export async function GET() {
     end: o.rental_end ?? "",
     dailyRate: o.rent_price_per_day ?? 0,
     deposit: o.deposit_amount ?? 0,
-    status: o.status,
+    status: ["paid", "shipped", "delivered"].includes(o.status) ? "active" : o.status,
+    trackingNumber: o.return_tracking_number ?? null,
+    returnNotedAt: o.return_noted_at ?? null,
     damageClaim: o.damage_claim_description ? {
       photos: o.damage_claim_photos ?? [],
       description: o.damage_claim_description,
