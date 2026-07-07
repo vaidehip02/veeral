@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import { validateTrackingNumber } from "@/lib/rentals/validateTracking";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -88,8 +89,9 @@ export default function BuyerRentalsPage() {
   const [instructionsId, setInstructionsId] = useState<string | null>(null);
   const [returnDrawerId, setReturnDrawerId] = useState<string | null>(null);
   const [trackingInput, setTrackingInput]   = useState("");
-  const [submitting, setSubmitting]   = useState(false);
-  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [submitting, setSubmitting]     = useState(false);
+  const [submitError, setSubmitError]   = useState<string | null>(null);
+  const [trackingError, setTrackingError] = useState<string | null>(null);
 
   useEffect(() => {
     const supabase = createClient();
@@ -150,8 +152,14 @@ export default function BuyerRentalsPage() {
   }, []);
 
   async function markReturned(rentalId: string) {
+    const validation = validateTrackingNumber(trackingInput);
+    if (!validation.valid) {
+      setTrackingError(validation.error ?? "Invalid tracking number.");
+      return;
+    }
     setSubmitting(true);
     setSubmitError(null);
+    setTrackingError(null);
     try {
       const res = await fetch(`/api/rentals/${rentalId}/mark-returned`, {
         method:  "POST",
@@ -166,6 +174,7 @@ export default function BuyerRentalsPage() {
       setRentals((prev) => prev.map((r) => r.id === rentalId ? { ...r, status: "return_pending" } : r));
       setReturnDrawerId(null);
       setTrackingInput("");
+      setTrackingError(null);
     } catch {
       setSubmitError("Network error. Please try again.");
     } finally {
@@ -363,8 +372,11 @@ export default function BuyerRentalsPage() {
       {/* Return instructions drawer */}
       {instructionsId && (
         <>
-          <div onClick={() => setInstructionsId(null)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.35)", zIndex: 60 }} />
-          <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, background: "var(--cream)", zIndex: 70, padding: "2rem", borderTop: "1px solid var(--warm-tan)", maxWidth: "520px", margin: "0 auto" }}>
+          <div
+            onClick={() => setInstructionsId(null)}
+            style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.35)", zIndex: 60, display: "flex", alignItems: "center", justifyContent: "center" }}
+          >
+          <div onClick={e => e.stopPropagation()} style={{ background: "var(--cream)", padding: "2rem", border: "1px solid var(--warm-tan)", width: "90%", maxWidth: "520px", maxHeight: "85vh", overflowY: "auto", boxShadow: "0 8px 40px rgba(13,9,6,0.18)" }}>
             <h2 style={{ fontFamily: "var(--font-cormorant)", fontStyle: "italic", fontWeight: 400, fontSize: "1.5rem", color: "#1A1A18", marginBottom: "1.5rem" }}>
               How to return your rental
             </h2>
@@ -388,14 +400,18 @@ export default function BuyerRentalsPage() {
               Got it
             </button>
           </div>
+          </div>
         </>
       )}
 
       {/* Mark as returned drawer */}
       {returnDrawerId && (
         <>
-          <div onClick={() => setReturnDrawerId(null)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.35)", zIndex: 60 }} />
-          <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, background: "var(--cream)", zIndex: 70, padding: "2rem", borderTop: "1px solid var(--warm-tan)", maxWidth: "520px", margin: "0 auto" }}>
+          <div
+            onClick={() => setReturnDrawerId(null)}
+            style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.35)", zIndex: 60, display: "flex", alignItems: "center", justifyContent: "center" }}
+          >
+          <div onClick={e => e.stopPropagation()} style={{ background: "var(--cream)", padding: "2rem", border: "1px solid var(--warm-tan)", width: "90%", maxWidth: "520px", maxHeight: "85vh", overflowY: "auto", boxShadow: "0 8px 40px rgba(13,9,6,0.18)" }}>
             <h2 style={{ fontFamily: "var(--font-cormorant)", fontStyle: "italic", fontWeight: 400, fontSize: "1.5rem", color: "#1A1A18", marginBottom: "0.5rem" }}>
               Mark as returned
             </h2>
@@ -411,10 +427,15 @@ export default function BuyerRentalsPage() {
             <input
               type="text"
               value={trackingInput}
-              onChange={e => setTrackingInput(e.target.value)}
+              onChange={e => { setTrackingInput(e.target.value); setTrackingError(null); }}
               placeholder="e.g. 1Z999AA10123456784"
-              style={{ width: "100%", padding: "0.65rem 0.85rem", border: "1px solid var(--warm-tan)", background: "#fff", fontFamily: "var(--font-jost)", fontSize: "0.85rem", color: "#1A1A18", outline: "none", boxSizing: "border-box", marginBottom: "1.5rem" }}
+              style={{ width: "100%", padding: "0.65rem 0.85rem", border: `1px solid ${trackingError ? "#EF4444" : "var(--warm-tan)"}`, background: "#fff", fontFamily: "var(--font-jost)", fontSize: "0.85rem", color: "#1A1A18", outline: "none", boxSizing: "border-box", marginBottom: trackingError ? "0.35rem" : "1.5rem" }}
             />
+            {trackingError && (
+              <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.72rem", color: "#991B1B", marginBottom: "1rem", lineHeight: 1.5 }}>
+                {trackingError}
+              </p>
+            )}
             {submitError && <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.75rem", color: "#991B1B", marginBottom: "0.75rem" }}>{submitError}</p>}
             <div style={{ display: "flex", gap: "0.75rem" }}>
               <button onClick={() => markReturned(returnDrawerId!)} disabled={submitting || !trackingInput.trim()} style={{ flex: 1, padding: "0.75rem", fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.68rem", letterSpacing: "0.16em", textTransform: "uppercase", background: (submitting || !trackingInput.trim()) ? "var(--warm-tan)" : "var(--burnt-orange)", color: (submitting || !trackingInput.trim()) ? "var(--muted)" : "var(--cream)", border: "none", cursor: (submitting || !trackingInput.trim()) ? "not-allowed" : "pointer" }}>
@@ -424,6 +445,7 @@ export default function BuyerRentalsPage() {
                 Cancel
               </button>
             </div>
+          </div>
           </div>
         </>
       )}
