@@ -16,7 +16,7 @@ export async function POST(
 
   // Admin check
   const { data: profile } = await supabase
-    .from("profiles")
+    .from("seller_profiles")
     .select("is_admin")
     .eq("id", user.id)
     .single();
