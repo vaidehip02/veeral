@@ -34,17 +34,27 @@ export async function POST(
   // Fetch the order and listing to validate seller + amounts
   const { data: order, error: orderErr } = await admin
     .from("orders")
-    .select("id, status, deposit_amount, buyer_id, listing_id, listings(title, seller_id, profiles:seller_id(email, full_name))")
+    .select("id, status, deposit_amount, buyer_id, listing_id")
     .eq("id", params.orderId)
     .single();
 
   if (orderErr || !order) {
+    console.error("claim-damage order fetch error:", orderErr, "orderId:", params.orderId);
     return NextResponse.json({ error: "Order not found" }, { status: 404 });
   }
 
+  const { data: listing, error: listingErr } = await admin
+    .from("listings")
+    .select("id, title, seller_id")
+    .eq("id", order.listing_id)
+    .single();
+
+  if (listingErr || !listing) {
+    return NextResponse.json({ error: "Listing not found" }, { status: 404 });
+  }
+
   // Ensure the requester is the seller
-  const listing = Array.isArray(order.listings) ? order.listings[0] : (order.listings as { seller_id: string; title: string } | null);
-  if (!listing || listing.seller_id !== user.id) {
+  if (listing.seller_id !== user.id) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
