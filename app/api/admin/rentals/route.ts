@@ -13,9 +13,9 @@ export async function GET() {
 
   const { data: orders, error } = await admin
     .from("orders")
-    .select("id, status, deposit_amount, rental_start_date, rental_end_date, damage_claim_photos, damage_claim_description, damage_claim_retain_amount, rent_price_per_day, buyer_id, seller_id, listing_id")
+    .select("id, status, deposit_amount, rental_start, rental_end, damage_claim_photos, damage_claim_description, damage_claim_retain_amount, rent_price_per_day, buyer_id, seller_id, listing_id")
     .in("status", ["active", "return_pending", "damage_claimed", "deposit_released", "deposit_resolved"])
-    .not("rental_start_date", "is", null)
+    .not("rental_start", "is", null)
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -45,8 +45,8 @@ export async function GET() {
     sellerUsername: profileMap[o.seller_id]?.username ?? "unknown",
     sellerId: o.seller_id ?? "",
     item: listingMap[o.listing_id]?.title ?? "Unknown item",
-    start: o.rental_start_date ?? "",
-    end: o.rental_end_date ?? "",
+    start: o.rental_start ?? "",
+    end: o.rental_end ?? "",
     dailyRate: o.rent_price_per_day ?? 0,
     deposit: o.deposit_amount ?? 0,
     status: o.status,
