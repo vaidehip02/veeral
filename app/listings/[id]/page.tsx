@@ -75,7 +75,6 @@ export default function ListingPage({ params: _params }: { params: { id: string 
   const [rentalOpen, setRentalOpen] = useState(false);
   const router = useRouter();
   const [sizeChartOpen, setSizeChartOpen] = useState(false);
-  const [selectedSize, setSelectedSize] = useState("");
   const [listing, setListing] = useState<Listing | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -130,7 +129,6 @@ export default function ListingPage({ params: _params }: { params: { id: string 
   );
 
   const l = listing;
-  const US_SIZES = isMens(l.category) ? MENS_SIZES : WOMENS_SIZES;
   const savings = l.original_price ? l.original_price - l.price : 0;
 
   const INCLUDED_OPTIONS = ["Lehenga skirt", "Blouse", "Dupatta", "Jacket/Shrug", "Belt/Kamarband"];
