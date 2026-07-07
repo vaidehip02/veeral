@@ -76,50 +76,52 @@ export default function AdminRentalsPage() {
 
   useEffect(() => {
     const supabase = createClient();
-    supabase
-      .from("orders")
-      .select(`
-        id, status, deposit_amount, rental_start_date, rental_end_date,
-        damage_claim_photos, damage_claim_description, damage_claim_retain_amount,
-        rent_price_per_day,
-        buyer:buyer_id ( id, username ),
-        seller_profile:seller_profiles!inner ( id, username ),
-        listing:listing_id ( id, title, images )
-      `)
-      .in("status", ["active", "return_pending", "damage_claimed", "deposit_released", "deposit_resolved"])
-      .not("rental_start_date", "is", null)
-      .order("created_at", { ascending: false })
-      .then(({ data, error }) => {
-        if (error) { console.error("admin rentals fetch:", error); setLoading(false); return; }
-        const mapped: AdminRental[] = (data ?? []).map((o) => {
-          const buyer = Array.isArray(o.buyer) ? o.buyer[0] : o.buyer as { id: string; username: string } | null;
-          const seller = Array.isArray(o.seller_profile) ? o.seller_profile[0] : o.seller_profile as { id: string; username: string } | null;
-          const listing = Array.isArray(o.listing) ? o.listing[0] : o.listing as { id: string; title: string; images: string[] } | null;
-          const returnBy = o.rental_end_date ? new Date(o.rental_end_date) : new Date();
-          return {
-            id: o.id,
-            buyer: buyer?.username ?? "unknown",
-            buyerId: buyer?.id ?? "",
-            seller: seller?.username ?? "unknown",
-            sellerId: seller?.id ?? "",
-            item: listing?.title ?? "Unknown item",
-            start: o.rental_start_date ?? "",
-            end: o.rental_end_date ?? "",
-            returnBy,
-            dailyRate: o.rent_price_per_day ?? 0,
-            deposit: o.deposit_amount ?? 0,
-            bg: "#EDE6DE",
-            status: o.status as AdminRentalStatus,
-            damageClaim: o.damage_claim_description ? {
-              photos: o.damage_claim_photos ?? [],
-              description: o.damage_claim_description,
-              retainAmount: o.damage_claim_retain_amount ?? 0,
-            } : undefined,
-          };
-        });
-        setRentals(mapped);
-        setLoading(false);
-      });
+    (async () => {
+      const { data: orders, error } = await supabase
+        .from("orders")
+        .select("id, status, deposit_amount, rental_start_date, rental_end_date, damage_claim_photos, damage_claim_description, damage_claim_retain_amount, rent_price_per_day, buyer_id, seller_id, listing_id")
+        .in("status", ["active", "return_pending", "damage_claimed", "deposit_released", "deposit_resolved"])
+        .not("rental_start_date", "is", null)
+        .order("created_at", { ascending: false });
+
+      if (error) { console.error("admin rentals fetch:", error); setLoading(false); return; }
+      if (!orders?.length) { setLoading(false); return; }
+
+      const profileIds = [...new Set([...orders.map(o => o.buyer_id), ...orders.map(o => o.seller_id)].filter(Boolean))];
+      const listingIds = [...new Set(orders.map(o => o.listing_id).filter(Boolean))];
+
+      const [{ data: profiles }, { data: listings }] = await Promise.all([
+        supabase.from("seller_profiles").select("id, username").in("id", profileIds),
+        supabase.from("listings").select("id, title").in("id", listingIds),
+      ]);
+
+      const profileMap = Object.fromEntries((profiles ?? []).map(p => [p.id, p]));
+      const listingMap = Object.fromEntries((listings ?? []).map(l => [l.id, l]));
+
+      const mapped: AdminRental[] = orders.map((o) => ({
+        id: o.id,
+        buyer: profileMap[o.buyer_id]?.username ?? "unknown",
+        buyerId: o.buyer_id ?? "",
+        seller: profileMap[o.seller_id]?.username ?? "unknown",
+        sellerId: o.seller_id ?? "",
+        item: listingMap[o.listing_id]?.title ?? "Unknown item",
+        start: o.rental_start_date ?? "",
+        end: o.rental_end_date ?? "",
+        returnBy: o.rental_end_date ? new Date(o.rental_end_date) : new Date(),
+        dailyRate: o.rent_price_per_day ?? 0,
+        deposit: o.deposit_amount ?? 0,
+        bg: "#EDE6DE",
+        status: o.status as AdminRentalStatus,
+        damageClaim: o.damage_claim_description ? {
+          photos: o.damage_claim_photos ?? [],
+          description: o.damage_claim_description,
+          retainAmount: o.damage_claim_retain_amount ?? 0,
+        } : undefined,
+      }));
+
+      setRentals(mapped);
+      setLoading(false);
+    })();
   }, []);
 
   const damageClaimed = rentals.filter(r => r.status === "damage_claimed");
