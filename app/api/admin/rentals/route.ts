@@ -13,14 +13,14 @@ export async function GET() {
 
   const { data: orders, error } = await admin
     .from("orders")
-    .select("id, status, deposit_amount, rental_start, rental_end, damage_claim_photos, damage_claim_description, damage_claim_retain_amount, rent_price_per_day, buyer_id, seller_id, listing_id")
+    .select("*")
     .in("status", ["active", "return_pending", "damage_claimed", "deposit_released", "deposit_resolved"])
     .not("rental_start", "is", null)
     .order("created_at", { ascending: false });
 
   if (error) {
     console.error("admin rentals:", error);
-    return NextResponse.json({ error: "Failed to fetch" }, { status: 500 });
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
   if (!orders?.length) return NextResponse.json({ rentals: [] });
