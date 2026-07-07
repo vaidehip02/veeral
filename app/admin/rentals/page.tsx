@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import MessageButton from "@/components/messages/MessageButton";
-import { createClient } from "@/lib/supabase/client";
 
 const A = {
   dark: "#0D0906", muted: "#6B5E52", label: "#9C8B7E",
@@ -75,55 +74,33 @@ export default function AdminRentalsPage() {
   const [resolveDrawer, setResolveDrawer] = useState<ResolveDrawerState | null>(null);
 
   useEffect(() => {
-    const supabase = createClient();
-    (async () => {
-      const { data: orders, error } = await supabase
-        .from("orders")
-        .select("id, status, deposit_amount, rental_start_date, rental_end_date, damage_claim_photos, damage_claim_description, damage_claim_retain_amount, rent_price_per_day, buyer_id, seller_id, listing_id")
-        .in("status", ["active", "return_pending", "damage_claimed", "deposit_released", "deposit_resolved"])
-        .not("rental_start_date", "is", null)
-        .order("created_at", { ascending: false });
-
-      if (error) { console.error("admin rentals fetch:", error); setLoading(false); return; }
-      if (!orders?.length) { setLoading(false); return; }
-
-      const allProfileIds = [...orders.map(o => o.buyer_id), ...orders.map(o => o.seller_id)].filter(Boolean);
-      const profileIds = allProfileIds.filter((id, i) => allProfileIds.indexOf(id) === i);
-      const allListingIds = orders.map(o => o.listing_id).filter(Boolean);
-      const listingIds = allListingIds.filter((id, i) => allListingIds.indexOf(id) === i);
-
-      const [{ data: profiles }, { data: listings }] = await Promise.all([
-        supabase.from("seller_profiles").select("id, username").in("id", profileIds),
-        supabase.from("listings").select("id, title").in("id", listingIds),
-      ]);
-
-      const profileMap = Object.fromEntries((profiles ?? []).map(p => [p.id, p]));
-      const listingMap = Object.fromEntries((listings ?? []).map(l => [l.id, l]));
-
-      const mapped: AdminRental[] = orders.map((o) => ({
-        id: o.id,
-        buyer: profileMap[o.buyer_id]?.username ?? "unknown",
-        buyerId: o.buyer_id ?? "",
-        seller: profileMap[o.seller_id]?.username ?? "unknown",
-        sellerId: o.seller_id ?? "",
-        item: listingMap[o.listing_id]?.title ?? "Unknown item",
-        start: o.rental_start_date ?? "",
-        end: o.rental_end_date ?? "",
-        returnBy: o.rental_end_date ? new Date(o.rental_end_date) : new Date(),
-        dailyRate: o.rent_price_per_day ?? 0,
-        deposit: o.deposit_amount ?? 0,
-        bg: "#EDE6DE",
-        status: o.status as AdminRentalStatus,
-        damageClaim: o.damage_claim_description ? {
-          photos: o.damage_claim_photos ?? [],
-          description: o.damage_claim_description,
-          retainAmount: o.damage_claim_retain_amount ?? 0,
-        } : undefined,
-      }));
-
-      setRentals(mapped);
-      setLoading(false);
-    })();
+    fetch("/api/admin/rentals")
+      .then(r => r.json())
+      .then(({ rentals: data }) => {
+        const mapped: AdminRental[] = (data ?? []).map((o: {
+          id: string; buyerUsername: string; buyerId: string; sellerUsername: string; sellerId: string;
+          item: string; start: string; end: string; dailyRate: number; deposit: number; status: string;
+          damageClaim: { photos: string[]; description: string; retainAmount: number } | null;
+        }) => ({
+          id: o.id,
+          buyer: o.buyerUsername,
+          buyerId: o.buyerId,
+          seller: o.sellerUsername,
+          sellerId: o.sellerId,
+          item: o.item,
+          start: o.start,
+          end: o.end,
+          returnBy: o.end ? new Date(o.end) : new Date(),
+          dailyRate: o.dailyRate,
+          deposit: o.deposit,
+          bg: "#EDE6DE",
+          status: o.status as AdminRentalStatus,
+          damageClaim: o.damageClaim ?? undefined,
+        }));
+        setRentals(mapped);
+        setLoading(false);
+      })
+      .catch(e => { console.error(e); setLoading(false); });
   }, []);
 
   const damageClaimed = rentals.filter(r => r.status === "damage_claimed");
