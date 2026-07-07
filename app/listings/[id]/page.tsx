@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import PhotoGallery from "@/components/listings/PhotoGallery";
 import SellerCard from "@/components/listings/SellerCard";
-import SizeChart, { WOMENS_SIZES, MENS_SIZES } from "@/components/listings/SizeChart";
+import SizeChart from "@/components/listings/SizeChart";
 import RentalDrawer from "@/components/listings/RentalDrawer";
 import Reviews from "@/components/listings/Reviews";
 import { useRouter } from "next/navigation";
@@ -38,9 +38,6 @@ interface Listing {
     avatar_url: string | null;
   };
 }
-
-// Determined by garment type: sherwanis use men's numeric sizing
-const isMens = (cat: string) => cat === "sherwani";
 
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
