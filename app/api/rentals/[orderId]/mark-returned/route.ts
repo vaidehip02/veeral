@@ -25,10 +25,10 @@ export async function POST(
   // Verify this order belongs to this buyer and is an active rental
   const { data: order, error: orderErr } = await supabase
     .from("orders")
-    .select("id, seller_id, status, type, listing:listings(title)")
+    .select("id, seller_id, status, listing:listings(title)")
     .eq("id", orderId)
     .eq("buyer_id", user.id)
-    .eq("type", "rent")
+    .not("rental_start", "is", null)
     .in("status", ["paid", "shipped", "delivered"])
     .single();
 
