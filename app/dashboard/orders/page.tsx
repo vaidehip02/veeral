@@ -19,6 +19,8 @@ interface SellerOrder {
   deposit_amount: number | null;
   rental_start: string | null;
   rental_end: string | null;
+  return_noted_at: string | null;
+  rent_price_per_day: number;
   created_at: string;
   buyer_id: string;
   listing_id: string;
@@ -58,9 +60,21 @@ export default function SellerOrdersPage() {
   const [orders, setOrders]   = useState<SellerOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [drawer, setDrawer]   = useState<ShipDrawer | null>(null);
+  const [lateFeeMultiplier, setLateFeeMultiplier] = useState(1.5);
+  const [gracePeriodDays,   setGracePeriodDays]   = useState(0);
   const [shipping, setShipping] = useState(false);
   const [shipError, setShipError] = useState<string | null>(null);
   const [expandedAddress, setExpandedAddress] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch("/api/admin/settings/late-fee")
+      .then(r => r.json())
+      .then(d => {
+        if (d.late_fee_multiplier != null) setLateFeeMultiplier(Number(d.late_fee_multiplier));
+        if (d.grace_period_days   != null) setGracePeriodDays(Number(d.grace_period_days));
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     const supabase = createClient();
@@ -69,7 +83,7 @@ export default function SellerOrdersPage() {
 
       const { data: rawOrders } = await supabase
         .from("orders")
-        .select("id, type, status, amount, stripe_processing_fee, deposit_amount, rental_start, rental_end, created_at, buyer_id, listing_id, shipping_address, return_tracking_number")
+        .select("id, type, status, amount, stripe_processing_fee, deposit_amount, rental_start, rental_end, return_noted_at, created_at, buyer_id, listing_id, shipping_address, return_tracking_number")
         .eq("seller_id", user.id)
         .order("created_at", { ascending: false });
 
@@ -79,7 +93,7 @@ export default function SellerOrdersPage() {
       const buyerIds   = Array.from(new Set(rawOrders.map((o) => o.buyer_id)));
 
       const [{ data: listings }, { data: buyers }] = await Promise.all([
-        supabase.from("listings").select("id, title, images, size").in("id", listingIds),
+        supabase.from("listings").select("id, title, images, size, rent_price").in("id", listingIds),
         supabase.from("seller_profiles").select("id, username").in("id", buyerIds),
       ]);
 
@@ -95,9 +109,11 @@ export default function SellerOrdersPage() {
           amount:                o.amount,
           stripe_processing_fee: o.stripe_processing_fee ?? null,
           deposit_amount:        o.deposit_amount,
-          rental_start:     o.rental_start,
-          rental_end:       o.rental_end,
-          created_at:       o.created_at,
+          rental_start:       o.rental_start,
+          rental_end:         o.rental_end,
+          return_noted_at:    o.return_noted_at ?? null,
+          rent_price_per_day: (l as { rent_price?: number } | undefined)?.rent_price ?? 0,
+          created_at:         o.created_at,
           buyer_id:         o.buyer_id,
           listing_id:       o.listing_id,
           shipping_address: o.shipping_address ?? null,
@@ -190,7 +206,7 @@ export default function SellerOrdersPage() {
                 Sales ({sales.length})
               </p>
               <div style={{ display: "flex", flexDirection: "column", gap: "1px", background: "var(--warm-tan)" }}>
-                {sales.map((order) => <OrderCard key={order.id} order={order} statusMap={SELLER_SALE_STATUS} onShip={() => { setDrawer({ orderId: order.id, tracking: "" }); setShipError(null); }} expandedAddress={expandedAddress} setExpandedAddress={setExpandedAddress} />)}
+                {sales.map((order) => <OrderCard key={order.id} order={order} statusMap={SELLER_SALE_STATUS} onShip={() => { setDrawer({ orderId: order.id, tracking: "" }); setShipError(null); }} expandedAddress={expandedAddress} setExpandedAddress={setExpandedAddress} lateFeeMultiplier={lateFeeMultiplier} gracePeriodDays={gracePeriodDays} />)}
               </div>
             </section>
           )}
@@ -202,7 +218,7 @@ export default function SellerOrdersPage() {
                 Rentals ({rentals.length})
               </p>
               <div style={{ display: "flex", flexDirection: "column", gap: "1px", background: "var(--warm-tan)" }}>
-                {rentals.map((order) => <OrderCard key={order.id} order={order} statusMap={SELLER_RENT_STATUS} onShip={() => { setDrawer({ orderId: order.id, tracking: "" }); setShipError(null); }} expandedAddress={expandedAddress} setExpandedAddress={setExpandedAddress} />)}
+                {rentals.map((order) => <OrderCard key={order.id} order={order} statusMap={SELLER_RENT_STATUS} onShip={() => { setDrawer({ orderId: order.id, tracking: "" }); setShipError(null); }} expandedAddress={expandedAddress} setExpandedAddress={setExpandedAddress} lateFeeMultiplier={lateFeeMultiplier} gracePeriodDays={gracePeriodDays} />)}
               </div>
             </section>
           )}
@@ -253,12 +269,16 @@ function OrderCard({
   onShip,
   expandedAddress,
   setExpandedAddress,
+  lateFeeMultiplier,
+  gracePeriodDays,
 }: {
   order: SellerOrder;
   statusMap: Record<string, { label: string; bg: string; text: string }>;
   onShip: () => void;
   expandedAddress: string | null;
   setExpandedAddress: (id: string | null) => void;
+  lateFeeMultiplier: number;
+  gracePeriodDays: number;
 }) {
   const cfg = statusMap[order.status] ?? { label: order.status, bg: "#F5F5F5", text: "#555" };
   const shortId = `VR-${order.id.slice(0, 6).toUpperCase()}`;
@@ -330,12 +350,41 @@ function OrderCard({
             </div>
           )}
 
-          {/* Tracking */}
+          {/* Tracking + return info */}
           {order.tracking && (
-            <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.73rem", color: "var(--muted)", marginBottom: "0.65rem", opacity: 0.7 }}>
+            <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.73rem", color: "var(--muted)", marginBottom: "0.35rem", opacity: 0.7 }}>
               Tracking: <span style={{ fontWeight: 600, color: "#1A1A18" }}>{order.tracking}</span>
             </p>
           )}
+          {order.status === "return_pending" && order.return_noted_at && (() => {
+            const returnedOn = new Date(order.return_noted_at);
+            const rentalEndDate = order.rental_end ? new Date(order.rental_end) : null;
+            const rawDays = rentalEndDate
+              ? Math.max(0, Math.ceil((returnedOn.getTime() - rentalEndDate.getTime()) / (1000 * 60 * 60 * 24)))
+              : 0;
+            const overdueDays = Math.max(0, rawDays - gracePeriodDays);
+            const estFee = overdueDays > 0 && order.rent_price_per_day > 0
+              ? Math.min(Math.round(order.rent_price_per_day * overdueDays * lateFeeMultiplier), order.deposit_amount ?? 0)
+              : 0;
+            return (
+              <div style={{ marginBottom: "0.65rem" }}>
+                <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.73rem", color: "var(--muted)", opacity: 0.7, marginBottom: overdueDays > 0 ? "0.3rem" : 0 }}>
+                  Returned:{" "}
+                  <span style={{ fontWeight: 600, color: "#1A1A18" }}>
+                    {returnedOn.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                  </span>
+                </p>
+                {overdueDays > 0 && (
+                  <div style={{ display: "inline-flex", alignItems: "center", gap: "0.4rem", background: "#FDECEA", padding: "0.3rem 0.65rem" }}>
+                    <span style={{ fontFamily: "var(--font-jost)", fontWeight: 700, fontSize: "0.6rem", letterSpacing: "0.12em", textTransform: "uppercase", color: "#C62828" }}>
+                      {overdueDays} day{overdueDays !== 1 ? "s" : ""} late
+                      {estFee > 0 && ` · est. late fee ${fmt(estFee)}`}
+                    </span>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
 
           {/* Shipping address (expandable) */}
           {order.shipping_address && (
