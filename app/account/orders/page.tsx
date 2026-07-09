@@ -170,7 +170,7 @@ export default function BuyerOrdersPage() {
                       <p style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.88rem", color: "#1A1A18", lineHeight: 1.3 }}>
                         {order.title}
                       </p>
-                      <span style={{ padding: "0.2rem 0.6rem", background: cfg.bg, color: cfg.text, fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.58rem", letterSpacing: "0.12em", textTransform: "uppercase", flexShrink: 0 }}>
+                      <span style={{ padding: "0.2rem 0.6rem", background: cfg.bg, color: cfg.text, fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.75rem", letterSpacing: "0.12em", textTransform: "uppercase", flexShrink: 0 }}>
                         {cfg.label}
                       </span>
                     </div>
@@ -183,7 +183,7 @@ export default function BuyerOrdersPage() {
                         { k: "Total",  v: `$${total.toLocaleString("en-US", { minimumFractionDigits: 2 })}` },
                       ].map(({ k, v }) => (
                         <span key={k} style={{ fontFamily: "var(--font-jost)", fontSize: "0.75rem", color: "var(--muted)", opacity: 0.7 }}>
-                          <span style={{ fontWeight: 600, opacity: 0.55, textTransform: "uppercase", letterSpacing: "0.1em", fontSize: "0.6rem" }}>{k} </span>
+                          <span style={{ fontWeight: 600, opacity: 0.55, textTransform: "uppercase", letterSpacing: "0.1em", fontSize: "0.75rem" }}>{k} </span>
                           {v}
                         </span>
                       ))}
@@ -202,13 +202,13 @@ export default function BuyerOrdersPage() {
                     <div style={{ display: "flex", gap: "0.6rem", flexWrap: "wrap" }}>
                       <Link
                         href={`/account/orders/${order.id}`}
-                        style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.6rem", letterSpacing: "0.14em", textTransform: "uppercase", padding: "0.4rem 0.9rem", background: "transparent", color: "var(--muted)", border: "1px solid var(--warm-tan)", textDecoration: "none" }}
+                        style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.75rem", letterSpacing: "0.14em", textTransform: "uppercase", padding: "0.4rem 0.9rem", background: "transparent", color: "var(--muted)", border: "1px solid var(--warm-tan)", textDecoration: "none" }}
                       >
                         View order
                       </Link>
                       <Link
                         href={`/listings/${order.listing_id}`}
-                        style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.6rem", letterSpacing: "0.14em", textTransform: "uppercase", padding: "0.4rem 0.9rem", background: "transparent", color: "var(--muted)", border: "1px solid var(--warm-tan)", textDecoration: "none" }}
+                        style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.75rem", letterSpacing: "0.14em", textTransform: "uppercase", padding: "0.4rem 0.9rem", background: "transparent", color: "var(--muted)", border: "1px solid var(--warm-tan)", textDecoration: "none" }}
                       >
                         View listing
                       </Link>
@@ -218,19 +218,19 @@ export default function BuyerOrdersPage() {
                           listingId={order.listing_id}
                           orderId={order.id}
                           label="Message seller"
-                          style={{ fontSize: "0.6rem", padding: "0.4rem 0.9rem" }}
+                          style={{ fontSize: "0.75rem", padding: "0.4rem 0.9rem" }}
                         />
                       )}
                       {canReview && (
                         <button
                           onClick={() => setReviewDrawer({ orderId: order.id, title: order.title, sellerUsername: order.seller_username, rating: 5, text: "" })}
-                          style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.6rem", letterSpacing: "0.14em", textTransform: "uppercase", padding: "0.4rem 0.9rem", background: "var(--burnt-orange)", color: "var(--cream)", border: "none", cursor: "pointer" }}
+                          style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.75rem", letterSpacing: "0.14em", textTransform: "uppercase", padding: "0.4rem 0.9rem", background: "var(--burnt-orange)", color: "var(--cream)", border: "none", cursor: "pointer" }}
                         >
                           Leave a review
                         </button>
                       )}
                       {reviewed && (
-                        <span style={{ fontFamily: "var(--font-jost)", fontSize: "0.65rem", color: "#2D6A4F", display: "flex", alignItems: "center", gap: "0.3rem" }}>
+                        <span style={{ fontFamily: "var(--font-jost)", fontSize: "0.78rem", color: "#2D6A4F", display: "flex", alignItems: "center", gap: "0.3rem" }}>
                           ✓ Review submitted
                         </span>
                       )}
@@ -255,14 +255,14 @@ export default function BuyerOrdersPage() {
               {reviewDrawer.title} · @{reviewDrawer.sellerUsername}
             </p>
 
-            <p style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.62rem", letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--muted)", marginBottom: "0.6rem" }}>Rating</p>
+            <p style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.75rem", letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--muted)", marginBottom: "0.6rem" }}>Rating</p>
             <div style={{ display: "flex", gap: "0.4rem", marginBottom: "1.5rem" }}>
               {[1,2,3,4,5].map(n => (
                 <button key={n} onClick={() => setReviewDrawer({ ...reviewDrawer, rating: n })} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "1.6rem", color: n <= reviewDrawer.rating ? "#C4440A" : "var(--warm-tan)", padding: 0, lineHeight: 1 }}>★</button>
               ))}
             </div>
 
-            <p style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.62rem", letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--muted)", marginBottom: "0.5rem" }}>Your review</p>
+            <p style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.75rem", letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--muted)", marginBottom: "0.5rem" }}>Your review</p>
             <textarea
               placeholder="How was the item? Was it as described? How was the seller to work with?"
               value={reviewDrawer.text}
@@ -274,10 +274,10 @@ export default function BuyerOrdersPage() {
             {submitError && <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.75rem", color: "#991B1B", marginBottom: "0.75rem" }}>{submitError}</p>}
 
             <div style={{ display: "flex", gap: "0.75rem" }}>
-              <button onClick={submitReview} disabled={!reviewDrawer.text.trim() || submitting} style={{ flex: 1, padding: "0.75rem", fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.68rem", letterSpacing: "0.16em", textTransform: "uppercase", background: reviewDrawer.text.trim() && !submitting ? "var(--burnt-orange)" : "var(--warm-tan)", color: reviewDrawer.text.trim() && !submitting ? "var(--cream)" : "var(--muted)", border: "none", cursor: reviewDrawer.text.trim() && !submitting ? "pointer" : "not-allowed" }}>
+              <button onClick={submitReview} disabled={!reviewDrawer.text.trim() || submitting} style={{ flex: 1, padding: "0.75rem", fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.82rem", letterSpacing: "0.16em", textTransform: "uppercase", background: reviewDrawer.text.trim() && !submitting ? "var(--burnt-orange)" : "var(--warm-tan)", color: reviewDrawer.text.trim() && !submitting ? "var(--cream)" : "var(--muted)", border: "none", cursor: reviewDrawer.text.trim() && !submitting ? "pointer" : "not-allowed" }}>
                 {submitting ? "Submitting…" : "Submit review"}
               </button>
-              <button onClick={() => setReviewDrawer(null)} style={{ padding: "0.75rem 1.25rem", fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.68rem", letterSpacing: "0.14em", textTransform: "uppercase", background: "transparent", color: "var(--muted)", border: "1px solid var(--warm-tan)", cursor: "pointer" }}>
+              <button onClick={() => setReviewDrawer(null)} style={{ padding: "0.75rem 1.25rem", fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.82rem", letterSpacing: "0.14em", textTransform: "uppercase", background: "transparent", color: "var(--muted)", border: "1px solid var(--warm-tan)", cursor: "pointer" }}>
                 Cancel
               </button>
             </div>

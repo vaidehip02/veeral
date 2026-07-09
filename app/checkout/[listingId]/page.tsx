@@ -497,7 +497,7 @@ export default function CheckoutPage({ params: _params }: { params: { listingId:
                             width: "15px", height: "15px", borderRadius: "50%",
                             border: "1.5px solid #9C8475", background: "transparent",
                             color: "#9C8475", fontFamily: "var(--font-jost)", fontWeight: 700,
-                            fontSize: "0.55rem", lineHeight: 1, cursor: "default",
+                            fontSize: "0.75rem", lineHeight: 1, cursor: "default",
                             display: "flex", alignItems: "center", justifyContent: "center",
                             padding: 0, flexShrink: 0,
                           }}

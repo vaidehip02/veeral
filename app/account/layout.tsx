@@ -107,7 +107,7 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
           }}
         >
           <p style={{
-            fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.62rem",
+            fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.75rem",
             letterSpacing: "0.25em", textTransform: "uppercase",
             color: "var(--burnt-orange)", padding: "0 1.75rem", marginBottom: "1.25rem",
           }}>
@@ -142,7 +142,7 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
                       minWidth: "18px", height: "18px", borderRadius: "9px",
                       background: "var(--burnt-orange)", color: "var(--cream)",
                       fontFamily: "var(--font-jost)", fontWeight: 700,
-                      fontSize: "0.6rem", display: "flex",
+                      fontSize: "0.75rem", display: "flex",
                       alignItems: "center", justifyContent: "center",
                       padding: "0 0.3rem",
                     }}>

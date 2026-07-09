@@ -244,7 +244,7 @@ export default function Navbar() {
                         {displayName}
                       </p>
                       <p style={{
-                        fontFamily: "var(--font-jost)", fontSize: "0.68rem",
+                        fontFamily: "var(--font-jost)", fontSize: "0.82rem",
                         color: "var(--muted)", opacity: 0.55,
                         overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap"
                       }}>
@@ -386,7 +386,7 @@ export default function Navbar() {
                   <p style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.82rem", color: "#1A1A18" }}>
                     {displayName}
                   </p>
-                  <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.68rem", color: "var(--muted)", opacity: 0.55 }}>
+                  <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.82rem", color: "var(--muted)", opacity: 0.55 }}>
                     {user.email}
                   </p>
                 </div>

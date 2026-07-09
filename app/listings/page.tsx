@@ -99,7 +99,7 @@ function CheckRow({
         border:`1px solid ${checked ? "var(--burnt-orange)" : "var(--warm-tan)"}`,
         background: checked ? "var(--burnt-orange)" : "transparent",
         display:"flex", alignItems:"center", justifyContent:"center",
-        fontSize:"0.65rem", color:"var(--cream)", transition:"all 0.15s",
+        fontSize:"0.78rem", color:"var(--cream)", transition:"all 0.15s",
       }}>
         {checked && "✓"}
       </span>
@@ -127,7 +127,7 @@ function FilterSection({
           width:"100%", background:"none", border:"none", cursor:"pointer",
           padding:"0 0 0.6rem 0",
           fontFamily:"var(--font-jost)", fontWeight:600,
-          fontSize:"0.62rem", letterSpacing:"0.2em", textTransform:"uppercase",
+          fontSize:"0.75rem", letterSpacing:"0.2em", textTransform:"uppercase",
           color:"var(--muted)",
         }}
       >
@@ -313,7 +313,7 @@ function ListingCard({ listing }: { listing: Listing }) {
           <span style={{
             position:"absolute", top:"0.6rem", left:"0.6rem",
             fontFamily:"var(--font-jost)", fontWeight:600,
-            fontSize:"0.62rem", letterSpacing:"0.12em", textTransform:"uppercase",
+            fontSize:"0.75rem", letterSpacing:"0.12em", textTransform:"uppercase",
             padding:"0.2rem 0.5rem",
             background: listing.type === "rent"
               ? "#E3F2FD"
@@ -334,7 +334,7 @@ function ListingCard({ listing }: { listing: Listing }) {
             padding:"0.15rem 0.45rem",
             background:cond.bg, color:cond.text,
             fontFamily:"var(--font-jost)", fontWeight:600,
-            fontSize:"0.62rem", letterSpacing:"0.12em", textTransform:"uppercase",
+            fontSize:"0.75rem", letterSpacing:"0.12em", textTransform:"uppercase",
           }}>
             {CONDITION_LABEL[listing.condition]}
           </span>
@@ -442,7 +442,7 @@ function EmptyState({ onClear }: { onClear: () => void }) {
         onClick={onClear}
         style={{
           fontFamily:"var(--font-jost)", fontWeight:600,
-          fontSize:"0.65rem", letterSpacing:"0.18em", textTransform:"uppercase",
+          fontSize:"0.78rem", letterSpacing:"0.18em", textTransform:"uppercase",
           padding:"0.65rem 1.4rem",
           background:"var(--burnt-orange)", color:"var(--cream)",
           border:"none", cursor:"pointer",
@@ -454,7 +454,7 @@ function EmptyState({ onClear }: { onClear: () => void }) {
       <div style={{ marginTop:"3rem" }}>
         <p style={{
           fontFamily:"var(--font-jost)", fontWeight:600,
-          fontSize:"0.6rem", letterSpacing:"0.2em", textTransform:"uppercase",
+          fontSize:"0.75rem", letterSpacing:"0.2em", textTransform:"uppercase",
           color:"var(--muted)", opacity:0.5, marginBottom:"1rem",
         }}>
           Browse by category
@@ -687,7 +687,7 @@ function ListingsInner({ typeParam }: { typeParam: string | null }) {
               onClick={clearAll}
               style={{
                 fontFamily:"var(--font-jost)", fontWeight:600,
-                fontSize:"0.65rem", letterSpacing:"0.16em", textTransform:"uppercase",
+                fontSize:"0.78rem", letterSpacing:"0.16em", textTransform:"uppercase",
                 padding:"0.3rem 0.7rem",
                 background:"transparent", color:"var(--muted)", opacity:0.6,
                 border:"1px solid var(--warm-tan)", cursor:"pointer",
@@ -718,7 +718,7 @@ function ListingsInner({ typeParam }: { typeParam: string | null }) {
                 style={{
                   width:"100%", marginBottom:"1.25rem",
                   fontFamily:"var(--font-jost)", fontWeight:600,
-                  fontSize:"0.62rem", letterSpacing:"0.18em", textTransform:"uppercase",
+                  fontSize:"0.75rem", letterSpacing:"0.18em", textTransform:"uppercase",
                   padding:"0.6rem 1rem",
                   background:"transparent", color:"var(--burnt-orange)",
                   border:"1px solid var(--burnt-orange)", cursor:"pointer",
@@ -743,7 +743,7 @@ function ListingsInner({ typeParam }: { typeParam: string | null }) {
             }}>
               <p style={{
                 fontFamily:"var(--font-jost)", fontWeight:600,
-                fontSize:"0.62rem", letterSpacing:"0.18em", textTransform:"uppercase",
+                fontSize:"0.75rem", letterSpacing:"0.18em", textTransform:"uppercase",
                 color:"var(--muted)", opacity:0.6,
               }}>
                 {loading ? "Loading…" : `${results.length} item${results.length !== 1 ? "s" : ""} found`}
@@ -757,7 +757,7 @@ function ListingsInner({ typeParam }: { typeParam: string | null }) {
                   style={{
                     display:"none", // shown via CSS below
                     fontFamily:"var(--font-jost)", fontWeight:600,
-                    fontSize:"0.62rem", letterSpacing:"0.16em", textTransform:"uppercase",
+                    fontSize:"0.75rem", letterSpacing:"0.16em", textTransform:"uppercase",
                     padding:"0.5rem 0.9rem", alignItems:"center", gap:"0.4rem",
                     background: hasActiveFilters ? "var(--burnt-orange)" : "transparent",
                     color: hasActiveFilters ? "var(--cream)" : "var(--muted)",
@@ -808,7 +808,7 @@ function ListingsInner({ typeParam }: { typeParam: string | null }) {
                       onClick={() => setPage(p => p + 1)}
                       style={{
                         fontFamily:"var(--font-jost)", fontWeight:600,
-                        fontSize:"0.65rem", letterSpacing:"0.18em", textTransform:"uppercase",
+                        fontSize:"0.78rem", letterSpacing:"0.18em", textTransform:"uppercase",
                         padding:"0.75rem 2rem",
                         background:"transparent", color:"var(--muted)",
                         border:"1px solid var(--warm-tan)", cursor:"pointer",
@@ -854,7 +854,7 @@ function ListingsInner({ typeParam }: { typeParam: string | null }) {
             }}>
               <p style={{
                 fontFamily:"var(--font-jost)", fontWeight:600,
-                fontSize:"0.65rem", letterSpacing:"0.2em", textTransform:"uppercase",
+                fontSize:"0.78rem", letterSpacing:"0.2em", textTransform:"uppercase",
                 color:"var(--muted)",
               }}>
                 Filters
@@ -876,7 +876,7 @@ function ListingsInner({ typeParam }: { typeParam: string | null }) {
               style={{
                 width:"100%", marginTop:"1rem", padding:"0.8rem",
                 fontFamily:"var(--font-jost)", fontWeight:600,
-                fontSize:"0.68rem", letterSpacing:"0.18em", textTransform:"uppercase",
+                fontSize:"0.82rem", letterSpacing:"0.18em", textTransform:"uppercase",
                 background:"var(--burnt-orange)", color:"var(--cream)",
                 border:"none", cursor:"pointer",
               }}
@@ -889,7 +889,7 @@ function ListingsInner({ typeParam }: { typeParam: string | null }) {
                 style={{
                   width:"100%", marginTop:"0.5rem", padding:"0.7rem",
                   fontFamily:"var(--font-jost)", fontWeight:600,
-                  fontSize:"0.65rem", letterSpacing:"0.16em", textTransform:"uppercase",
+                  fontSize:"0.78rem", letterSpacing:"0.16em", textTransform:"uppercase",
                   background:"transparent", color:"var(--muted)",
                   border:"1px solid var(--warm-tan)", cursor:"pointer",
                 }}

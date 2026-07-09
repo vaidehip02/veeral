@@ -106,7 +106,7 @@ export default function HomePage() {
             href="/listings"
             style={{
               fontFamily: "var(--font-jost)", fontWeight: 500,
-              fontSize: "0.55rem", letterSpacing: "0.18em", textTransform: "uppercase",
+              fontSize: "0.75rem", letterSpacing: "0.18em", textTransform: "uppercase",
               color: "var(--burnt-orange)", whiteSpace: "nowrap", transition: "opacity 0.2s"
             }}
             onMouseOver={e => (e.currentTarget.style.opacity = "0.6")}
@@ -184,7 +184,7 @@ export default function HomePage() {
       <section style={{ background: "#EDE8E2", padding: "5rem 1.5rem", textAlign: "center" }}>
         <p style={{
           fontFamily: "var(--font-jost)", fontWeight: 500,
-          fontSize: "0.55rem", letterSpacing: "0.25em", textTransform: "uppercase",
+          fontSize: "0.75rem", letterSpacing: "0.25em", textTransform: "uppercase",
           color: "var(--burnt-orange)", marginBottom: "1rem"
         }}>
           ✦ AI Assistant
@@ -207,7 +207,7 @@ export default function HomePage() {
         <button
           style={{
             fontFamily: "var(--font-jost)", fontWeight: 600,
-            fontSize: "0.58rem", letterSpacing: "0.2em", textTransform: "uppercase",
+            fontSize: "0.75rem", letterSpacing: "0.2em", textTransform: "uppercase",
             color: "var(--cream)", background: "var(--burnt-orange)",
             padding: "0.85rem 2rem", border: "none", cursor: "pointer", transition: "opacity 0.2s"
           }}

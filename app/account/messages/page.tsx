@@ -216,7 +216,7 @@ function MessagesInner() {
               Messages
             </h1>
             {totalUnread > 0 && (
-              <span style={{ minWidth: "20px", height: "20px", borderRadius: "10px", background: A.accent, color: "#fff", fontFamily: "var(--font-jost)", fontWeight: 700, fontSize: "0.6rem", display: "flex", alignItems: "center", justifyContent: "center", padding: "0 0.35rem" }}>
+              <span style={{ minWidth: "20px", height: "20px", borderRadius: "10px", background: A.accent, color: "#fff", fontFamily: "var(--font-jost)", fontWeight: 700, fontSize: "0.75rem", display: "flex", alignItems: "center", justifyContent: "center", padding: "0 0.35rem" }}>
                 {totalUnread}
               </span>
             )}
@@ -355,7 +355,7 @@ function MessagesInner() {
             <button
               onClick={sendMessage}
               disabled={!draft.trim() || sending}
-              style={{ padding: "0.65rem 1.25rem", background: draft.trim() && !sending ? A.accent : "#EDE6DE", color: draft.trim() && !sending ? "#fff" : A.muted, fontFamily: "var(--font-jost)", fontWeight: 700, fontSize: "0.65rem", letterSpacing: "0.14em", textTransform: "uppercase", border: "none", cursor: draft.trim() && !sending ? "pointer" : "not-allowed", flexShrink: 0 }}
+              style={{ padding: "0.65rem 1.25rem", background: draft.trim() && !sending ? A.accent : "#EDE6DE", color: draft.trim() && !sending ? "#fff" : A.muted, fontFamily: "var(--font-jost)", fontWeight: 700, fontSize: "0.78rem", letterSpacing: "0.14em", textTransform: "uppercase", border: "none", cursor: draft.trim() && !sending ? "pointer" : "not-allowed", flexShrink: 0 }}
             >
               {sending ? "…" : "Send"}
             </button>

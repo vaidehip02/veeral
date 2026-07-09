@@ -56,7 +56,7 @@ export default function AccountOverview() {
               onMouseOut={e => (e.currentTarget.style.boxShadow = "none")}
             >
               <p style={{
-                fontFamily: "var(--font-jost)", fontSize: "0.62rem", fontWeight: 600,
+                fontFamily: "var(--font-jost)", fontSize: "0.75rem", fontWeight: 600,
                 letterSpacing: "0.2em", textTransform: "uppercase",
                 color: "var(--burnt-orange)", marginBottom: "0.6rem",
               }}>
@@ -83,7 +83,7 @@ export default function AccountOverview() {
       {/* Recent activity */}
       <div>
         <p style={{
-          fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.62rem",
+          fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.75rem",
           letterSpacing: "0.25em", textTransform: "uppercase",
           color: "var(--burnt-orange)", marginBottom: "1.25rem",
         }}>
@@ -124,7 +124,7 @@ export default function AccountOverview() {
                 </p>
               </div>
               <p style={{
-                fontFamily: "var(--font-jost)", fontSize: "0.68rem",
+                fontFamily: "var(--font-jost)", fontSize: "0.82rem",
                 color: "var(--muted)", opacity: 0.5, flexShrink: 0, whiteSpace: "nowrap",
               }}>
                 {item.time}

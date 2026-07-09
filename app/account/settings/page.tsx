@@ -21,7 +21,7 @@ const INITIAL_ADDRESSES: Address[] = [
 function SectionHeader({ title }: { title: string }) {
   return (
     <p style={{
-      fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.62rem",
+      fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.75rem",
       letterSpacing: "0.25em", textTransform: "uppercase",
       color: "var(--burnt-orange)", marginBottom: "1.25rem",
     }}>
@@ -35,7 +35,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
     <div style={{ marginBottom: "1rem" }}>
       <label style={{
         display: "block", fontFamily: "var(--font-jost)", fontWeight: 600,
-        fontSize: "0.62rem", letterSpacing: "0.18em", textTransform: "uppercase",
+        fontSize: "0.75rem", letterSpacing: "0.18em", textTransform: "uppercase",
         color: "var(--muted)", marginBottom: "0.45rem",
       }}>
         {label}
@@ -76,7 +76,7 @@ function SaveButton({ onClick, saved }: { onClick: () => void; saved: boolean })
       onClick={onClick}
       style={{
         fontFamily: "var(--font-jost)", fontWeight: 600,
-        fontSize: "0.65rem", letterSpacing: "0.18em", textTransform: "uppercase",
+        fontSize: "0.78rem", letterSpacing: "0.18em", textTransform: "uppercase",
         padding: "0.65rem 1.4rem",
         background: saved ? "#2D6A4F" : "var(--burnt-orange)", color: "var(--cream)",
         border: "none", cursor: "pointer", transition: "all 0.2s",
@@ -169,7 +169,7 @@ export default function SettingsPage() {
             </div>
             <button style={{
               fontFamily:"var(--font-jost)", fontWeight:600,
-              fontSize:"0.62rem", letterSpacing:"0.16em", textTransform:"uppercase",
+              fontSize:"0.75rem", letterSpacing:"0.16em", textTransform:"uppercase",
               padding:"0.5rem 1rem",
               background:"transparent", color:"var(--muted)",
               border:"1px solid var(--warm-tan)", cursor:"pointer",
@@ -195,7 +195,7 @@ export default function SettingsPage() {
                   {addr.label && (
                     <span style={{
                       fontFamily:"var(--font-jost)", fontWeight:600,
-                      fontSize:"0.62rem", letterSpacing:"0.14em", textTransform:"uppercase",
+                      fontSize:"0.75rem", letterSpacing:"0.14em", textTransform:"uppercase",
                       color: addr.isDefault ? "var(--burnt-orange)" : "var(--muted)",
                     }}>
                       {addr.label}
@@ -204,7 +204,7 @@ export default function SettingsPage() {
                   {addr.isDefault && (
                     <span style={{
                       fontFamily:"var(--font-jost)", fontWeight:600,
-                      fontSize:"0.55rem", letterSpacing:"0.12em", textTransform:"uppercase",
+                      fontSize:"0.75rem", letterSpacing:"0.12em", textTransform:"uppercase",
                       padding:"0.12rem 0.4rem",
                       background:"rgba(201,92,26,0.1)", color:"var(--burnt-orange)",
                     }}>
@@ -223,7 +223,7 @@ export default function SettingsPage() {
                     onClick={() => setDefault(addr.id)}
                     style={{
                       fontFamily:"var(--font-jost)", fontWeight:600,
-                      fontSize:"0.58rem", letterSpacing:"0.12em", textTransform:"uppercase",
+                      fontSize:"0.75rem", letterSpacing:"0.12em", textTransform:"uppercase",
                       padding:"0.3rem 0.6rem",
                       background:"transparent", color:"var(--muted)",
                       border:"1px solid var(--warm-tan)", cursor:"pointer",
@@ -236,7 +236,7 @@ export default function SettingsPage() {
                   onClick={() => removeAddr(addr.id)}
                   style={{
                     fontFamily:"var(--font-jost)", fontWeight:600,
-                    fontSize:"0.58rem", letterSpacing:"0.12em", textTransform:"uppercase",
+                    fontSize:"0.75rem", letterSpacing:"0.12em", textTransform:"uppercase",
                     padding:"0.3rem 0.6rem",
                     background:"transparent", color:"#C62828",
                     border:"1px solid #FADADD", cursor:"pointer",
@@ -287,7 +287,7 @@ export default function SettingsPage() {
                 onClick={addAddress}
                 style={{
                   fontFamily:"var(--font-jost)", fontWeight:600,
-                  fontSize:"0.62rem", letterSpacing:"0.16em", textTransform:"uppercase",
+                  fontSize:"0.75rem", letterSpacing:"0.16em", textTransform:"uppercase",
                   padding:"0.6rem 1.2rem",
                   background:"var(--burnt-orange)", color:"var(--cream)",
                   border:"none", cursor:"pointer",
@@ -299,7 +299,7 @@ export default function SettingsPage() {
                 onClick={() => setAddingAddress(false)}
                 style={{
                   fontFamily:"var(--font-jost)", fontWeight:600,
-                  fontSize:"0.62rem", letterSpacing:"0.16em", textTransform:"uppercase",
+                  fontSize:"0.75rem", letterSpacing:"0.16em", textTransform:"uppercase",
                   padding:"0.6rem 1rem",
                   background:"transparent", color:"var(--muted)",
                   border:"1px solid var(--warm-tan)", cursor:"pointer",
@@ -314,7 +314,7 @@ export default function SettingsPage() {
             onClick={() => setAddingAddress(true)}
             style={{
               fontFamily:"var(--font-jost)", fontWeight:600,
-              fontSize:"0.62rem", letterSpacing:"0.18em", textTransform:"uppercase",
+              fontSize:"0.75rem", letterSpacing:"0.18em", textTransform:"uppercase",
               padding:"0.6rem 1.2rem",
               background:"transparent", color:"var(--muted)",
               border:"1px solid var(--warm-tan)", cursor:"pointer",
@@ -344,7 +344,7 @@ export default function SettingsPage() {
                   background:"var(--warm-tan)", display:"flex",
                   alignItems:"center", justifyContent:"center",
                   fontFamily:"var(--font-jost)", fontWeight:700,
-                  fontSize:"0.55rem", color:"var(--muted)",
+                  fontSize:"0.75rem", color:"var(--muted)",
                 }}>
                   {card.brand.toUpperCase().slice(0,2)}
                 </div>
@@ -352,7 +352,7 @@ export default function SettingsPage() {
                   <p style={{ fontFamily:"var(--font-jost)", fontWeight:500, fontSize:"0.82rem", color:"#1A1A18" }}>
                     {card.brand} ···· {card.last4}
                   </p>
-                  <p style={{ fontFamily:"var(--font-jost)", fontSize:"0.68rem", color:"var(--muted)", opacity:0.55 }}>
+                  <p style={{ fontFamily:"var(--font-jost)", fontSize:"0.82rem", color:"var(--muted)", opacity:0.55 }}>
                     Expires {card.expires}
                   </p>
                 </div>
@@ -361,7 +361,7 @@ export default function SettingsPage() {
                 {card.default && (
                   <span style={{
                     fontFamily:"var(--font-jost)", fontWeight:600,
-                    fontSize:"0.55rem", letterSpacing:"0.12em", textTransform:"uppercase",
+                    fontSize:"0.75rem", letterSpacing:"0.12em", textTransform:"uppercase",
                     padding:"0.12rem 0.4rem",
                     background:"rgba(201,92,26,0.1)", color:"var(--burnt-orange)",
                   }}>
@@ -447,7 +447,7 @@ export default function SettingsPage() {
             onClick={() => setDeleteConfirm(true)}
             style={{
               fontFamily:"var(--font-jost)", fontWeight:600,
-              fontSize:"0.65rem", letterSpacing:"0.18em", textTransform:"uppercase",
+              fontSize:"0.78rem", letterSpacing:"0.18em", textTransform:"uppercase",
               padding:"0.65rem 1.4rem",
               background:"transparent", color:"#C62828",
               border:"1px solid #FADADD", cursor:"pointer",
@@ -482,7 +482,7 @@ export default function SettingsPage() {
                 disabled={deleteInput !== "DELETE"}
                 style={{
                   fontFamily:"var(--font-jost)", fontWeight:600,
-                  fontSize:"0.65rem", letterSpacing:"0.18em", textTransform:"uppercase",
+                  fontSize:"0.78rem", letterSpacing:"0.18em", textTransform:"uppercase",
                   padding:"0.65rem 1.2rem",
                   background: deleteInput === "DELETE" ? "#C62828" : "var(--warm-tan)",
                   color: deleteInput === "DELETE" ? "#fff" : "var(--muted)",
@@ -495,7 +495,7 @@ export default function SettingsPage() {
                 onClick={() => { setDeleteConfirm(false); setDeleteInput(""); }}
                 style={{
                   fontFamily:"var(--font-jost)", fontWeight:600,
-                  fontSize:"0.65rem", letterSpacing:"0.18em", textTransform:"uppercase",
+                  fontSize:"0.78rem", letterSpacing:"0.18em", textTransform:"uppercase",
                   padding:"0.65rem 1rem",
                   background:"transparent", color:"var(--muted)",
                   border:"1px solid var(--warm-tan)", cursor:"pointer",

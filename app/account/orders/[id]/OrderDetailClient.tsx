@@ -160,7 +160,7 @@ export default function OrderDetailClient({
           padding: "0.25rem 0.75rem",
           background: statusStyle.bg, color: statusStyle.text,
           fontFamily: "var(--font-jost)", fontWeight: 700,
-          fontSize: "0.58rem", letterSpacing: "0.14em", textTransform: "uppercase",
+          fontSize: "0.75rem", letterSpacing: "0.14em", textTransform: "uppercase",
           alignSelf: "center",
         }}>
           {BUYER_DETAIL_STATUS[order.status]?.label ?? order.status}
@@ -308,7 +308,7 @@ export default function OrderDetailClient({
                   flexShrink: 0,
                 }} />
                 <span style={{
-                  fontFamily: "var(--font-jost)", fontSize: "0.58rem",
+                  fontFamily: "var(--font-jost)", fontSize: "0.75rem",
                   letterSpacing: "0.1em", textTransform: "uppercase",
                   color: step.done || step.current ? "#1A1A18" : "var(--muted)",
                   fontWeight: step.current ? 700 : 500,
@@ -346,7 +346,7 @@ export default function OrderDetailClient({
             listingId={order.listing_id}
             orderId={order.id}
             label="Message seller"
-            style={{ fontSize: "0.6rem", padding: "0.45rem 1rem", letterSpacing: "0.14em" }}
+            style={{ fontSize: "0.75rem", padding: "0.45rem 1rem", letterSpacing: "0.14em" }}
           />
         )}
 
@@ -414,13 +414,13 @@ export default function OrderDetailClient({
               <button
                 onClick={submitReview}
                 disabled={!reviewText.trim() || submitting}
-                style={{ flex: 1, padding: "0.75rem", fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.68rem", letterSpacing: "0.16em", textTransform: "uppercase", background: reviewText.trim() && !submitting ? "var(--burnt-orange)" : "var(--warm-tan)", color: reviewText.trim() && !submitting ? "var(--cream)" : "var(--muted)", border: "none", cursor: reviewText.trim() && !submitting ? "pointer" : "not-allowed" }}
+                style={{ flex: 1, padding: "0.75rem", fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.82rem", letterSpacing: "0.16em", textTransform: "uppercase", background: reviewText.trim() && !submitting ? "var(--burnt-orange)" : "var(--warm-tan)", color: reviewText.trim() && !submitting ? "var(--cream)" : "var(--muted)", border: "none", cursor: reviewText.trim() && !submitting ? "pointer" : "not-allowed" }}
               >
                 {submitting ? "Submitting…" : "Submit review"}
               </button>
               <button
                 onClick={() => setReviewOpen(false)}
-                style={{ padding: "0.75rem 1.25rem", fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.68rem", letterSpacing: "0.14em", textTransform: "uppercase", background: "transparent", color: "var(--muted)", border: "1px solid var(--warm-tan)", cursor: "pointer" }}
+                style={{ padding: "0.75rem 1.25rem", fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.82rem", letterSpacing: "0.14em", textTransform: "uppercase", background: "transparent", color: "var(--muted)", border: "1px solid var(--warm-tan)", cursor: "pointer" }}
               >
                 Cancel
               </button>
@@ -436,19 +436,19 @@ export default function OrderDetailClient({
 
 const labelStyle: React.CSSProperties = {
   fontFamily: "var(--font-jost)", fontWeight: 500,
-  fontSize: "0.65rem", letterSpacing: "0.22em", textTransform: "uppercase",
+  fontSize: "0.78rem", letterSpacing: "0.22em", textTransform: "uppercase",
   color: "#2A2118", marginBottom: "0.75rem",
 };
 
 const drawerLabelStyle: React.CSSProperties = {
   fontFamily: "var(--font-jost)", fontWeight: 600,
-  fontSize: "0.62rem", letterSpacing: "0.18em", textTransform: "uppercase",
+  fontSize: "0.75rem", letterSpacing: "0.18em", textTransform: "uppercase",
   color: "var(--muted)", marginBottom: "0.5rem",
 };
 
 const outlineBtn: React.CSSProperties = {
   fontFamily: "var(--font-jost)", fontWeight: 600,
-  fontSize: "0.6rem", letterSpacing: "0.14em", textTransform: "uppercase",
+  fontSize: "0.75rem", letterSpacing: "0.14em", textTransform: "uppercase",
   padding: "0.45rem 1rem",
   background: "transparent", color: "var(--muted)",
   border: "1px solid var(--warm-tan)", textDecoration: "none",
@@ -457,7 +457,7 @@ const outlineBtn: React.CSSProperties = {
 
 const primaryBtn: React.CSSProperties = {
   fontFamily: "var(--font-jost)", fontWeight: 600,
-  fontSize: "0.6rem", letterSpacing: "0.14em", textTransform: "uppercase",
+  fontSize: "0.75rem", letterSpacing: "0.14em", textTransform: "uppercase",
   padding: "0.45rem 1rem",
   background: "var(--burnt-orange)", color: "var(--cream)",
   border: "none", cursor: "pointer",

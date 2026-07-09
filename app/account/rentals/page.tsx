@@ -227,7 +227,7 @@ export default function BuyerRentalsPage() {
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "0.5rem", marginBottom: "0.5rem" }}>
                           <p style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.88rem", color: "#1A1A18", lineHeight: 1.3 }}>{rental.title}</p>
-                          <span style={{ padding: "0.22rem 0.65rem", background: badge.bg, color: badge.text, fontFamily: "var(--font-jost)", fontWeight: 700, fontSize: "0.6rem", letterSpacing: "0.1em", textTransform: "uppercase", flexShrink: 0 }}>
+                          <span style={{ padding: "0.22rem 0.65rem", background: badge.bg, color: badge.text, fontFamily: "var(--font-jost)", fontWeight: 700, fontSize: "0.75rem", letterSpacing: "0.1em", textTransform: "uppercase", flexShrink: 0 }}>
                             {badge.label}
                           </span>
                         </div>
@@ -238,7 +238,7 @@ export default function BuyerRentalsPage() {
                             { k: "Deposit", v: rental.deposit_amount != null ? `$${(rental.deposit_amount / 100).toLocaleString()}` : "—" },
                           ].map(({ k, v }) => (
                             <span key={k} style={{ fontFamily: "var(--font-jost)", fontSize: "0.75rem", color: "var(--muted)", opacity: 0.75 }}>
-                              <span style={{ fontWeight: 600, opacity: 0.5, textTransform: "uppercase", letterSpacing: "0.1em", fontSize: "0.6rem" }}>{k} </span>{v}
+                              <span style={{ fontWeight: 600, opacity: 0.5, textTransform: "uppercase", letterSpacing: "0.1em", fontSize: "0.75rem" }}>{k} </span>{v}
                             </span>
                           ))}
                         </div>
@@ -256,13 +256,13 @@ export default function BuyerRentalsPage() {
                           </p>
                         )}
                         <div style={{ display: "flex", gap: "0.6rem", flexWrap: "wrap" }}>
-                          <Link href={`/account/orders/${rental.id}`} style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.6rem", letterSpacing: "0.14em", textTransform: "uppercase", padding: "0.4rem 0.9rem", background: "transparent", color: "var(--muted)", border: "1px solid var(--warm-tan)", textDecoration: "none" }}>
+                          <Link href={`/account/orders/${rental.id}`} style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.75rem", letterSpacing: "0.14em", textTransform: "uppercase", padding: "0.4rem 0.9rem", background: "transparent", color: "var(--muted)", border: "1px solid var(--warm-tan)", textDecoration: "none" }}>
                             View order
                           </Link>
-                          <button onClick={() => setInstructionsId(rental.id)} style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.6rem", letterSpacing: "0.14em", textTransform: "uppercase", padding: "0.4rem 0.9rem", background: "transparent", color: "var(--muted)", border: "1px solid var(--warm-tan)", cursor: "pointer" }}>
+                          <button onClick={() => setInstructionsId(rental.id)} style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.75rem", letterSpacing: "0.14em", textTransform: "uppercase", padding: "0.4rem 0.9rem", background: "transparent", color: "var(--muted)", border: "1px solid var(--warm-tan)", cursor: "pointer" }}>
                             Return instructions
                           </button>
-                          <button onClick={() => { setReturnDrawerId(rental.id); setTrackingInput(""); setSubmitError(null); }} style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.6rem", letterSpacing: "0.14em", textTransform: "uppercase", padding: "0.4rem 0.9rem", background: "var(--burnt-orange)", color: "var(--cream)", border: "none", cursor: "pointer" }}>
+                          <button onClick={() => { setReturnDrawerId(rental.id); setTrackingInput(""); setSubmitError(null); }} style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.75rem", letterSpacing: "0.14em", textTransform: "uppercase", padding: "0.4rem 0.9rem", background: "var(--burnt-orange)", color: "var(--cream)", border: "none", cursor: "pointer" }}>
                             Mark as returned
                           </button>
                         </div>
@@ -284,7 +284,7 @@ export default function BuyerRentalsPage() {
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "0.5rem", marginBottom: "0.5rem" }}>
                           <p style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.88rem", color: "#1A1A18", lineHeight: 1.3 }}>{rental.title}</p>
-                          <span style={{ padding: "0.22rem 0.65rem", background: badge.bg, color: badge.text, fontFamily: "var(--font-jost)", fontWeight: 700, fontSize: "0.6rem", letterSpacing: "0.1em", textTransform: "uppercase", flexShrink: 0 }}>
+                          <span style={{ padding: "0.22rem 0.65rem", background: badge.bg, color: badge.text, fontFamily: "var(--font-jost)", fontWeight: 700, fontSize: "0.75rem", letterSpacing: "0.1em", textTransform: "uppercase", flexShrink: 0 }}>
                             {badge.label}
                           </span>
                         </div>
@@ -295,12 +295,12 @@ export default function BuyerRentalsPage() {
                             { k: "Deposit", v: rental.deposit_amount != null ? `$${(rental.deposit_amount / 100).toLocaleString()}` : "—" },
                           ].map(({ k, v }) => (
                             <span key={k} style={{ fontFamily: "var(--font-jost)", fontSize: "0.75rem", color: "var(--muted)", opacity: 0.75 }}>
-                              <span style={{ fontWeight: 600, opacity: 0.5, textTransform: "uppercase", letterSpacing: "0.1em", fontSize: "0.6rem" }}>{k} </span>{v}
+                              <span style={{ fontWeight: 600, opacity: 0.5, textTransform: "uppercase", letterSpacing: "0.1em", fontSize: "0.75rem" }}>{k} </span>{v}
                             </span>
                           ))}
                         </div>
                         <div style={{ display: "flex", gap: "0.6rem", flexWrap: "wrap", marginBottom: "0.75rem" }}>
-                          <Link href={`/account/orders/${rental.id}`} style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.6rem", letterSpacing: "0.14em", textTransform: "uppercase", padding: "0.4rem 0.9rem", background: "transparent", color: "var(--muted)", border: "1px solid var(--warm-tan)", textDecoration: "none" }}>
+                          <Link href={`/account/orders/${rental.id}`} style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.75rem", letterSpacing: "0.14em", textTransform: "uppercase", padding: "0.4rem 0.9rem", background: "transparent", color: "var(--muted)", border: "1px solid var(--warm-tan)", textDecoration: "none" }}>
                             View order
                           </Link>
                         </div>
@@ -325,7 +325,7 @@ export default function BuyerRentalsPage() {
           {/* Past rentals */}
           {past.length > 0 && (
             <div>
-              <p style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.62rem", letterSpacing: "0.25em", textTransform: "uppercase", color: "var(--muted)", opacity: 0.55, marginBottom: "1rem" }}>
+              <p style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.75rem", letterSpacing: "0.25em", textTransform: "uppercase", color: "var(--muted)", opacity: 0.55, marginBottom: "1rem" }}>
                 Past rentals
               </p>
               <div style={{ display: "flex", flexDirection: "column", gap: "1px", background: "var(--warm-tan)" }}>
@@ -341,7 +341,7 @@ export default function BuyerRentalsPage() {
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "0.5rem", marginBottom: "0.3rem" }}>
                             <p style={{ fontFamily: "var(--font-jost)", fontWeight: 500, fontSize: "0.85rem", color: "#1A1A18" }}>{rental.title}</p>
-                            <span style={{ padding: "0.18rem 0.55rem", background: badge.bg, color: badge.text, fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.55rem", letterSpacing: "0.12em", textTransform: "uppercase", flexShrink: 0 }}>
+                            <span style={{ padding: "0.18rem 0.55rem", background: badge.bg, color: badge.text, fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.75rem", letterSpacing: "0.12em", textTransform: "uppercase", flexShrink: 0 }}>
                               {badge.label}
                             </span>
                           </div>
@@ -355,7 +355,7 @@ export default function BuyerRentalsPage() {
                               {rental.deposit_release_reason ? ` — ${rental.deposit_release_reason}` : ""}.
                             </p>
                           )}
-                          <Link href={`/account/orders/${rental.id}`} style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.58rem", letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--muted)", textDecoration: "underline", textUnderlineOffset: "2px", opacity: 0.65 }}>
+                          <Link href={`/account/orders/${rental.id}`} style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.75rem", letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--muted)", textDecoration: "underline", textUnderlineOffset: "2px", opacity: 0.65 }}>
                             View order →
                           </Link>
                         </div>
@@ -396,7 +396,7 @@ export default function BuyerRentalsPage() {
                 </div>
               </div>
             ))}
-            <button onClick={() => setInstructionsId(null)} style={{ width: "100%", padding: "0.75rem", fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.68rem", letterSpacing: "0.18em", textTransform: "uppercase", background: "var(--burnt-orange)", color: "var(--cream)", border: "none", cursor: "pointer" }}>
+            <button onClick={() => setInstructionsId(null)} style={{ width: "100%", padding: "0.75rem", fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.82rem", letterSpacing: "0.18em", textTransform: "uppercase", background: "var(--burnt-orange)", color: "var(--cream)", border: "none", cursor: "pointer" }}>
               Got it
             </button>
           </div>
@@ -418,7 +418,7 @@ export default function BuyerRentalsPage() {
             <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.78rem", color: "var(--muted)", opacity: 0.7, marginBottom: "1.75rem", lineHeight: 1.6 }}>
               Only do this once you&apos;ve dropped the item off with the carrier. The seller will have 5 business days to confirm receipt before your deposit is automatically released.
             </p>
-            <p style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.62rem", letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--muted)", marginBottom: "0.5rem" }}>
+            <p style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.75rem", letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--muted)", marginBottom: "0.5rem" }}>
               Tracking number <span style={{ fontWeight: 400, color: "#991B1B" }}>*</span>
             </p>
             <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.72rem", color: "var(--muted)", opacity: 0.7, marginBottom: "0.5rem" }}>
@@ -438,10 +438,10 @@ export default function BuyerRentalsPage() {
             )}
             {submitError && <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.75rem", color: "#991B1B", marginBottom: "0.75rem" }}>{submitError}</p>}
             <div style={{ display: "flex", gap: "0.75rem" }}>
-              <button onClick={() => markReturned(returnDrawerId!)} disabled={submitting || !trackingInput.trim()} style={{ flex: 1, padding: "0.75rem", fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.68rem", letterSpacing: "0.16em", textTransform: "uppercase", background: (submitting || !trackingInput.trim()) ? "var(--warm-tan)" : "var(--burnt-orange)", color: (submitting || !trackingInput.trim()) ? "var(--muted)" : "var(--cream)", border: "none", cursor: (submitting || !trackingInput.trim()) ? "not-allowed" : "pointer" }}>
+              <button onClick={() => markReturned(returnDrawerId!)} disabled={submitting || !trackingInput.trim()} style={{ flex: 1, padding: "0.75rem", fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.82rem", letterSpacing: "0.16em", textTransform: "uppercase", background: (submitting || !trackingInput.trim()) ? "var(--warm-tan)" : "var(--burnt-orange)", color: (submitting || !trackingInput.trim()) ? "var(--muted)" : "var(--cream)", border: "none", cursor: (submitting || !trackingInput.trim()) ? "not-allowed" : "pointer" }}>
                 {submitting ? "Submitting…" : "Confirm — item shipped back"}
               </button>
-              <button onClick={() => setReturnDrawerId(null)} style={{ padding: "0.75rem 1.25rem", fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.68rem", letterSpacing: "0.14em", textTransform: "uppercase", background: "transparent", color: "var(--muted)", border: "1px solid var(--warm-tan)", cursor: "pointer" }}>
+              <button onClick={() => setReturnDrawerId(null)} style={{ padding: "0.75rem 1.25rem", fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.82rem", letterSpacing: "0.14em", textTransform: "uppercase", background: "transparent", color: "var(--muted)", border: "1px solid var(--warm-tan)", cursor: "pointer" }}>
                 Cancel
               </button>
             </div>

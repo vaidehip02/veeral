@@ -55,7 +55,7 @@ export default function SavedItemsPage() {
             href="/listings"
             style={{
               fontFamily: "var(--font-jost)", fontWeight: 600,
-              fontSize: "0.65rem", letterSpacing: "0.18em", textTransform: "uppercase",
+              fontSize: "0.78rem", letterSpacing: "0.18em", textTransform: "uppercase",
               padding: "0.65rem 1.4rem", textDecoration: "none",
               background: "var(--burnt-orange)", color: "var(--cream)",
             }}
@@ -107,7 +107,7 @@ export default function SavedItemsPage() {
                   }}>
                     <p style={{
                       fontFamily: "var(--font-jost)", fontWeight: 600,
-                      fontSize: "0.65rem", letterSpacing: "0.18em", textTransform: "uppercase",
+                      fontSize: "0.78rem", letterSpacing: "0.18em", textTransform: "uppercase",
                       color: "#fff", textAlign: "center",
                     }}>
                       No longer available
@@ -116,7 +116,7 @@ export default function SavedItemsPage() {
                       href="/listings"
                       style={{
                         fontFamily: "var(--font-jost)", fontWeight: 600,
-                        fontSize: "0.6rem", letterSpacing: "0.14em", textTransform: "uppercase",
+                        fontSize: "0.75rem", letterSpacing: "0.14em", textTransform: "uppercase",
                         padding: "0.35rem 0.75rem",
                         background: "transparent", color: "#fff",
                         border: "1px solid rgba(255,255,255,0.6)",
@@ -147,7 +147,7 @@ export default function SavedItemsPage() {
                       ${item.price.toLocaleString()}
                     </span>
                     {item.rent_price && (
-                      <span style={{ fontFamily: "var(--font-jost)", fontSize: "0.68rem", color: "var(--muted)", opacity: 0.7 }}>
+                      <span style={{ fontFamily: "var(--font-jost)", fontSize: "0.82rem", color: "var(--muted)", opacity: 0.7 }}>
                         · ${item.rent_price}/day
                       </span>
                     )}
@@ -171,7 +171,7 @@ export default function SavedItemsPage() {
                     display: "block", padding: "0.55rem",
                     borderTop: "1px solid var(--warm-tan)",
                     fontFamily: "var(--font-jost)", fontWeight: 600,
-                    fontSize: "0.58rem", letterSpacing: "0.16em", textTransform: "uppercase",
+                    fontSize: "0.75rem", letterSpacing: "0.16em", textTransform: "uppercase",
                     color: "var(--muted)", textAlign: "center", textDecoration: "none",
                     transition: "background 0.15s, color 0.15s",
                   }}

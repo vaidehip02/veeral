@@ -58,7 +58,7 @@ export default function RentalPicker({ pricePerDay, maxDays, onClose }: RentalPi
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "0.75rem" }}>
             <label style={{
               fontFamily: "var(--font-jost)", fontWeight: 300,
-              fontSize: "0.55rem", letterSpacing: "0.2em", textTransform: "uppercase", color: "var(--muted)"
+              fontSize: "0.75rem", letterSpacing: "0.2em", textTransform: "uppercase", color: "var(--muted)"
             }}>
               Duration
             </label>
@@ -78,8 +78,8 @@ export default function RentalPicker({ pricePerDay, maxDays, onClose }: RentalPi
             style={{ width: "100%", accentColor: "var(--burnt-orange)" }}
           />
           <div style={{ display: "flex", justifyContent: "space-between" }}>
-            <span style={{ fontFamily: "var(--font-jost)", fontSize: "0.55rem", color: "var(--warm-tan)" }}>1 day</span>
-            <span style={{ fontFamily: "var(--font-jost)", fontSize: "0.55rem", color: "var(--warm-tan)" }}>{maxDays} days</span>
+            <span style={{ fontFamily: "var(--font-jost)", fontSize: "0.75rem", color: "var(--warm-tan)" }}>1 day</span>
+            <span style={{ fontFamily: "var(--font-jost)", fontSize: "0.75rem", color: "var(--warm-tan)" }}>{maxDays} days</span>
           </div>
         </div>
 
@@ -107,7 +107,7 @@ export default function RentalPicker({ pricePerDay, maxDays, onClose }: RentalPi
             width: "100%", padding: "0.95rem",
             background: "#C4440A", border: "none", cursor: "pointer",
             fontFamily: "var(--font-jost)", fontWeight: 400,
-            fontSize: "0.6rem", letterSpacing: "0.2em", textTransform: "uppercase",
+            fontSize: "0.75rem", letterSpacing: "0.2em", textTransform: "uppercase",
             color: "var(--cream)", transition: "opacity 0.2s"
           }}
           onMouseOver={e => (e.currentTarget.style.opacity = "0.85")}

@@ -238,7 +238,7 @@ export default function SellerProfilePage({
                 width: "24px", height: "24px", borderRadius: "50%",
                 background: "var(--burnt-orange)", border: "2px solid var(--cream)",
                 display: "flex", alignItems: "center", justifyContent: "center",
-                fontSize: "0.65rem", color: "var(--cream)",
+                fontSize: "0.78rem", color: "var(--cream)",
               }} title="Verified seller">
                 ✓
               </div>
@@ -251,7 +251,7 @@ export default function SellerProfilePage({
               onClick={handleFollow}
               style={{
                 fontFamily: "var(--font-jost)", fontWeight: 600,
-                fontSize: "0.65rem", letterSpacing: "0.18em", textTransform: "uppercase",
+                fontSize: "0.78rem", letterSpacing: "0.18em", textTransform: "uppercase",
                 padding: "0.6rem 1.4rem",
                 background: followed ? "var(--burnt-orange)" : "transparent",
                 color: followed ? "var(--cream)" : "var(--muted)",
@@ -263,7 +263,7 @@ export default function SellerProfilePage({
             </button>
             <button style={{
               fontFamily: "var(--font-jost)", fontWeight: 600,
-              fontSize: "0.65rem", letterSpacing: "0.18em", textTransform: "uppercase",
+              fontSize: "0.78rem", letterSpacing: "0.18em", textTransform: "uppercase",
               padding: "0.6rem 1.4rem",
               background: "transparent", color: "var(--muted)",
               border: "1px solid var(--warm-tan)", cursor: "pointer",
@@ -289,7 +289,7 @@ export default function SellerProfilePage({
             {SELLER.verified && (
               <span style={{
                 fontFamily: "var(--font-jost)", fontWeight: 600,
-                fontSize: "0.58rem", letterSpacing: "0.16em", textTransform: "uppercase",
+                fontSize: "0.75rem", letterSpacing: "0.16em", textTransform: "uppercase",
                 padding: "0.22rem 0.6rem",
                 background: "rgba(201,92,26,0.1)", color: "var(--burnt-orange)",
                 border: "1px solid rgba(201,92,26,0.25)",
@@ -374,7 +374,7 @@ export default function SellerProfilePage({
                 {stat.value}
               </p>
               <p style={{
-                fontFamily: "var(--font-jost)", fontSize: "0.58rem", fontWeight: 600,
+                fontFamily: "var(--font-jost)", fontSize: "0.75rem", fontWeight: 600,
                 letterSpacing: "0.18em", textTransform: "uppercase",
                 color: "var(--muted)", opacity: 0.55, marginTop: "0.3rem",
               }}>
@@ -405,7 +405,7 @@ export default function SellerProfilePage({
                   onClick={() => setActiveTab(tab.id)}
                   style={{
                     fontFamily: "var(--font-jost)", fontWeight: 600,
-                    fontSize: "0.62rem", letterSpacing: "0.16em", textTransform: "uppercase",
+                    fontSize: "0.75rem", letterSpacing: "0.16em", textTransform: "uppercase",
                     padding: "0.4rem 1rem", border: "1px solid",
                     borderColor: activeTab === tab.id ? "var(--burnt-orange)" : "var(--warm-tan)",
                     background: activeTab === tab.id ? "var(--burnt-orange)" : "transparent",
@@ -461,7 +461,7 @@ export default function SellerProfilePage({
                       {/* Type badge */}
                       <span style={{
                         fontFamily: "var(--font-jost)", fontWeight: 600,
-                        fontSize: "0.55rem", letterSpacing: "0.16em", textTransform: "uppercase",
+                        fontSize: "0.75rem", letterSpacing: "0.16em", textTransform: "uppercase",
                         padding: "0.18rem 0.5rem",
                         background: listing.type === "rent"
                           ? "#E3F2FD"
@@ -546,7 +546,7 @@ export default function SellerProfilePage({
               </p>
               <Stars rating={avgRating} size="lg" />
               <p style={{
-                fontFamily: "var(--font-jost)", fontSize: "0.68rem",
+                fontFamily: "var(--font-jost)", fontSize: "0.82rem",
                 color: "var(--muted)", opacity: 0.55, marginTop: "0.3rem",
                 letterSpacing: "0.08em",
               }}>
@@ -579,7 +579,7 @@ export default function SellerProfilePage({
                       }} />
                     </div>
                     <span style={{
-                      fontFamily: "var(--font-jost)", fontSize: "0.68rem",
+                      fontFamily: "var(--font-jost)", fontSize: "0.82rem",
                       color: "var(--muted)", opacity: 0.5, minWidth: "12px",
                     }}>
                       {count}
@@ -649,7 +649,7 @@ export default function SellerProfilePage({
               style={{
                 marginTop: "1.5rem",
                 fontFamily: "var(--font-jost)", fontWeight: 600,
-                fontSize: "0.65rem", letterSpacing: "0.18em", textTransform: "uppercase",
+                fontSize: "0.78rem", letterSpacing: "0.18em", textTransform: "uppercase",
                 padding: "0.65rem 1.4rem",
                 background: "transparent", color: "var(--muted)",
                 border: "1px solid var(--warm-tan)", cursor: "pointer",
