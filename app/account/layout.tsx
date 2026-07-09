@@ -6,12 +6,11 @@ import { useEffect, useState } from "react";
 
 const NAV_ITEMS = [
   {
-    label: "Overview",
-    href: "/account",
+    label: "Profile",
+    href: "/account/profile",
     icon: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-        <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
-        <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+        <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
       </svg>
     ),
   },
@@ -88,8 +87,7 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
       .catch(() => {});
   }, [pathname]); // re-check when navigating
 
-  const isActive = (href: string) =>
-    href === "/account" ? pathname === "/account" : pathname.startsWith(href);
+  const isActive = (href: string) => pathname.startsWith(href);
 
   return (
     <div style={{ background: "var(--cream)", minHeight: "100vh" }}>
