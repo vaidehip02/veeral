@@ -208,7 +208,7 @@ function MessagesInner() {
     <div style={{ display: "flex", height: "calc(100vh - 140px)", minHeight: "500px", overflow: "hidden", margin: "-2.5rem -2rem -4rem", borderLeft: "1px solid var(--warm-tan)" }}>
 
       {/* ── Inbox list ── */}
-      <div style={{ width: "300px", flexShrink: 0, borderRight: `1px solid ${A.border}`, display: "flex", flexDirection: "column", background: "#fff" }}>
+      <div style={{ width: "360px", flexShrink: 0, borderRight: `1px solid ${A.border}`, display: "flex", flexDirection: "column", background: "#fff" }}>
 
         <div style={{ padding: "1.5rem 1.25rem 1rem", borderBottom: `1px solid ${A.border}` }}>
           <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
@@ -254,21 +254,21 @@ function MessagesInner() {
 
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: "0.5rem", marginBottom: "0.2rem" }}>
-                      <span style={{ fontFamily: "var(--font-jost)", fontWeight: unread ? 700 : 500, fontSize: "0.82rem", color: A.dark, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      <span style={{ fontFamily: "var(--font-jost)", fontWeight: unread ? 700 : 500, fontSize: "0.95rem", color: A.dark, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                         {conv.counterparty?.display_name ?? "Unknown"}
                       </span>
                       {conv.lastMessageAt && (
-                        <span style={{ fontFamily: "var(--font-jost)", fontSize: "0.62rem", color: A.muted, opacity: 0.6, flexShrink: 0 }}>
+                        <span style={{ fontFamily: "var(--font-jost)", fontSize: "0.75rem", color: A.muted, opacity: 0.6, flexShrink: 0 }}>
                           {formatTime(conv.lastMessageAt)}
                         </span>
                       )}
                     </div>
                     {conv.listing && (
-                      <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.65rem", color: A.accent, margin: "0 0 0.15rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.78rem", color: A.accent, margin: "0 0 0.15rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                         {conv.listing.title}
                       </p>
                     )}
-                    <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.72rem", color: A.muted, opacity: unread ? 1 : 0.65, fontWeight: unread ? 600 : 400, margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.82rem", color: A.muted, opacity: unread ? 1 : 0.65, fontWeight: unread ? 600 : 400, margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                       {conv.lastMessagePreview ?? "Start the conversation"}
                     </p>
                   </div>
@@ -325,7 +325,7 @@ function MessagesInner() {
                   <div key={msg.id} style={{ display: "flex", justifyContent: mine ? "flex-end" : "flex-start" }}>
                     <div style={{ maxWidth: "68%", padding: "0.65rem 0.9rem", background: mine ? A.accent : "#fff", color: mine ? "#fff" : A.dark, borderRadius: mine ? "12px 12px 2px 12px" : "12px 12px 12px 2px", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
                       <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.85rem", lineHeight: 1.55, margin: 0, wordBreak: "break-word" }}>{msg.body}</p>
-                      <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.58rem", margin: "0.35rem 0 0", opacity: 0.65, textAlign: mine ? "right" : "left" }}>
+                      <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.7rem", margin: "0.35rem 0 0", opacity: 0.65, textAlign: mine ? "right" : "left" }}>
                         {formatTime(msg.created_at)}
                       </p>
                     </div>
@@ -339,7 +339,7 @@ function MessagesInner() {
           {/* Composer */}
           <div style={{ borderTop: `1px solid ${A.border}`, background: "#fff" }}>
             {sendError && (
-              <p style={{ margin: "0", padding: "0.5rem 1.25rem", fontFamily: "var(--font-jost)", fontSize: "0.72rem", color: "#991B1B", background: "#FEF2F2", borderBottom: `1px solid #FECACA` }}>
+              <p style={{ margin: "0", padding: "0.6rem 1.5rem", fontFamily: "var(--font-jost)", fontSize: "0.85rem", color: "#991B1B", background: "#FEF2F2", borderBottom: `1px solid #FECACA` }}>
                 {sendError}
               </p>
             )}
