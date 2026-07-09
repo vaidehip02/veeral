@@ -313,7 +313,7 @@ function ListingCard({ listing }: { listing: Listing }) {
           <span style={{
             position:"absolute", top:"0.6rem", left:"0.6rem",
             fontFamily:"var(--font-jost)", fontWeight:600,
-            fontSize:"0.52rem", letterSpacing:"0.14em", textTransform:"uppercase",
+            fontSize:"0.62rem", letterSpacing:"0.12em", textTransform:"uppercase",
             padding:"0.2rem 0.5rem",
             background: listing.type === "rent"
               ? "#E3F2FD"
@@ -334,7 +334,7 @@ function ListingCard({ listing }: { listing: Listing }) {
             padding:"0.15rem 0.45rem",
             background:cond.bg, color:cond.text,
             fontFamily:"var(--font-jost)", fontWeight:600,
-            fontSize:"0.52rem", letterSpacing:"0.14em", textTransform:"uppercase",
+            fontSize:"0.62rem", letterSpacing:"0.12em", textTransform:"uppercase",
           }}>
             {CONDITION_LABEL[listing.condition]}
           </span>
@@ -361,7 +361,7 @@ function ListingCard({ listing }: { listing: Listing }) {
             )}
             {listing.rent_price && (listing.type === "rent" || listing.type === "both") && (
               <span style={{
-                fontFamily:"var(--font-jost)", fontSize:"0.68rem",
+                fontFamily:"var(--font-jost)", fontSize:"0.78rem",
                 color:"var(--muted)", opacity:0.7,
               }}>
                 {listing.type === "both" ? "· " : ""}${listing.rent_price}/day
@@ -372,14 +372,14 @@ function ListingCard({ listing }: { listing: Listing }) {
           {/* Seller + size */}
           <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
             <span style={{
-              fontFamily:"var(--font-jost)", fontSize:"0.7rem",
+              fontFamily:"var(--font-jost)", fontSize:"0.78rem",
               color:"var(--muted)", opacity:0.6,
             }}>
               {listing.color ?? listing.category}
             </span>
             {listing.size && listing.size !== "Free" && (
               <span style={{
-                fontFamily:"var(--font-jost)", fontSize:"0.68rem", fontWeight:500,
+                fontFamily:"var(--font-jost)", fontSize:"0.75rem", fontWeight:500,
                 color:"var(--muted)", opacity:0.7,
                 border:"1px solid var(--warm-tan)", padding:"0.1rem 0.4rem",
               }}>
