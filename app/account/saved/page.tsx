@@ -40,7 +40,7 @@ export default function SavedItemsPage() {
         .select("id, title, price, rent_price, type, images, seller_id, status")
         .in("id", listingIds);
 
-      const sellerIds = [...new Set((listings ?? []).map(l => l.seller_id).filter(Boolean))];
+      const sellerIds = Array.from(new Set((listings ?? []).map(l => l.seller_id).filter(Boolean)));
       const { data: sellerProfiles } = sellerIds.length
         ? await supabase.from("seller_profiles").select("id, username").in("id", sellerIds)
         : { data: [] };
