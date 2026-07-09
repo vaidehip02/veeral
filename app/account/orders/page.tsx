@@ -60,7 +60,7 @@ export default function BuyerOrdersPage() {
         .from("orders")
         .select("id, listing_id, seller_id, amount, platform_fee, status, created_at, return_tracking_number")
         .eq("buyer_id", user.id)
-        .eq("type", "sale")
+        .is("rental_start", null)
         .order("created_at", { ascending: false });
 
       if (!rawOrders?.length) { setLoading(false); return; }
