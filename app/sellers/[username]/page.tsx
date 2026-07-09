@@ -4,196 +4,189 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 
-// ─── Mock data ────────────────────────────────────────────────────────────────
+// ── Types ─────────────────────────────────────────────────────────────────────
 
-const SELLER = {
-  username: "priya_sharma",
-  display_name: "Priya Sharma",
-  bio: "Curating a wardrobe of heirlooms and modern South Asian fashion. Every piece has a story — find yours here.",
-  location: "New York, NY",
-  member_since: "March 2024",
-  avatar_color: "#D4C5B5",   // placeholder until real photo
-  banner_color: "#E8DDD3",   // placeholder until real banner
-  total_listings: 12,
-  total_sales: 47,
-  avg_rating: 4.8,
-  review_count: 31,
-  follower_count: 214,
-  following_count: 38,
-  verified: true,
-};
+interface SellerProfile {
+  id: string;
+  username: string;
+  display_name: string;
+  avatar_url: string | null;
+  bio: string | null;
+  location: string | null;
+  created_at: string;
+}
 
-type ListingType = "sale" | "rent" | "both";
-
-interface MockListing {
+interface ActiveListing {
   id: string;
   title: string;
   price: number;
-  rent_price?: number;
-  type: ListingType;
-  bg: string;
-  category: string;
+  rent_price: number | null;
+  type: "sale" | "rent" | "both";
+  images: string[];
+  condition: string;
 }
-
-const LISTINGS: MockListing[] = [
-  { id: "1",  title: "Red Bridal Lehenga with Gold Embroidery", price: 4500, rent_price: 120, type: "both", bg: "#D4C5B5", category: "lehenga" },
-  { id: "2",  title: "Zardozi Saree — Ivory & Gold",            price: 980,  rent_price: 65,  type: "both", bg: "#E8DDD3", category: "saree"   },
-  { id: "3",  title: "Pink Anarkali Kurta Set",                 price: 320,                   type: "sale", bg: "#DDD0C5", category: "kurta"   },
-  { id: "4",  title: "Mirror-work Lehenga (Bridal)",            price: 3800, rent_price: 160, type: "both", bg: "#C8B9A8", category: "lehenga" },
-  { id: "5",  title: "Silk Sharara Set — Olive Green",          price: 540,                   type: "sale", bg: "#CFC0AF", category: "salwar"  },
-  { id: "6",  title: "Blue Banarasi Silk Saree",                price: 1200,                  type: "sale", bg: "#C3B5A8", category: "saree"   },
-  { id: "7",  title: "Sequin Lehenga — Midnight Blue",          price: 2200, rent_price: 95,  type: "both", bg: "#B8BFCC", category: "lehenga" },
-  { id: "8",  title: "Embroidered Chanderi Saree",              price: 780,  rent_price: 45,  type: "both", bg: "#DDD5CA", category: "saree"   },
-  { id: "9",  title: "Cream Sharara Set",                       price: 460,                   type: "sale", bg: "#CABDB1", category: "salwar"  },
-  { id: "10", title: "Gold Tissue Lehenga",                     price: 5100, rent_price: 200, type: "both", bg: "#E0DDD8", category: "lehenga" },
-  { id: "11", title: "Dusty Pink Anarkali — Georgette",         price: 290,                   type: "sale", bg: "#D9C9C4", category: "kurta"   },
-  { id: "12", title: "Bridal Dupatta — Red & Gold",             price: 180,  rent_price: 30,  type: "rent", bg: "#E3D5CA", category: "other"   },
-];
 
 interface Review {
-  id: string;
-  buyer: string;
-  rating: number;
-  text: string;
-  item: string;
-  date: string;
-}
-
-const REVIEWS: Review[] = [
-  {
-    id: "r1",
-    buyer: "ananya_m",
-    rating: 5,
-    text: "Absolutely stunning lehenga — the photos don't do it justice. Priya was incredibly communicative and packed it beautifully. Would 100% buy from her again.",
-    item: "Red Bridal Lehenga with Gold Embroidery",
-    date: "Jun 3, 2026",
-  },
-  {
-    id: "r2",
-    buyer: "kavitha_wears",
-    rating: 5,
-    text: "The saree arrived in perfect condition, exactly as described. Shipping was fast and Priya even included a handwritten note. This is what shopping should feel like.",
-    item: "Zardozi Saree — Ivory & Gold",
-    date: "May 28, 2026",
-  },
-  {
-    id: "r3",
-    buyer: "meera_b",
-    rating: 4,
-    text: "Lovely piece, great quality. Slight colour difference from photos but honestly it looked even better in person. Very smooth transaction.",
-    item: "Blue Banarasi Silk Saree",
-    date: "May 19, 2026",
-  },
-  {
-    id: "r4",
-    buyer: "sana.rents",
-    rating: 5,
-    text: "Rented the Mirror-work Lehenga for a wedding and received so many compliments. Returned without any issues. Highly recommend renting from Priya!",
-    item: "Mirror-work Lehenga (Bridal)",
-    date: "May 12, 2026",
-  },
-  {
-    id: "r5",
-    buyer: "divya.looks",
-    rating: 5,
-    text: "Fast shipping, accurate description, beautiful garment. Priya answered all my questions quickly before I purchased. A+ seller.",
-    item: "Silk Sharara Set — Sage Green",
-    date: "May 2, 2026",
-  },
-];
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function Stars({ rating, size = "sm" }: { rating: number; size?: "sm" | "lg" }) {
-  const fontSize = size === "lg" ? "1.25rem" : "0.78rem";
-  return (
-    <span style={{ color: "#C4440A", fontSize, letterSpacing: "0.05em" }}>
-      {"★".repeat(Math.floor(rating))}
-      {rating % 1 >= 0.5 ? "½" : ""}
-      {"☆".repeat(5 - Math.ceil(rating))}
-    </span>
-  );
-}
-
-// ─── Page ─────────────────────────────────────────────────────────────────────
-
-type FilterTab = "all" | "sale" | "rent";
-
-interface LiveReview {
   id: string;
   rating: number;
   comment: string;
   created_at: string;
-  reviewer: { username: string } | null;
-  listing: { title: string } | null;
+  reviewer_username: string | null;
+  listing_title: string | null;
 }
 
-export default function SellerProfilePage({
-  params,
-}: {
-  params: { username: string };
-}) {
-  const [followed, setFollowed] = useState(false);
-  const [followerCount, setFollowerCount] = useState(SELLER.follower_count);
-  const [activeTab, setActiveTab] = useState<FilterTab>("all");
-  const [showAllReviews, setShowAllReviews] = useState(false);
-  const [liveReviews, setLiveReviews] = useState<LiveReview[] | null>(null);
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function Stars({ rating, size = "sm" }: { rating: number; size?: "sm" | "lg" }) {
+  const full = Math.floor(rating);
+  const half = rating % 1 >= 0.5;
+  const empty = 5 - full - (half ? 1 : 0);
+  return (
+    <span style={{ color: "#C4440A", fontSize: size === "lg" ? "1.25rem" : "0.85rem", letterSpacing: "0.05em" }}>
+      {"★".repeat(full)}{half ? "½" : ""}{"☆".repeat(empty)}
+    </span>
+  );
+}
+
+function fmtDate(iso: string) {
+  return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
+
+function memberSince(iso: string) {
+  return new Date(iso).toLocaleDateString("en-US", { month: "long", year: "numeric" });
+}
+
+type FilterTab = "all" | "sale" | "rent";
+
+// ── Page ──────────────────────────────────────────────────────────────────────
+
+export default function SellerProfilePage({ params }: { params: { username: string } }) {
+  const [profile,      setProfile]      = useState<SellerProfile | null>(null);
+  const [listings,     setListings]     = useState<ActiveListing[]>([]);
+  const [reviews,      setReviews]      = useState<Review[]>([]);
+  const [salesCount,   setSalesCount]   = useState(0);
+  const [rentalsCount, setRentalsCount] = useState(0);
+  const [loading,      setLoading]      = useState(true);
+  const [notFound,     setNotFound]     = useState(false);
+  const [activeTab,    setActiveTab]    = useState<FilterTab>("all");
+  const [showAll,      setShowAll]      = useState(false);
 
   useEffect(() => {
     const supabase = createClient();
-    supabase
-      .from("reviews")
-      .select(`
-        id, rating, comment, created_at,
-        reviewer:reviewer_id ( username:id ),
-        listing:order_id ( title:listing_id )
-      `)
-      .eq("seller_id", SELLER.username) // will be replaced when seller data is live
-      .order("created_at", { ascending: false })
-      .then(({ data }) => {
-        if (data && data.length > 0) {
-          // Supabase returns joined rows as arrays — normalise to single objects
-          const normalised: LiveReview[] = (data as unknown[]).map((r: unknown) => {
-            const row = r as Record<string, unknown>;
-            const rev = Array.isArray(row.reviewer) ? row.reviewer[0] : row.reviewer;
-            const lst = Array.isArray(row.listing)  ? row.listing[0]  : row.listing;
-            return {
-              id:         row.id as string,
-              rating:     row.rating as number,
-              comment:    row.comment as string,
-              created_at: row.created_at as string,
-              reviewer:   rev ? { username: (rev as Record<string,string>).username } : null,
-              listing:    lst ? { title:    (lst as Record<string,string>).title    } : null,
-            };
-          });
-          setLiveReviews(normalised);
-        }
-      });
-  }, []);
 
-  // Use live reviews when available, fall back to mock
-  const activeReviews = liveReviews ?? REVIEWS.map(r => ({
-    id: r.id, rating: r.rating, comment: r.text, created_at: r.date,
-    reviewer: { username: r.buyer },
-    listing: { title: r.item },
-  }));
+    async function load() {
+      // 1. Look up seller profile by username
+      const { data: sp } = await supabase
+        .from("seller_profiles")
+        .select("id, username, display_name, avatar_url, bio, location, created_at")
+        .eq("username", params.username)
+        .single();
 
-  const avgRating = activeReviews.length > 0
-    ? Math.round((activeReviews.reduce((s, r) => s + r.rating, 0) / activeReviews.length) * 10) / 10
-    : SELLER.avg_rating;
+      if (!sp) { setNotFound(true); setLoading(false); return; }
+      setProfile(sp as SellerProfile);
 
-  const handleFollow = () => {
-    setFollowed(f => !f);
-    setFollowerCount(c => (followed ? c - 1 : c + 1));
-  };
+      // 2. Active listings (public — only active status)
+      const { data: listingRows } = await supabase
+        .from("listings")
+        .select("id, title, price, rent_price, type, images, condition")
+        .eq("seller_id", sp.id)
+        .eq("status", "active")
+        .order("created_at", { ascending: false });
+      setListings((listingRows ?? []) as ActiveListing[]);
 
-  const filteredListings = LISTINGS.filter(l => {
+      // 3. Completed order counts — sales vs rentals (seller perspective only)
+      const { data: orderRows } = await supabase
+        .from("orders")
+        .select("id, rental_start, status")
+        .eq("seller_id", sp.id)
+        .in("status", ["delivered", "deposit_released", "deposit_resolved"]);
+
+      if (orderRows) {
+        setSalesCount(orderRows.filter(o => o.rental_start === null).length);
+        setRentalsCount(orderRows.filter(o => o.rental_start !== null).length);
+      }
+
+      // 4. Reviews for this seller
+      const { data: reviewRows } = await supabase
+        .from("reviews")
+        .select("id, rating, comment, created_at, reviewer_id, listing_id")
+        .eq("seller_id", sp.id)
+        .order("created_at", { ascending: false });
+
+      if (reviewRows?.length) {
+        const reviewerIds = [...new Set(reviewRows.map(r => r.reviewer_id).filter(Boolean))];
+        const listingIds  = [...new Set(reviewRows.map(r => r.listing_id).filter(Boolean))];
+
+        const [{ data: reviewerProfiles }, { data: reviewListings }] = await Promise.all([
+          supabase.from("seller_profiles").select("id, username").in("id", reviewerIds),
+          supabase.from("listings").select("id, title").in("id", listingIds),
+        ]);
+
+        setReviews(reviewRows.map(r => ({
+          id:               r.id,
+          rating:           r.rating,
+          comment:          r.comment,
+          created_at:       r.created_at,
+          reviewer_username: reviewerProfiles?.find(p => p.id === r.reviewer_id)?.username ?? null,
+          listing_title:    reviewListings?.find(l => l.id === r.listing_id)?.title ?? null,
+        })));
+      }
+
+      setLoading(false);
+    }
+
+    load();
+  }, [params.username]);
+
+  // ── Loading ──────────────────────────────────────────────────────────────────
+
+  if (loading) {
+    return (
+      <div style={{ background: "var(--cream)", minHeight: "100vh" }}>
+        <div style={{ height: "220px", background: "#E8DDD3" }} />
+        <div className="max-w-5xl mx-auto" style={{ padding: "2rem 1.5rem", fontFamily: "var(--font-jost)", fontSize: "0.85rem", color: "var(--muted)", opacity: 0.6 }}>
+          Loading…
+        </div>
+      </div>
+    );
+  }
+
+  // ── Not found ─────────────────────────────────────────────────────────────────
+
+  if (notFound || !profile) {
+    return (
+      <div style={{ background: "var(--cream)", minHeight: "100vh" }}>
+        <div style={{ height: "220px", background: "#E8DDD3" }} />
+        <div className="max-w-5xl mx-auto" style={{ padding: "3rem 1.5rem", textAlign: "center" }}>
+          <p style={{ fontFamily: "var(--font-cormorant)", fontStyle: "italic", fontSize: "1.75rem", color: "#1A1A18", marginBottom: "0.5rem" }}>
+            User not found
+          </p>
+          <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.85rem", color: "var(--muted)", opacity: 0.6, marginBottom: "1.5rem" }}>
+            @{params.username} doesn&apos;t exist or has been removed.
+          </p>
+          <Link href="/listings" style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.78rem", letterSpacing: "0.18em", textTransform: "uppercase", padding: "0.65rem 1.4rem", background: "var(--burnt-orange)", color: "var(--cream)", textDecoration: "none", display: "inline-block" }}>
+            Browse listings
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Derived ───────────────────────────────────────────────────────────────────
+
+  const avgRating = reviews.length > 0
+    ? Math.round((reviews.reduce((s, r) => s + r.rating, 0) / reviews.length) * 10) / 10
+    : null;
+
+  const initials = profile.display_name.trim().split(/\s+/).slice(0, 2).map(w => w[0]).join("").toUpperCase();
+
+  const filteredListings = listings.filter(l => {
     if (activeTab === "sale") return l.type === "sale" || l.type === "both";
     if (activeTab === "rent") return l.type === "rent" || l.type === "both";
     return true;
   });
 
-  const visibleReviews = showAllReviews ? activeReviews : activeReviews.slice(0, 3);
+  const visibleReviews = showAll ? reviews : reviews.slice(0, 3);
 
   const TABS: { id: FilterTab; label: string }[] = [
     { id: "all",  label: "All" },
@@ -201,306 +194,136 @@ export default function SellerProfilePage({
     { id: "rent", label: "For Rent" },
   ];
 
+  // ── Render ────────────────────────────────────────────────────────────────────
+
   return (
     <div style={{ background: "var(--cream)", minHeight: "100vh" }}>
 
-      {/* ── Banner ── */}
-      <div style={{
-        width: "100%", height: "220px",
-        background: SELLER.banner_color,
-        position: "relative",
-      }} />
+      {/* Banner */}
+      <div style={{ width: "100%", height: "200px", background: "#E8DDD3" }} />
 
-      {/* ── Profile header ── */}
       <div className="max-w-5xl mx-auto" style={{ padding: "0 1.5rem" }}>
 
         {/* Avatar row */}
-        <div style={{
-          display: "flex", alignItems: "flex-end",
-          justifyContent: "space-between", flexWrap: "wrap",
-          gap: "1rem", marginTop: "-52px", marginBottom: "1.5rem",
-        }}>
-          {/* Avatar */}
-          <div style={{ position: "relative", flexShrink: 0 }}>
-            <div style={{
-              width: "104px", height: "104px", borderRadius: "50%",
-              background: SELLER.avatar_color,
-              border: "4px solid var(--cream)",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              fontFamily: "var(--font-cormorant)", fontStyle: "italic",
-              fontSize: "2.5rem", color: "var(--muted)",
-            }}>
-              {SELLER.display_name[0]}
-            </div>
-            {SELLER.verified && (
-              <div style={{
-                position: "absolute", bottom: "4px", right: "4px",
-                width: "24px", height: "24px", borderRadius: "50%",
-                background: "var(--burnt-orange)", border: "2px solid var(--cream)",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                fontSize: "0.78rem", color: "var(--cream)",
-              }} title="Verified seller">
-                ✓
-              </div>
+        <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", flexWrap: "wrap", gap: "1rem", marginTop: "-48px", marginBottom: "1.5rem" }}>
+          <div style={{ width: "96px", height: "96px", borderRadius: "50%", background: profile.avatar_url ? "transparent" : "#C4440A", border: "4px solid var(--cream)", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", flexShrink: 0 }}>
+            {profile.avatar_url ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={profile.avatar_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+            ) : (
+              <span style={{ fontFamily: "var(--font-jost)", fontWeight: 700, fontSize: "1.5rem", color: "#fff" }}>{initials}</span>
             )}
           </div>
-
-          {/* Action buttons */}
-          <div style={{ display: "flex", gap: "0.65rem", marginBottom: "0.25rem" }}>
-            <button
-              onClick={handleFollow}
-              style={{
-                fontFamily: "var(--font-jost)", fontWeight: 600,
-                fontSize: "0.78rem", letterSpacing: "0.18em", textTransform: "uppercase",
-                padding: "0.6rem 1.4rem",
-                background: followed ? "var(--burnt-orange)" : "transparent",
-                color: followed ? "var(--cream)" : "var(--muted)",
-                border: `1px solid ${followed ? "var(--burnt-orange)" : "var(--warm-tan)"}`,
-                cursor: "pointer", transition: "all 0.2s",
-              }}
-            >
-              {followed ? "Following" : "Follow"}
-            </button>
-            <button style={{
-              fontFamily: "var(--font-jost)", fontWeight: 600,
-              fontSize: "0.78rem", letterSpacing: "0.18em", textTransform: "uppercase",
-              padding: "0.6rem 1.4rem",
-              background: "transparent", color: "var(--muted)",
-              border: "1px solid var(--warm-tan)", cursor: "pointer",
-              transition: "border-color 0.15s",
-            }}
-              onMouseOver={e => (e.currentTarget.style.borderColor = "var(--muted)")}
-              onMouseOut={e => (e.currentTarget.style.borderColor = "var(--warm-tan)")}
-            >
-              Message
-            </button>
-          </div>
+          <Link
+            href={`/account/messages`}
+            style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.78rem", letterSpacing: "0.18em", textTransform: "uppercase", padding: "0.6rem 1.4rem", background: "transparent", color: "var(--muted)", border: "1px solid var(--warm-tan)", textDecoration: "none", marginBottom: "0.25rem", transition: "border-color 0.15s", display: "inline-block" }}
+          >
+            Message
+          </Link>
         </div>
 
-        {/* Name + handle + verified */}
-        <div style={{ marginBottom: "0.75rem" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "0.65rem", flexWrap: "wrap" }}>
-            <h1 style={{
-              fontFamily: "var(--font-cormorant)", fontStyle: "italic", fontWeight: 400,
-              fontSize: "clamp(1.75rem, 3vw, 2.25rem)", color: "#1A1A18", lineHeight: 1.1,
-            }}>
-              {SELLER.display_name}
-            </h1>
-            {SELLER.verified && (
-              <span style={{
-                fontFamily: "var(--font-jost)", fontWeight: 600,
-                fontSize: "0.75rem", letterSpacing: "0.16em", textTransform: "uppercase",
-                padding: "0.22rem 0.6rem",
-                background: "rgba(201,92,26,0.1)", color: "var(--burnt-orange)",
-                border: "1px solid rgba(201,92,26,0.25)",
-              }}>
-                Verified seller
-              </span>
-            )}
-          </div>
-          <p style={{
-            fontFamily: "var(--font-jost)", fontSize: "0.82rem",
-            color: "var(--muted)", opacity: 0.6, marginTop: "0.2rem",
-            letterSpacing: "0.04em",
-          }}>
-            @{params.username}
-          </p>
-        </div>
-
-        {/* Bio */}
-        <p style={{
-          fontFamily: "var(--font-jost)", fontSize: "0.88rem",
-          color: "var(--muted)", lineHeight: 1.75, maxWidth: "520px",
-          marginBottom: "1rem",
-        }}>
-          {SELLER.bio}
+        {/* Name */}
+        <h1 style={{ fontFamily: "var(--font-cormorant)", fontStyle: "italic", fontWeight: 400, fontSize: "clamp(1.75rem, 3vw, 2.25rem)", color: "#1A1A18", lineHeight: 1.1, marginBottom: "0.2rem" }}>
+          {profile.display_name}
+        </h1>
+        <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.82rem", color: "var(--muted)", opacity: 0.6, marginBottom: "0.75rem", letterSpacing: "0.04em" }}>
+          @{profile.username}
         </p>
 
-        {/* Meta row: location, member since */}
-        <div style={{
-          display: "flex", flexWrap: "wrap", gap: "1.25rem",
-          marginBottom: "1.75rem", alignItems: "center",
-        }}>
-          {SELLER.location && (
-            <span style={{
-              fontFamily: "var(--font-jost)", fontSize: "0.78rem",
-              color: "var(--muted)", opacity: 0.65,
-              display: "flex", alignItems: "center", gap: "0.35rem",
-            }}>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>
-              </svg>
-              {SELLER.location}
+        {/* Bio */}
+        {profile.bio && (
+          <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.88rem", color: "var(--muted)", lineHeight: 1.75, maxWidth: "520px", marginBottom: "0.75rem" }}>
+            {profile.bio}
+          </p>
+        )}
+
+        {/* Meta */}
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem", marginBottom: "1.75rem", alignItems: "center" }}>
+          {profile.location && (
+            <span style={{ fontFamily: "var(--font-jost)", fontSize: "0.78rem", color: "var(--muted)", opacity: 0.65 }}>
+              📍 {profile.location}
             </span>
           )}
-          <span style={{
-            fontFamily: "var(--font-jost)", fontSize: "0.78rem",
-            color: "var(--muted)", opacity: 0.65,
-            display: "flex", alignItems: "center", gap: "0.35rem",
-          }}>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
-            </svg>
-            Member since {SELLER.member_since}
+          <span style={{ fontFamily: "var(--font-jost)", fontSize: "0.78rem", color: "var(--muted)", opacity: 0.65 }}>
+            Member since {memberSince(profile.created_at)}
           </span>
         </div>
 
         {/* Stats row */}
-        <div style={{
-          display: "flex", gap: "0", flexWrap: "wrap",
-          borderTop: "1px solid var(--warm-tan)",
-          borderBottom: "1px solid var(--warm-tan)",
-          marginBottom: "3rem",
-        }}>
+        <div style={{ display: "flex", gap: 0, flexWrap: "wrap", borderTop: "1px solid var(--warm-tan)", borderBottom: "1px solid var(--warm-tan)", marginBottom: "3rem" }}>
           {[
-            { value: SELLER.total_listings, label: "Listings" },
-            { value: SELLER.total_sales, label: "Sales" },
-            { value: followerCount, label: "Followers" },
-            { value: SELLER.following_count, label: "Following" },
-            { value: `${SELLER.avg_rating} ★`, label: `${SELLER.review_count} reviews` },
+            { value: listings.length,   label: "Listings" },
+            { value: salesCount > 0 || rentalsCount > 0
+                ? `${salesCount > 0 ? `${salesCount} sold` : ""}${salesCount > 0 && rentalsCount > 0 ? " · " : ""}${rentalsCount > 0 ? `${rentalsCount} rented` : ""}`
+                : "—",
+              label: "Completed" },
+            { value: avgRating !== null ? `${avgRating} ★` : "—", label: `${reviews.length} review${reviews.length !== 1 ? "s" : ""}` },
           ].map((stat, i, arr) => (
-            <div
-              key={stat.label}
-              style={{
-                flex: "1 1 80px", minWidth: "80px",
-                padding: "1.25rem 1rem", textAlign: "center",
-                borderRight: i < arr.length - 1 ? "1px solid var(--warm-tan)" : "none",
-              }}
-            >
-              <p style={{
-                fontFamily: "var(--font-cormorant)", fontStyle: "italic",
-                fontSize: "1.6rem", fontWeight: 400, color: "#1A1A18", lineHeight: 1,
-              }}>
+            <div key={stat.label} style={{ flex: "1 1 100px", minWidth: "100px", padding: "1.25rem 1rem", textAlign: "center", borderRight: i < arr.length - 1 ? "1px solid var(--warm-tan)" : "none" }}>
+              <p style={{ fontFamily: "var(--font-cormorant)", fontStyle: "italic", fontSize: typeof stat.value === "string" && stat.value.length > 6 ? "1.1rem" : "1.6rem", fontWeight: 400, color: "#1A1A18", lineHeight: 1, wordBreak: "break-word" }}>
                 {stat.value}
               </p>
-              <p style={{
-                fontFamily: "var(--font-jost)", fontSize: "0.75rem", fontWeight: 600,
-                letterSpacing: "0.18em", textTransform: "uppercase",
-                color: "var(--muted)", opacity: 0.55, marginTop: "0.3rem",
-              }}>
+              <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.75rem", fontWeight: 600, letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--muted)", opacity: 0.55, marginTop: "0.3rem" }}>
                 {stat.label}
               </p>
             </div>
           ))}
         </div>
 
-        {/* ── Listings section ── */}
+        {/* ── Listings ── */}
         <section style={{ marginBottom: "4rem" }}>
-          <div style={{
-            display: "flex", alignItems: "center",
-            justifyContent: "space-between", flexWrap: "wrap",
-            gap: "1rem", marginBottom: "1.5rem",
-          }}>
-            <h2 style={{
-              fontFamily: "var(--font-cormorant)", fontStyle: "italic", fontWeight: 400,
-              fontSize: "1.6rem", color: "#1A1A18",
-            }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "1rem", marginBottom: "1.5rem" }}>
+            <h2 style={{ fontFamily: "var(--font-cormorant)", fontStyle: "italic", fontWeight: 400, fontSize: "1.6rem", color: "#1A1A18" }}>
               Listings
             </h2>
-            {/* Filter tabs */}
-            <div style={{ display: "flex", gap: "0.4rem" }}>
-              {TABS.map(tab => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  style={{
-                    fontFamily: "var(--font-jost)", fontWeight: 600,
-                    fontSize: "0.75rem", letterSpacing: "0.16em", textTransform: "uppercase",
-                    padding: "0.4rem 1rem", border: "1px solid",
-                    borderColor: activeTab === tab.id ? "var(--burnt-orange)" : "var(--warm-tan)",
-                    background: activeTab === tab.id ? "var(--burnt-orange)" : "transparent",
-                    color: activeTab === tab.id ? "var(--cream)" : "var(--muted)",
-                    cursor: "pointer", transition: "all 0.15s",
-                  }}
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </div>
+            {listings.length > 0 && (
+              <div style={{ display: "flex", gap: "0.4rem" }}>
+                {TABS.map(tab => (
+                  <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.75rem", letterSpacing: "0.16em", textTransform: "uppercase", padding: "0.4rem 1rem", border: "1px solid", borderColor: activeTab === tab.id ? "var(--burnt-orange)" : "var(--warm-tan)", background: activeTab === tab.id ? "var(--burnt-orange)" : "transparent", color: activeTab === tab.id ? "var(--cream)" : "var(--muted)", cursor: "pointer", transition: "all 0.15s" }}>
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
-          {filteredListings.length === 0 ? (
-            <p style={{
-              fontFamily: "var(--font-jost)", fontSize: "0.85rem",
-              color: "var(--muted)", opacity: 0.5, textAlign: "center",
-              padding: "3rem 0",
-            }}>
-              No listings in this category.
-            </p>
+          {listings.length === 0 ? (
+            <div style={{ padding: "3rem 0", textAlign: "center" }}>
+              <p style={{ fontFamily: "var(--font-cormorant)", fontStyle: "italic", fontSize: "1.25rem", color: "#1A1A18", marginBottom: "0.35rem" }}>No listings yet</p>
+              <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.82rem", color: "var(--muted)", opacity: 0.6 }}>This seller hasn&apos;t posted anything yet.</p>
+            </div>
+          ) : filteredListings.length === 0 ? (
+            <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.85rem", color: "var(--muted)", opacity: 0.5, textAlign: "center", padding: "3rem 0" }}>No listings in this category.</p>
           ) : (
-            <div
-              className="listings-grid"
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(3, 1fr)",
-                gap: "1.25rem",
-              }}
-            >
-              {filteredListings.map(listing => (
-                <Link
-                  key={listing.id}
-                  href={`/listings/${listing.id}`}
-                  style={{ textDecoration: "none" }}
-                >
-                  <div style={{
-                    background: "#fff",
-                    border: "1px solid var(--warm-tan)",
-                    overflow: "hidden",
-                    transition: "box-shadow 0.2s",
-                  }}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "1.25rem" }}>
+              {filteredListings.map(l => (
+                <Link key={l.id} href={`/listings/${l.id}`} style={{ textDecoration: "none" }}>
+                  <div style={{ background: "#fff", border: "1px solid var(--warm-tan)", overflow: "hidden", transition: "box-shadow 0.2s" }}
                     onMouseOver={e => (e.currentTarget.style.boxShadow = "0 4px 20px rgba(0,0,0,0.07)")}
                     onMouseOut={e => (e.currentTarget.style.boxShadow = "none")}
                   >
-                    {/* Photo placeholder */}
-                    <div style={{
-                      aspectRatio: "3/4",
-                      background: listing.bg,
-                    }} />
-
-                    <div style={{ padding: "0.85rem 0.9rem 0.9rem" }}>
-                      {/* Type badge */}
-                      <span style={{
-                        fontFamily: "var(--font-jost)", fontWeight: 600,
-                        fontSize: "0.75rem", letterSpacing: "0.16em", textTransform: "uppercase",
-                        padding: "0.18rem 0.5rem",
-                        background: listing.type === "rent"
-                          ? "#E3F2FD"
-                          : listing.type === "both"
-                            ? "rgba(201,92,26,0.08)"
-                            : "#F5F5F5",
-                        color: listing.type === "rent"
-                          ? "#1D4E89"
-                          : listing.type === "both"
-                            ? "var(--burnt-orange)"
-                            : "#555",
-                        display: "inline-block", marginBottom: "0.5rem",
-                      }}>
-                        {listing.type === "both" ? "Sale + Rent" : listing.type === "rent" ? "Rent only" : "For Sale"}
+                    <div style={{ aspectRatio: "3/4", background: "#EDE6DE", overflow: "hidden", position: "relative" }}>
+                      {l.images?.[0] && (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={l.images[0]} alt={l.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                      )}
+                      <span style={{ position: "absolute", top: "0.5rem", left: "0.5rem", fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.72rem", letterSpacing: "0.12em", textTransform: "uppercase", padding: "0.2rem 0.5rem", background: l.type === "rent" ? "#E3F2FD" : l.type === "both" ? "rgba(201,92,26,0.9)" : "rgba(26,26,24,0.75)", color: l.type === "rent" ? "#1D4E89" : "var(--cream)" }}>
+                        {l.type === "both" ? "Sale + Rent" : l.type === "rent" ? "Rent only" : "For Sale"}
                       </span>
-
-                      <p style={{
-                        fontFamily: "var(--font-jost)", fontWeight: 500,
-                        fontSize: "0.82rem", color: "#1A1A18",
-                        lineHeight: 1.35, marginBottom: "0.5rem",
-                      }}>
-                        {listing.title}
+                    </div>
+                    <div style={{ padding: "0.75rem 0.85rem 0.85rem" }}>
+                      <p style={{ fontFamily: "var(--font-jost)", fontWeight: 500, fontSize: "0.85rem", color: "#1A1A18", lineHeight: 1.35, marginBottom: "0.4rem", overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>
+                        {l.title}
                       </p>
-
-                      <div style={{ display: "flex", alignItems: "baseline", gap: "0.4rem", flexWrap: "wrap" }}>
-                        {(listing.type === "sale" || listing.type === "both") && (
-                          <span style={{
-                            fontFamily: "var(--font-cormorant)", fontStyle: "italic",
-                            fontSize: "1.1rem", color: "#C4440A",
-                          }}>
-                            ${listing.price.toLocaleString()}
+                      <div style={{ display: "flex", alignItems: "baseline", gap: "0.35rem", flexWrap: "wrap" }}>
+                        {(l.type === "sale" || l.type === "both") && (
+                          <span style={{ fontFamily: "var(--font-cormorant)", fontStyle: "italic", fontSize: "1.05rem", color: "#C4440A" }}>
+                            ${l.price.toLocaleString()}
                           </span>
                         )}
-                        {listing.rent_price && (listing.type === "rent" || listing.type === "both") && (
-                          <span style={{
-                            fontFamily: "var(--font-jost)", fontSize: "0.7rem",
-                            color: "var(--muted)", opacity: 0.65,
-                          }}>
-                            {listing.type === "both" ? "· " : ""}${listing.rent_price}/day
+                        {l.rent_price && (l.type === "rent" || l.type === "both") && (
+                          <span style={{ fontFamily: "var(--font-jost)", fontSize: "0.78rem", color: "var(--muted)", opacity: 0.7 }}>
+                            {l.type === "both" ? "· " : ""}${l.rent_price}/day
                           </span>
                         )}
                       </div>
@@ -512,167 +335,81 @@ export default function SellerProfilePage({
           )}
         </section>
 
-        {/* ── Reviews section ── */}
-        <section style={{ marginBottom: "4rem" }}>
-
-          {/* Section header with aggregate rating */}
-          <div style={{
-            display: "flex", alignItems: "center",
-            gap: "1rem", marginBottom: "2rem", flexWrap: "wrap",
-          }}>
-            <h2 style={{
-              fontFamily: "var(--font-cormorant)", fontStyle: "italic", fontWeight: 400,
-              fontSize: "1.6rem", color: "#1A1A18", whiteSpace: "nowrap",
-            }}>
-              Reviews
-            </h2>
-            <div style={{ flex: 1, height: "1px", background: "var(--warm-tan)" }} />
-          </div>
-
-          {/* Aggregate rating card */}
-          <div style={{
-            display: "flex", alignItems: "center", gap: "2.5rem",
-            background: "#fff", border: "1px solid var(--warm-tan)",
-            padding: "1.75rem 2rem", marginBottom: "2rem",
-            flexWrap: "wrap",
-          }}>
-            <div style={{ textAlign: "center", flexShrink: 0 }}>
-              <p style={{
-                fontFamily: "var(--font-cormorant)", fontStyle: "italic",
-                fontSize: "3.5rem", fontWeight: 400, color: "#1A1A18",
-                lineHeight: 1, marginBottom: "0.3rem",
-              }}>
-                {avgRating}
-              </p>
-              <Stars rating={avgRating} size="lg" />
-              <p style={{
-                fontFamily: "var(--font-jost)", fontSize: "0.82rem",
-                color: "var(--muted)", opacity: 0.55, marginTop: "0.3rem",
-                letterSpacing: "0.08em",
-              }}>
-                {activeReviews.length} reviews
-              </p>
+        {/* ── Reviews ── */}
+        {reviews.length > 0 && (
+          <section style={{ marginBottom: "4rem" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "2rem", flexWrap: "wrap" }}>
+              <h2 style={{ fontFamily: "var(--font-cormorant)", fontStyle: "italic", fontWeight: 400, fontSize: "1.6rem", color: "#1A1A18", whiteSpace: "nowrap" }}>Reviews</h2>
+              <div style={{ flex: 1, height: "1px", background: "var(--warm-tan)" }} />
             </div>
 
-            <div style={{ flex: 1, minWidth: "160px" }}>
-              {[5, 4, 3, 2, 1].map(star => {
-                const count = activeReviews.filter(r => Math.round(r.rating) === star).length;
-                const pct = activeReviews.length > 0 ? (count / activeReviews.length) * 100 : 0;
-                return (
-                  <div key={star} style={{ display: "flex", alignItems: "center", gap: "0.6rem", marginBottom: "0.3rem" }}>
-                    <span style={{
-                      fontFamily: "var(--font-jost)", fontSize: "0.7rem",
-                      color: "var(--muted)", opacity: 0.65, minWidth: "10px", textAlign: "right",
-                    }}>
-                      {star}
-                    </span>
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="#C4440A">
-                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-                    </svg>
-                    <div style={{
-                      flex: 1, height: "5px",
-                      background: "var(--warm-tan)", borderRadius: "2px", overflow: "hidden",
-                    }}>
-                      <div style={{
-                        width: `${pct}%`, height: "100%",
-                        background: "var(--burnt-orange)", transition: "width 0.4s ease",
-                      }} />
-                    </div>
-                    <span style={{
-                      fontFamily: "var(--font-jost)", fontSize: "0.82rem",
-                      color: "var(--muted)", opacity: 0.5, minWidth: "12px",
-                    }}>
-                      {count}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Individual reviews */}
-          <div style={{ display: "flex", flexDirection: "column", gap: "0" }}>
-            {visibleReviews.map((review, i) => (
-              <div
-                key={review.id}
-                style={{
-                  padding: "1.5rem 0",
-                  borderBottom: i < visibleReviews.length - 1 ? "1px solid var(--warm-tan)" : "none",
-                }}
-              >
-                <div style={{
-                  display: "flex", justifyContent: "space-between",
-                  alignItems: "flex-start", marginBottom: "0.6rem", flexWrap: "wrap", gap: "0.5rem",
-                }}>
-                  <div>
-                    <p style={{
-                      fontFamily: "var(--font-jost)", fontWeight: 600,
-                      fontSize: "0.82rem", color: "#1A1A18", marginBottom: "0.25rem",
-                    }}>
-                      @{review.reviewer?.username ?? "buyer"}
-                    </p>
-                    <Stars rating={review.rating} />
-                  </div>
-                  <p style={{
-                    fontFamily: "var(--font-jost)", fontSize: "0.7rem",
-                    color: "var(--muted)", opacity: 0.5,
-                  }}>
-                    {new Date(review.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
-                  </p>
-                </div>
-
-                <p style={{
-                  fontFamily: "var(--font-jost)", fontSize: "0.85rem",
-                  color: "var(--muted)", lineHeight: 1.75,
-                  marginBottom: "0.5rem",
-                }}>
-                  {review.comment}
+            {/* Aggregate card */}
+            <div style={{ display: "flex", alignItems: "center", gap: "2.5rem", background: "#fff", border: "1px solid var(--warm-tan)", padding: "1.75rem 2rem", marginBottom: "2rem", flexWrap: "wrap" }}>
+              <div style={{ textAlign: "center", flexShrink: 0 }}>
+                <p style={{ fontFamily: "var(--font-cormorant)", fontStyle: "italic", fontSize: "3.5rem", fontWeight: 400, color: "#1A1A18", lineHeight: 1, marginBottom: "0.3rem" }}>
+                  {avgRating}
                 </p>
-
-                {review.listing?.title && (
-                  <p style={{
-                    fontFamily: "var(--font-jost)", fontSize: "0.7rem",
-                    color: "var(--muted)", opacity: 0.5,
-                    letterSpacing: "0.04em",
-                  }}>
-                    Purchased: {review.listing.title}
-                  </p>
-                )}
+                {avgRating !== null && <Stars rating={avgRating} size="lg" />}
+                <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.82rem", color: "var(--muted)", opacity: 0.55, marginTop: "0.3rem" }}>
+                  {reviews.length} review{reviews.length !== 1 ? "s" : ""}
+                </p>
               </div>
-            ))}
-          </div>
+              <div style={{ flex: 1, minWidth: "160px" }}>
+                {[5, 4, 3, 2, 1].map(star => {
+                  const count = reviews.filter(r => Math.round(r.rating) === star).length;
+                  const pct = (count / reviews.length) * 100;
+                  return (
+                    <div key={star} style={{ display: "flex", alignItems: "center", gap: "0.6rem", marginBottom: "0.3rem" }}>
+                      <span style={{ fontFamily: "var(--font-jost)", fontSize: "0.75rem", color: "var(--muted)", opacity: 0.65, minWidth: "10px", textAlign: "right" }}>{star}</span>
+                      <span style={{ color: "#C4440A", fontSize: "0.7rem" }}>★</span>
+                      <div style={{ flex: 1, height: "5px", background: "var(--warm-tan)", borderRadius: "2px", overflow: "hidden" }}>
+                        <div style={{ width: `${pct}%`, height: "100%", background: "var(--burnt-orange)" }} />
+                      </div>
+                      <span style={{ fontFamily: "var(--font-jost)", fontSize: "0.75rem", color: "var(--muted)", opacity: 0.5, minWidth: "12px" }}>{count}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
 
-          {/* Show more / less */}
-          {activeReviews.length > 3 && (
-            <button
-              onClick={() => setShowAllReviews(v => !v)}
-              style={{
-                marginTop: "1.5rem",
-                fontFamily: "var(--font-jost)", fontWeight: 600,
-                fontSize: "0.78rem", letterSpacing: "0.18em", textTransform: "uppercase",
-                padding: "0.65rem 1.4rem",
-                background: "transparent", color: "var(--muted)",
-                border: "1px solid var(--warm-tan)", cursor: "pointer",
-                transition: "border-color 0.15s",
-              }}
-              onMouseOver={e => (e.currentTarget.style.borderColor = "var(--muted)")}
-              onMouseOut={e => (e.currentTarget.style.borderColor = "var(--warm-tan)")}
-            >
-              {showAllReviews
-                ? `Show less`
-                : `Show all ${activeReviews.length} reviews`}
-            </button>
-          )}
-        </section>
+            {/* Individual reviews */}
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              {visibleReviews.map((r, i) => (
+                <div key={r.id} style={{ padding: "1.5rem 0", borderBottom: i < visibleReviews.length - 1 ? "1px solid var(--warm-tan)" : "none" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "0.5rem", flexWrap: "wrap", gap: "0.5rem" }}>
+                    <div>
+                      <p style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.85rem", color: "#1A1A18", marginBottom: "0.2rem" }}>
+                        @{r.reviewer_username ?? "buyer"}
+                      </p>
+                      <Stars rating={r.rating} />
+                    </div>
+                    <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.75rem", color: "var(--muted)", opacity: 0.5 }}>
+                      {fmtDate(r.created_at)}
+                    </p>
+                  </div>
+                  <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.88rem", color: "var(--muted)", lineHeight: 1.75, marginBottom: "0.4rem" }}>
+                    {r.comment}
+                  </p>
+                  {r.listing_title && (
+                    <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.75rem", color: "var(--muted)", opacity: 0.5 }}>
+                      Purchased: {r.listing_title}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {reviews.length > 3 && (
+              <button onClick={() => setShowAll(v => !v)} style={{ marginTop: "1.5rem", fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.78rem", letterSpacing: "0.18em", textTransform: "uppercase", padding: "0.65rem 1.4rem", background: "transparent", color: "var(--muted)", border: "1px solid var(--warm-tan)", cursor: "pointer" }}
+                onMouseOver={e => (e.currentTarget.style.borderColor = "var(--muted)")}
+                onMouseOut={e => (e.currentTarget.style.borderColor = "var(--warm-tan)")}
+              >
+                {showAll ? "Show less" : `Show all ${reviews.length} reviews`}
+              </button>
+            )}
+          </section>
+        )}
       </div>
-
-      <style>{`
-        @media (max-width: 640px) {
-          .listings-grid {
-            grid-template-columns: repeat(2, 1fr) !important;
-          }
-        }
-      `}</style>
     </div>
   );
 }

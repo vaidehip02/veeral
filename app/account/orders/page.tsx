@@ -176,11 +176,14 @@ export default function BuyerOrdersPage() {
                     </div>
 
                     <div style={{ display: "flex", flexWrap: "wrap", gap: "0.35rem 1.25rem", marginBottom: "0.75rem" }}>
+                      <span style={{ fontFamily: "var(--font-jost)", fontSize: "0.75rem", color: "var(--muted)", opacity: 0.7 }}>
+                        <span style={{ fontWeight: 600, opacity: 0.55, textTransform: "uppercase", letterSpacing: "0.1em", fontSize: "0.75rem" }}>Seller </span>
+                        <Link href={`/sellers/${order.seller_username}`} style={{ color: "var(--burnt-orange)", textDecoration: "none" }}>@{order.seller_username}</Link>
+                      </span>
                       {[
-                        { k: "Seller", v: `@${order.seller_username}` },
-                        { k: "Size",   v: order.size ?? "—" },
-                        { k: "Date",   v: fmtDate(order.created_at) },
-                        { k: "Total",  v: `$${total.toLocaleString("en-US", { minimumFractionDigits: 2 })}` },
+                        { k: "Size",  v: order.size ?? "—" },
+                        { k: "Date",  v: fmtDate(order.created_at) },
+                        { k: "Total", v: `$${total.toLocaleString("en-US", { minimumFractionDigits: 2 })}` },
                       ].map(({ k, v }) => (
                         <span key={k} style={{ fontFamily: "var(--font-jost)", fontSize: "0.75rem", color: "var(--muted)", opacity: 0.7 }}>
                           <span style={{ fontWeight: 600, opacity: 0.55, textTransform: "uppercase", letterSpacing: "0.1em", fontSize: "0.75rem" }}>{k} </span>

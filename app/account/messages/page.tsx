@@ -293,9 +293,12 @@ function MessagesInner() {
               <p style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.9rem", color: A.dark, margin: 0 }}>
                 {activeConv.counterparty?.display_name ?? "Unknown"}
                 {activeConv.counterparty?.username && (
-                  <span style={{ fontWeight: 400, color: A.muted, fontSize: "0.78rem", marginLeft: "0.5rem" }}>
+                  <Link href={`/sellers/${activeConv.counterparty.username}`} style={{ fontWeight: 400, color: A.muted, fontSize: "0.78rem", marginLeft: "0.5rem", textDecoration: "none" }}
+                    onMouseOver={e => (e.currentTarget.style.color = A.accent)}
+                    onMouseOut={e => (e.currentTarget.style.color = A.muted)}
+                  >
                     @{activeConv.counterparty.username}
-                  </span>
+                  </Link>
                 )}
               </p>
               {activeConv.listing && (

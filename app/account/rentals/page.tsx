@@ -346,7 +346,7 @@ export default function BuyerRentalsPage() {
                             </span>
                           </div>
                           <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.72rem", color: "var(--muted)", opacity: 0.6, marginBottom: "0.4rem" }}>
-                            @{rental.seller_username}
+                            <Link href={`/sellers/${rental.seller_username}`} style={{ color: "var(--burnt-orange)", textDecoration: "none" }}>@{rental.seller_username}</Link>
                             {rental.rental_start && rental.rental_end && ` · ${fmtDate(rental.rental_start)} – ${fmtDate(rental.rental_end)}`}
                           </p>
                           {rental.deposit_release_amount != null && (
