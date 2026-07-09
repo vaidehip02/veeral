@@ -221,13 +221,13 @@ export default function HelpCenterPage() {
 
             <H3>Creating a Listing</H3>
             <P>Clear, detailed listings help buyers feel confident — and help your item sell faster.</P>
-            <P><strong>Title</strong> — include the garment type and occasion when relevant. Example: <em>"Silk Lehenga Set – Wedding Wear"</em></P>
+            <P><strong>Title</strong> — include the garment type and occasion when relevant. Example: <em>&ldquo;Silk Lehenga Set &ndash; Wedding Wear&rdquo;</em></P>
             <P><strong>Condition</strong> — note any wear, fading, or discoloration; repairs or tailoring; missing pieces (e.g., dupatta or blouse not included).</P>
             <P><strong>Fabric & Details</strong> — include fabric type and embellishments such as silk, chiffon, georgette, zari work, mirror work, or beadwork.</P>
             <P><strong>Photos</strong> — upload clear photos showing the front and back of the garment, close-ups of fabric and embroidery, and any flaws or wear. Transparency protects both buyers and sellers.</P>
 
             <H3>Saving Drafts</H3>
-            <P>You can save a listing as a draft at any time and return to it later. Drafts are accessible across devices as long as you're logged in to your Veeral account.</P>
+            <P>You can save a listing as a draft at any time and return to it later. Drafts are accessible across devices as long as you&apos;re logged in to your Veeral account.</P>
 
             <H3>Seller Ratings & Reviews</H3>
             <P>After a transaction is completed and delivery is confirmed, both buyers and sellers are invited to leave a review.</P>
@@ -298,7 +298,7 @@ export default function HelpCenterPage() {
             ]} />
             <P>Once your order is confirmed, the seller will be notified and has 7 days to ship.</P>
 
-            <H3>Buyer Protection — What's Covered</H3>
+            <H3>Buyer Protection &mdash; What&apos;s Covered</H3>
             <P>You may be eligible for a return if:</P>
             <Ul items={[
               "You received the wrong item",
@@ -308,7 +308,7 @@ export default function HelpCenterPage() {
               "The item was lost or damaged in transit",
             ]} />
 
-            <H3>Buyer Protection — What's Not Covered</H3>
+            <H3>Buyer Protection &mdash; What&apos;s Not Covered</H3>
             <Ul items={[
               "Minor wear consistent with pre-owned or vintage items",
               "Fabric appearance differences due to lighting or photography",
@@ -345,7 +345,7 @@ export default function HelpCenterPage() {
               "Both parties may be asked to provide additional information",
               "Veeral issues a resolution within 7 business days of the dispute being opened",
             ]} />
-            <P>During an open dispute, the seller's payout for the affected transaction will be placed on hold until the matter is resolved.</P>
+            <P>During an open dispute, the seller&apos;s payout for the affected transaction will be placed on hold until the matter is resolved.</P>
 
             <H3>Possible Outcomes</H3>
             <Ul items={[
@@ -353,7 +353,7 @@ export default function HelpCenterPage() {
               "Partial refund issued to buyer",
               "Dispute dismissed and payout released to seller",
             ]} />
-            <P>Veeral's decision is final for transactions conducted through the platform.</P>
+            <P>Veeral&apos;s decision is final for transactions conducted through the platform.</P>
           </Section>
 
           <Divider />
@@ -389,9 +389,9 @@ export default function HelpCenterPage() {
             <H2>Payments & Payouts</H2>
 
             <H3>What Is a Payout?</H3>
-            <P>A payout is the money you receive from a completed sale. Funds are sent to your linked bank account after delivery is confirmed. Veeral's commission is automatically deducted before the payout is issued.</P>
+            <P>A payout is the money you receive from a completed sale. Funds are sent to your linked bank account after delivery is confirmed. Veeral&apos;s commission is automatically deducted before the payout is issued.</P>
 
-            <H3>When You'll Receive Your Payout</H3>
+            <H3>When You&apos;ll Receive Your Payout</H3>
             <Ul items={[
               "If tracking is provided, payouts are initiated 2 business days after delivery is confirmed",
               "If tracking is not provided, payouts may be delayed",
@@ -441,7 +441,7 @@ export default function HelpCenterPage() {
             <H2>Your Account</H2>
 
             <H3>Logging In</H3>
-            <P>Access your Veeral account via the website using your registered email and password. If you've forgotten your password, use the "Forgot Password" link on the login page.</P>
+            <P>Access your Veeral account via the website using your registered email and password. If you&apos;ve forgotten your password, use the &ldquo;Forgot Password&rdquo; link on the login page.</P>
 
             <H3>Managing Your Account</H3>
             <P>From your account settings you can update your profile information, linked bank account for payouts, notification preferences, and saved addresses.</P>
