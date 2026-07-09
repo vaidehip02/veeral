@@ -14,10 +14,10 @@ const NAV_LINKS = [
 const DROPDOWN_ITEMS = [
   { label: "My Profile",   href: "/profile",           sellerOnly: false },
   { label: "Dashboard",    href: "/dashboard",         sellerOnly: true  },
-  { label: "My Orders",    href: "/orders",            sellerOnly: false },
-  { label: "My Rentals",   href: "/rentals",           sellerOnly: false },
-  { label: "Saved Items",  href: "/saved",             sellerOnly: false },
-  { label: "Settings",     href: "/settings",          sellerOnly: false },
+  { label: "My Orders",    href: "/account/orders",    sellerOnly: false },
+  { label: "My Rentals",   href: "/account/rentals",   sellerOnly: false },
+  { label: "Saved Items",  href: "/account/saved",     sellerOnly: false },
+  { label: "Settings",     href: "/account/settings",  sellerOnly: false },
 ];
 
 function getInitials(user: User): string {

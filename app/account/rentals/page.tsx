@@ -106,7 +106,7 @@ export default function BuyerRentalsPage() {
           "status, rental_start, rental_end, return_tracking_number, return_noted_at, created_at"
         )
         .eq("buyer_id", user.id)
-        .eq("type", "rent")
+        .not("rental_start", "is", null)
         .order("created_at", { ascending: false });
 
       if (!rawOrders?.length) { setLoading(false); return; }
