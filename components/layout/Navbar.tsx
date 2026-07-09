@@ -12,7 +12,7 @@ const NAV_LINKS = [
 ];
 
 const DROPDOWN_ITEMS = [
-  { label: "My Profile",   href: "/profile",           sellerOnly: false },
+  { label: "My Profile",   href: "/account/profile",   sellerOnly: false },
   { label: "Dashboard",    href: "/dashboard",         sellerOnly: true  },
   { label: "My Orders",    href: "/account/orders",    sellerOnly: false },
   { label: "My Rentals",   href: "/account/rentals",   sellerOnly: false },
@@ -184,27 +184,29 @@ export default function Navbar() {
                   }}
                   aria-label="Account menu"
                 >
-                  {/* Avatar */}
-                  {avatar ? (
-                    <img
-                      src={avatar}
-                      alt={displayName}
-                      style={{
+                  {/* Avatar — links to profile page */}
+                  <Link href="/account/profile" onClick={e => e.stopPropagation()} style={{ flexShrink: 0, display: "block" }}>
+                    {avatar ? (
+                      <img
+                        src={avatar}
+                        alt={displayName}
+                        style={{
+                          width: "32px", height: "32px", borderRadius: "50%",
+                          objectFit: "cover", border: "1.5px solid var(--warm-tan)"
+                        }}
+                      />
+                    ) : (
+                      <div style={{
                         width: "32px", height: "32px", borderRadius: "50%",
-                        objectFit: "cover", border: "1.5px solid var(--warm-tan)"
-                      }}
-                    />
-                  ) : (
-                    <div style={{
-                      width: "32px", height: "32px", borderRadius: "50%",
-                      background: "var(--burnt-orange)", color: "var(--cream)",
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      fontFamily: "var(--font-jost)", fontWeight: 700, fontSize: "0.7rem",
-                      letterSpacing: "0.05em", flexShrink: 0,
-                    }}>
-                      {initials}
-                    </div>
-                  )}
+                        background: "var(--burnt-orange)", color: "var(--cream)",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        fontFamily: "var(--font-jost)", fontWeight: 700, fontSize: "0.7rem",
+                        letterSpacing: "0.05em",
+                      }}>
+                        {initials}
+                      </div>
+                    )}
+                  </Link>
                   {/* Display name */}
                   <span style={{
                     fontFamily: "var(--font-jost)", fontWeight: 500,
