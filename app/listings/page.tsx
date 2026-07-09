@@ -586,7 +586,7 @@ function ListingsInner({ typeParam }: { typeParam: string | null }) {
     });
 
     return list;
-  }, [query, filters, sort]);
+  }, [query, filters, sort, allListings]);
 
   const _totalPages = Math.ceil(results.length / PAGE_SIZE); void _totalPages;
   const paged = results.slice(0, page * PAGE_SIZE);
