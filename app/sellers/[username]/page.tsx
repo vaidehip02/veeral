@@ -114,8 +114,8 @@ export default function SellerProfilePage({ params }: { params: { username: stri
         .order("created_at", { ascending: false });
 
       if (reviewRows?.length) {
-        const reviewerIds = [...new Set(reviewRows.map(r => r.reviewer_id).filter(Boolean))];
-        const listingIds  = [...new Set(reviewRows.map(r => r.listing_id).filter(Boolean))];
+        const reviewerIds = Array.from(new Set(reviewRows.map(r => r.reviewer_id).filter(Boolean)));
+        const listingIds  = Array.from(new Set(reviewRows.map(r => r.listing_id).filter(Boolean)));
 
         const [{ data: reviewerProfiles }, { data: reviewListings }] = await Promise.all([
           supabase.from("seller_profiles").select("id, username").in("id", reviewerIds),
