@@ -16,6 +16,7 @@ const DROPDOWN_ITEMS = [
   { label: "Dashboard",    href: "/dashboard",         sellerOnly: true  },
   { label: "My Orders",    href: "/account/orders",    sellerOnly: false },
   { label: "My Rentals",   href: "/account/rentals",   sellerOnly: false },
+  { label: "Messages",     href: "/account/messages",  sellerOnly: false },
   { label: "Saved Items",  href: "/account/saved",     sellerOnly: false },
   { label: "Settings",     href: "/account/settings",  sellerOnly: false },
 ];
