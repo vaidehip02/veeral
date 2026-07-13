@@ -189,8 +189,8 @@ export default function BuyerReceipt({
 
           <Text style={{ color: C.label, fontSize: "12px", lineHeight: "1.6", textAlign: "center", margin: 0 }}>
             Questions about your order? Reply to this email or contact us at{" "}
-            <a href="mailto:hello@veeral.com" style={{ color: C.accent, textDecoration: "none" }}>
-              hello@veeral.com
+            <a href="mailto:help@shopveeral.com" style={{ color: C.accent, textDecoration: "none" }}>
+              help@shopveeral.com
             </a>
           </Text>
 

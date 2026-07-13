@@ -217,8 +217,8 @@ export default function SellerSaleAlert({
 
           <Text style={{ color: C.label, fontSize: "12px", lineHeight: "1.6", textAlign: "center", margin: 0 }}>
             Questions or issues with this order? Contact us at{" "}
-            <a href="mailto:hello@veeral.com" style={{ color: C.accent, textDecoration: "none" }}>
-              hello@veeral.com
+            <a href="mailto:help@shopveeral.com" style={{ color: C.accent, textDecoration: "none" }}>
+              help@shopveeral.com
             </a>
           </Text>
           <Text style={{ color: C.label, fontSize: "11px", textAlign: "center", marginTop: "12px" }}>

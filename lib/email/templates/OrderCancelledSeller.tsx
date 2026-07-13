@@ -41,7 +41,7 @@ export default function OrderCancelledSeller({ sellerName, itemTitle, orderId, i
             <Section style={{ backgroundColor: C.warnBg, border: `1px solid ${C.warnBorder}`, padding: "16px 24px", marginBottom: "24px" }}>
               <Text style={{ color: C.warn, fontSize: "13px", lineHeight: "1.6", margin: 0 }}>
                 <strong>Please note:</strong> This is not your first unshipped cancellation. Repeated failures to ship may affect your ability to sell on Veeral. If you&apos;re having trouble fulfilling orders, contact us at{" "}
-                <a href="mailto:hello@veeral.com" style={{ color: C.accent }}>hello@veeral.com</a> before the deadline.
+                <a href="mailto:help@shopveeral.com" style={{ color: C.accent }}>help@shopveeral.com</a> before the deadline.
               </Text>
             </Section>
           )}

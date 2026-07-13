@@ -46,7 +46,7 @@ export default function OrderCancelledBuyer({ buyerName, itemTitle, orderId, ref
           <Hr style={{ borderColor: C.border, margin: "0 0 24px" }} />
           <Text style={{ color: C.label, fontSize: "12px", lineHeight: "1.6", textAlign: "center", margin: 0 }}>
             Questions? Contact us at{" "}
-            <a href="mailto:hello@veeral.com" style={{ color: C.accent, textDecoration: "none" }}>hello@veeral.com</a>
+            <a href="mailto:help@shopveeral.com" style={{ color: C.accent, textDecoration: "none" }}>help@shopveeral.com</a>
           </Text>
           <Text style={{ color: C.label, fontSize: "11px", textAlign: "center", marginTop: "12px" }}>Veeral — South Asian fashion, reimagined.</Text>
         </Container>
