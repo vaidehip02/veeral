@@ -84,9 +84,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               display: "inline-flex", alignItems: "center", gap: "0.4rem",
               fontFamily: "var(--font-jost)", fontWeight: 800, fontSize: "0.6rem",
               letterSpacing: "0.18em", textTransform: "uppercase",
-              color: "var(--burnt-orange)", background: "rgba(196,68,10,0.1)",
+              color: "var(--cream)", background: "var(--burnt-orange)",
               padding: "0.35rem 0.8rem", textDecoration: "none",
-              border: "1px solid rgba(196,68,10,0.25)",
+              border: "none",
               transition: "background 0.15s",
             }}
               onMouseOver={e => (e.currentTarget.style.background = "rgba(196,68,10,0.18)")}
