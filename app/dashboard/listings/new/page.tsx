@@ -793,6 +793,11 @@ function NewListingForm() {
               })}
             </div>
 
+            {/* Edge-case escape hatch */}
+            <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.72rem", color: "#9A8A7E", margin: "0 0 0.75rem", lineHeight: 1.5 }}>
+              Unusually light or very heavy? Use <button type="button" onClick={() => setShippingTier("custom")} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, fontFamily: "inherit", fontSize: "inherit", color: "#C4440A", fontWeight: 600, textDecoration: "underline", textUnderlineOffset: "2px" }}>Custom</button> to enter your exact amount.
+            </p>
+
             {/* Large tier nudge */}
             {shippingTier === "large" && (
               <div style={{ background: "rgba(196,68,10,0.05)", border: "1px solid rgba(196,68,10,0.2)", padding: "0.75rem 1rem", marginBottom: "0.75rem" }}>

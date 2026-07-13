@@ -3,6 +3,10 @@
     {
       "path": "/api/rentals/process-auto-release",
       "schedule": "0 9 * * *"
+    },
+    {
+      "path": "/api/orders/process-ship-deadline",
+      "schedule": "0 9 * * *"
     }
   ]
 }
