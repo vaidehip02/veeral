@@ -120,36 +120,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </main>
       </div>
 
-      {/* ── Mobile bottom tab bar ────────────────────────────── */}
-      <nav
-        className="md:hidden fixed bottom-0 left-0 right-0"
-        style={{
-          background: "var(--cream)", borderTop: "1px solid var(--warm-tan)",
-          display: "flex", zIndex: 40,
-        }}
-      >
-        {TABS.map((tab) => {
-          const active = isActive(tab.href);
-          return (
-            <Link
-              key={tab.href}
-              href={tab.href}
-              style={{
-                flex: 1, display: "flex", flexDirection: "column",
-                alignItems: "center", justifyContent: "center",
-                gap: "0.25rem", padding: "0.6rem 0",
-                color: active ? "var(--burnt-orange)" : "var(--muted)",
-                textDecoration: "none", fontSize: "0.6rem",
-                fontFamily: "var(--font-jost)", fontWeight: active ? 600 : 400,
-                letterSpacing: "0.08em", textTransform: "uppercase",
-              }}
-            >
-              <span style={{ opacity: active ? 1 : 0.55 }}>{tab.icon}</span>
-              {tab.label}
-            </Link>
-          );
-        })}
-      </nav>
     </div>
   );
 }
