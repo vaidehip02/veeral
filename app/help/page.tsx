@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 
 // ── Shared components (must be defined before data that uses them) ─────────────
 
