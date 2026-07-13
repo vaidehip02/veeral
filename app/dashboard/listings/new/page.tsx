@@ -381,12 +381,15 @@ function NewListingForm() {
 
     // Validate all required fields
     const errs: Record<string, string> = {};
-    if (!form.title.trim())   errs.title       = "Please complete this field before publishing";
-    if (!form.garmentType)    errs.garmentType  = "Please complete this field before publishing";
-    if (!form.condition)      errs.condition    = "Please complete this field before publishing";
-    if (!form.price)          errs.price        = "Please complete this field before publishing";
-    if (!form.us_size)        errs.us_size      = "Please complete this field before publishing";
-    if (totalPhotos === 0)    errs.photos       = "Add at least one photo before publishing";
+    if (!form.title.trim())                          errs.title       = "Please complete this field before publishing";
+    if (!form.garmentType)                           errs.garmentType = "Please complete this field before publishing";
+    if (!form.condition)                             errs.condition   = "Please complete this field before publishing";
+    if (!form.description.trim())                    errs.description = "Please add a description before publishing";
+    if (!form.price || parseFloat(form.price) <= 0) errs.price       = "Please enter a price greater than $0 before publishing";
+    if (form.isRental && (!form.rentPrice || parseFloat(form.rentPrice) <= 0))
+                                                     errs.rentPrice   = "Please enter a rental price greater than $0";
+    if (!form.us_size)                               errs.us_size     = "Please complete this field before publishing";
+    if (totalPhotos === 0)                           errs.photos      = "Add at least one photo before publishing";
 
     if (Object.keys(errs).length > 0) {
       setFieldErrors(errs);
@@ -613,10 +616,13 @@ function NewListingForm() {
                 </div>
               </div>
 
-              <div>
+              <div id="field-description">
                 <label style={label}>Description</label>
-                <textarea value={form.description} onChange={setF("description")} rows={5} maxLength={1000} placeholder="Describe the item — include fabric details, embellishments, condition notes, any flaws or repairs, and note if any pieces are missing from the set" style={{ ...inp, border: "1px solid var(--warm-tan)", borderBottom: undefined, padding: "0.75rem", resize: "none" }} />
-                <p style={hint}>{1000 - form.description.length} characters remaining</p>
+                <textarea value={form.description} onChange={setF("description")} rows={5} maxLength={1000} placeholder="Describe the item — include fabric details, embellishments, condition notes, any flaws or repairs, and note if any pieces are missing from the set" style={{ ...inp, border: `1px solid ${fieldErrors.description ? "#C4440A" : "var(--warm-tan)"}`, borderBottom: undefined, padding: "0.75rem", resize: "none" }} />
+                {fieldErrors.description
+                  ? <p style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.75rem", color: "#C4440A", marginTop: "0.3rem" }}>{fieldErrors.description}</p>
+                  : <p style={hint}>{1000 - form.description.length} characters remaining</p>
+                }
               </div>
 
               <div>
@@ -665,9 +671,10 @@ function NewListingForm() {
                 {form.isRental && (
                   <div style={{ border: "1px solid var(--warm-tan)", padding: "1.2rem", display: "flex", flexDirection: "column", gap: "1.2rem" }}>
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.2rem" }}>
-                      <div>
+                      <div id="field-rentPrice">
                         <label style={label}>Rental price per day ($)</label>
                         <input type="number" min="1" step="0.01" style={inp} value={form.rentPrice} onChange={setF("rentPrice")} placeholder="120" />
+                        {fieldErrors.rentPrice && <p style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.75rem", color: "#C4440A", marginTop: "0.3rem" }}>{fieldErrors.rentPrice}</p>}
                       </div>
                       <div>
                         <label style={label}>Max rental duration (days)</label>
