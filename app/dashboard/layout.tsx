@@ -79,20 +79,25 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             minHeight: "100vh",
           }}
         >
-          <Link href="/" style={{
-            display: "inline-flex", alignItems: "center", gap: "0.35rem",
-            margin: "0 1.75rem 1.25rem",
-            fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.62rem",
-            letterSpacing: "0.18em", textTransform: "uppercase",
-            color: "var(--cream)", background: "var(--burnt-orange)",
-            padding: "0.3rem 0.65rem", textDecoration: "none",
-            transition: "opacity 0.15s",
-          }}
-            onMouseOver={e => (e.currentTarget.style.opacity = "0.8")}
-            onMouseOut={e => (e.currentTarget.style.opacity = "1")}
-          >
-            ← Home
-          </Link>
+          <div style={{ display: "flex", justifyContent: "center", marginBottom: "1.25rem" }}>
+            <Link href="/" style={{
+              display: "inline-flex", alignItems: "center", gap: "0.4rem",
+              fontFamily: "var(--font-jost)", fontWeight: 800, fontSize: "0.6rem",
+              letterSpacing: "0.18em", textTransform: "uppercase",
+              color: "var(--burnt-orange)", background: "rgba(196,68,10,0.1)",
+              padding: "0.35rem 0.8rem", textDecoration: "none",
+              border: "1px solid rgba(196,68,10,0.25)",
+              transition: "background 0.15s",
+            }}
+              onMouseOver={e => (e.currentTarget.style.background = "rgba(196,68,10,0.18)")}
+              onMouseOut={e => (e.currentTarget.style.background = "rgba(196,68,10,0.1)")}
+            >
+              <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M10 6H2M2 6L6 2M2 6L6 10"/>
+              </svg>
+              Home
+            </Link>
+          </div>
           <p style={{
             fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.62rem",
             letterSpacing: "0.25em", textTransform: "uppercase",
