@@ -10,6 +10,7 @@ interface OrderRow {
   amount: number;
   platform_fee: number;
   seller_payout: number;
+  shipping_cents: number | null;
   deposit_amount: number | null;
   deposit_held: boolean;
   deposit_release_amount: number | null;
@@ -52,7 +53,7 @@ export default async function OrderDetailPage({ params }: { params: { id: string
   const { data: order, error: _orderError } = await db
     .from("orders")
     .select(
-      "id, type, status, amount, platform_fee, seller_payout, deposit_amount, " +
+      "id, type, status, amount, platform_fee, seller_payout, shipping_cents, deposit_amount, " +
       "deposit_held, deposit_release_amount, deposit_release_reason, deposit_released_at, " +
       "rental_start, rental_end, return_tracking_number, return_noted_at, " +
       "paid_at, created_at, listing_id, seller_id, buyer_id"

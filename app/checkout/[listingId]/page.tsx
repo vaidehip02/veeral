@@ -10,6 +10,7 @@ import {
   useElements,
 } from "@stripe/react-stripe-js";
 import { createClient } from "@/lib/supabase/client";
+import { resolveTierCents, type ShippingTier, type ShippingSettings } from "@/lib/shipping";
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
@@ -24,6 +25,8 @@ interface ListingData {
   images: string[];
   seller_username: string;
   deposit_pct: number;
+  shipping_tier: string | null;
+  shipping_cents: number | null;
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -149,7 +152,7 @@ export default function CheckoutPage({ params: _params }: { params: { listingId:
     const supabase = createClient();
     supabase
       .from("listings")
-      .select("id, title, price, rent_price, size, category, images, deposit_pct, seller_id")
+      .select("id, title, price, rent_price, size, category, images, deposit_pct, seller_id, shipping_tier, shipping_cents")
       .eq("id", _params.listingId)
       .single()
       .then(async ({ data, error }) => {
@@ -178,6 +181,8 @@ export default function CheckoutPage({ params: _params }: { params: { listingId:
           images: data.images ?? [],
           seller_username: sellerUsername,
           deposit_pct: data.deposit_pct ?? 40,
+          shipping_tier: data.shipping_tier ?? null,
+          shipping_cents: data.shipping_cents ?? null,
         });
         setListingLoading(false);
       });
@@ -185,10 +190,12 @@ export default function CheckoutPage({ params: _params }: { params: { listingId:
 
   const l = listing;
 
-  // ── Fee rates from platform_settings (server is the source of truth) ─────
-  // null while loading — the summary hides the fee line until resolved.
-  const [saleFee,   setSaleFee]   = useState<number | null>(null);
-  const [rentalFee, setRentalFee] = useState<number | null>(null);
+  // ── Fee rates + shipping settings from platform_settings ─────────────────
+  const [saleFee,        setSaleFee]        = useState<number | null>(null);
+  const [rentalFee,      setRentalFee]      = useState<number | null>(null);
+  const [shippingConfig, setShippingConfig] = useState<ShippingSettings>({
+    smallCents: 800, mediumCents: 1400, largeCents: 2400, minCents: 500, maxCents: 4500,
+  });
 
   useEffect(() => {
     fetch("/api/platform/fee-settings")
@@ -197,22 +204,29 @@ export default function CheckoutPage({ params: _params }: { params: { listingId:
         setSaleFee(d.saleFee);
         setRentalFee(d.rentalFee);
       })
-      .catch(() => { setSaleFee(10); setRentalFee(10); }); // safe fallback
+      .catch(() => { setSaleFee(10); setRentalFee(10); });
+    fetch("/api/platform/shipping-settings")
+      .then(r => r.json())
+      .then((d: ShippingSettings) => setShippingConfig(d))
+      .catch(() => {});
   }, []);
 
   // Display amounts (dollars, for the summary — actual cents used for Stripe)
   const rentPricePerDay   = l?.rent_price ?? 0;
   const rentalCostDollars = rentPricePerDay * days;
   const depositDollars    = l ? Math.round(l.price * depositPct / 100) : 0;
-  const shipping          = 18;
+  // Resolve shipping: listing tier takes precedence; falls back to medium ($14)
+  const shippingCents     = l
+    ? resolveTierCents(l.shipping_tier as ShippingTier | null, l.shipping_cents, shippingConfig)
+    : shippingConfig.mediumCents;
+  const shipping          = shippingCents / 100; // dollars for display
   const subtotalDollars   = isRental ? rentalCostDollars : (l?.price ?? 0);
   const feePercent: number | null = isRental ? rentalFee : saleFee;
 
   // Cents (what Stripe actually charges)
-  const rentalCents   = rentalCostDollars * 100;
-  const depositCents  = depositDollars * 100;
-  const shippingCents = shipping * 100;
-  const saleCents     = (l?.price ?? 0) * 100;
+  const rentalCents  = rentalCostDollars * 100;
+  const depositCents = depositDollars * 100;
+  const saleCents    = (l?.price ?? 0) * 100;
 
   // Checkout state machine
   // sale:   "address" → "paying" → "done"
@@ -476,7 +490,9 @@ export default function CheckoutPage({ params: _params }: { params: { listingId:
                 {/* Shipping */}
                 <div style={rowBetween}>
                   <span style={{ fontFamily: "var(--font-jost)", fontWeight: 500, fontSize: "0.85rem", color: "#2A2118" }}>Shipping</span>
-                  <span style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.85rem", color: "#1A1A18" }}>${shipping}</span>
+                  <span style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.85rem", color: shippingCents === 0 ? "#2D6A4F" : "#1A1A18" }}>
+                    {shippingCents === 0 ? "Free" : `$${shipping}`}
+                  </span>
                 </div>
 
                 {/* Veeral fee — hidden while fee rate is loading */}

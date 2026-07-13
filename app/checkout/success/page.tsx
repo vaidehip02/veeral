@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
-const SHIPPING_CENTS = 1800;
+const FALLBACK_SHIPPING_CENTS = 1400; // medium tier — used only for orders before tiered shipping
 
 function fmt(cents: number) {
   return `$${(cents / 100).toLocaleString("en-US", { minimumFractionDigits: 2 })}`;
@@ -24,6 +24,7 @@ interface OrderData {
   type: "sale" | "rent";
   amount: number;
   platform_fee: number;
+  shipping_cents: number | null;
   deposit_amount: number | null;
   rental_start: string | null;
   rental_end: string | null;
@@ -49,10 +50,10 @@ function SuccessContent() {
     const db = supabase as any;
     db
       .from("orders")
-      .select("id, type, amount, platform_fee, deposit_amount, rental_start, rental_end, listing_id, seller_id")
+      .select("id, type, amount, platform_fee, shipping_cents, deposit_amount, rental_start, rental_end, listing_id, seller_id")
       .eq("id", orderId)
       .single()
-      .then(async ({ data: o }: { data: { id: string; type: string; amount: number; platform_fee: number; deposit_amount: number | null; rental_start: string | null; rental_end: string | null; listing_id: string; seller_id: string } | null }) => {
+      .then(async ({ data: o }: { data: { id: string; type: string; amount: number; platform_fee: number; shipping_cents: number | null; deposit_amount: number | null; rental_start: string | null; rental_end: string | null; listing_id: string; seller_id: string } | null }) => {
         if (!o) { setLoading(false); return; }
         const [{ data: listing }, { data: seller }] = await Promise.all([
           db.from("listings").select("title, images, size, category").eq("id", o.listing_id).single(),
@@ -63,6 +64,7 @@ function SuccessContent() {
           type:             o.type as "sale" | "rent",
           amount:           o.amount,
           platform_fee:     o.platform_fee,
+          shipping_cents:   o.shipping_cents,
           deposit_amount:   o.deposit_amount,
           rental_start:     o.rental_start,
           rental_end:       o.rental_end,
@@ -84,9 +86,10 @@ function SuccessContent() {
     );
   }
 
-  const isRental     = order?.type === "rent";
-  const depositCents = order?.deposit_amount ?? 0;
-  const totalCents   = (order?.amount ?? 0) + (order?.platform_fee ?? 0) + SHIPPING_CENTS + (isRental ? depositCents : 0);
+  const isRental         = order?.type === "rent";
+  const depositCents     = order?.deposit_amount ?? 0;
+  const orderShipping    = order?.shipping_cents ?? FALLBACK_SHIPPING_CENTS;
+  const totalCents       = (order?.amount ?? 0) + (order?.platform_fee ?? 0) + orderShipping + (isRental ? depositCents : 0);
   const returnDate   = order?.rental_end ?? "";
   const shortId      = order ? `VR-${order.id.slice(0, 6).toUpperCase()}` : "VR-??????";
 
@@ -157,7 +160,7 @@ function SuccessContent() {
             {[
               { label: isRental ? "Rental fee" : "Item price", cents: order.amount },
               { label: "Veeral fee",                           cents: order.platform_fee },
-              { label: "Shipping",                             cents: SHIPPING_CENTS },
+              { label: "Shipping",                             cents: orderShipping },
               ...(isRental && depositCents > 0
                 ? [{ label: "Security deposit (refundable)", cents: depositCents }]
                 : []),

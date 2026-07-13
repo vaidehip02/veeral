@@ -16,6 +16,7 @@ export async function POST(req: NextRequest) {
     title, description, category, condition,
     price, rent_price, rent_duration_days, type,
     size, color, brand, images,
+    shipping_tier, shipping_cents,
     draft_data,
   } = body as {
     id?:                 string;
@@ -31,6 +32,8 @@ export async function POST(req: NextRequest) {
     color?:              string;
     brand?:              string | null;
     images?:             string[];
+    shipping_tier?:      string | null;
+    shipping_cents?:     number | null;
     draft_data?:         Record<string, unknown>;
   };
 
@@ -47,6 +50,8 @@ export async function POST(req: NextRequest) {
     color:             color              ?? null,
     brand:             brand              ?? null,
     images:            images             ?? [],
+    shipping_tier:     shipping_tier      ?? null,
+    shipping_cents:    shipping_cents     ?? null,
     draft_data:        draft_data         ?? null,
     status:            "draft" as const,
     updated_at:        new Date().toISOString(),
@@ -108,7 +113,8 @@ export async function GET(req: NextRequest) {
     .from("listings")
     .select(
       "id, title, description, category, condition, price, rent_price, " +
-      "rent_duration_days, type, size, color, brand, images, draft_data, status"
+      "rent_duration_days, type, size, color, brand, images, " +
+      "shipping_tier, shipping_cents, draft_data, status"
     )
     .eq("id", id)
     .eq("seller_id", user.id)

@@ -5,6 +5,10 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import AIIdentifyPanel from "@/components/seller/AIIdentifyPanel";
 import AIPricingSuggestion from "@/components/seller/AIPricingSuggestion";
+import {
+  CATEGORY_DEFAULT_TIER, TIER_LABEL, TIER_DESCRIPTION,
+  type ShippingTier, type ShippingSettings,
+} from "@/lib/shipping";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const GARMENT_TYPES = [
@@ -159,6 +163,20 @@ function NewListingForm() {
   const [savedImages, setSavedImages] = useState<string[]>([]);
   const [newPhotos, setNewPhotos]     = useState<{ file: File; preview: string }[]>([]);
 
+  // Shipping settings fetched from platform (for display in the tier picker)
+  const [shippingSettings, setShippingSettings] = useState<ShippingSettings>({
+    smallCents: 800, mediumCents: 1400, largeCents: 2400, minCents: 500, maxCents: 4500,
+  });
+  const [shippingTier,       setShippingTier]       = useState<ShippingTier>("medium");
+  const [customShippingAmt,  setCustomShippingAmt]  = useState(""); // dollars, for "custom" tier
+
+  useEffect(() => {
+    fetch("/api/platform/shipping-settings")
+      .then(r => r.json())
+      .then((d: ShippingSettings) => setShippingSettings(d))
+      .catch(() => {}); // keep defaults on error
+  }, []);
+
   // Form fields
   const [form, setForm] = useState({
     title: "", description: "", garmentType: "",
@@ -196,6 +214,7 @@ function NewListingForm() {
         price?: number | null; rent_price?: number | null; rent_duration_days?: number | null;
         type?: string; size?: string; color?: string; brand?: string;
         images?: string[];
+        shipping_tier?: string | null; shipping_cents?: number | null;
         draft_data?: {
           fabric?: string; occasions?: string[]; embellishments?: string[];
           included?: string[]; careInstructions?: string; originalPrice?: string;
@@ -227,6 +246,9 @@ function NewListingForm() {
         if (dd.occasions?.length)      setOccasions(dd.occasions);
         if (dd.embellishments?.length) setEmbellishments(dd.embellishments);
         if (dd.included?.length)       setIncluded(dd.included);
+        if (data.shipping_tier)        setShippingTier(data.shipping_tier as ShippingTier);
+        if (data.shipping_cents != null && data.shipping_tier === "custom")
+          setCustomShippingAmt((data.shipping_cents / 100).toString());
       })
       .catch(() => { /* silently ignore load failure */ })
       .finally(() => {
@@ -237,6 +259,15 @@ function NewListingForm() {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Auto-save: debounced 4 s after any form change ──────────────────────────
+  const resolvedShippingCents = useCallback((): number | null => {
+    if (shippingTier === "free") return 0;
+    if (shippingTier === "custom") {
+      const v = parseFloat(customShippingAmt);
+      return isNaN(v) ? null : Math.round(v * 100);
+    }
+    return null; // named tiers resolved server-side from platform_settings
+  }, [shippingTier, customShippingAmt]);
+
   const buildDraftPayload = useCallback(() => ({
     id:                draftIdRef.current ?? undefined,
     title:             form.title            || null,
@@ -253,6 +284,8 @@ function NewListingForm() {
     color:             form.color            || null,
     brand:             form.brand            || null,
     images:            savedImages,
+    shipping_tier:     shippingTier,
+    shipping_cents:    resolvedShippingCents(),
     draft_data: {
       fabric:           form.fabric,
       occasions,
@@ -300,7 +333,7 @@ function NewListingForm() {
     setSaveStatus("idle");
     autoSaveTimer.current = setTimeout(performAutoSave, 4000);
     return () => { if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current); };
-  }, [form, occasions, embellishments, included, savedImages]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [form, occasions, embellishments, included, savedImages, shippingTier, customShippingAmt]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Photo helpers ────────────────────────────────────────────────────────────
   const totalPhotos = savedImages.length + newPhotos.length;
@@ -390,6 +423,13 @@ function NewListingForm() {
                                                      errs.rentPrice   = "Please enter a rental price greater than $0";
     if (!form.us_size)                               errs.us_size     = "Please complete this field before publishing";
     if (totalPhotos === 0)                           errs.photos      = "Add at least one photo before publishing";
+    if (shippingTier === "custom") {
+      const v = parseFloat(customShippingAmt);
+      const min = shippingSettings.minCents / 100;
+      const max = shippingSettings.maxCents / 100;
+      if (isNaN(v) || v < min || v > max)
+        errs.shippingCustom = `Custom shipping must be between $${min} and $${max}`;
+    }
 
     if (Object.keys(errs).length > 0) {
       setFieldErrors(errs);
@@ -426,6 +466,8 @@ function NewListingForm() {
       color:              form.color,
       brand:              form.brand || null,
       location:           null,
+      shipping_tier:      shippingTier,
+      shipping_cents:     resolvedShippingCents(),
       draft_data:         null, // clear draft blob once published
       updated_at:         new Date().toISOString(),
     };
@@ -535,6 +577,10 @@ function NewListingForm() {
                       setForm(f => ({ ...f, garmentType: val }));
                       setIncluded([]);
                       if (val) setIncludedModal(true);
+                      // Suggest shipping tier from garment category (only if seller
+                      // hasn't already customised it from the default "medium")
+                      const suggested = CATEGORY_DEFAULT_TIER[val];
+                      if (suggested && shippingTier === "medium") setShippingTier(suggested);
                     }}>
                     <option value="">Select type</option>
                     {GARMENT_TYPES.map(g => <option key={g.value} value={g.value}>{g.label}</option>)}
@@ -698,6 +744,103 @@ function NewListingForm() {
                 )}
               </div>
             </div>
+          </section>
+
+          <div style={divider} />
+
+          {/* ── Shipping ────────────────────────────────────────── */}
+          <section>
+            <p style={sectionHead}>Shipping</p>
+            <p style={{ ...hint, marginBottom: "1.2rem", marginTop: 0 }}>
+              The buyer pays this amount at checkout. You receive it in your payout and use it to buy your own label from USPS, UPS, or FedEx.
+            </p>
+
+            {/* Tier buttons */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "0.6rem", marginBottom: "0.75rem" }}>
+              {(["small", "medium", "large", "custom", "free"] as ShippingTier[]).map(tier => {
+                const tierCents =
+                  tier === "small"  ? shippingSettings.smallCents :
+                  tier === "medium" ? shippingSettings.mediumCents :
+                  tier === "large"  ? shippingSettings.largeCents :
+                  null;
+                const isSelected = shippingTier === tier;
+                return (
+                  <button key={tier} type="button" onClick={() => setShippingTier(tier)}
+                    style={{
+                      padding: "0.75rem 0.9rem", textAlign: "left", cursor: "pointer",
+                      border: `1.5px solid ${isSelected ? "#C4440A" : "var(--warm-tan)"}`,
+                      background: isSelected ? "rgba(196,68,10,0.06)" : "transparent",
+                      transition: "all 0.15s",
+                    }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "0.2rem" }}>
+                      <span style={{ fontFamily: "var(--font-jost)", fontWeight: 700, fontSize: "0.78rem", color: isSelected ? "#C4440A" : "#1A1A18" }}>
+                        {TIER_LABEL[tier]}
+                      </span>
+                      {tierCents !== null && (
+                        <span style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.78rem", color: isSelected ? "#C4440A" : "#9A8A7E" }}>
+                          ${(tierCents / 100).toFixed(0)}
+                        </span>
+                      )}
+                      {tier === "free" && (
+                        <span style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.78rem", color: isSelected ? "#C4440A" : "#9A8A7E" }}>Free</span>
+                      )}
+                    </div>
+                    <p style={{ fontFamily: "var(--font-jost)", fontWeight: 400, fontSize: "0.68rem", color: "#9A8A7E", margin: 0, lineHeight: 1.4 }}>
+                      {TIER_DESCRIPTION[tier]}
+                    </p>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Large tier nudge */}
+            {shippingTier === "large" && (
+              <div style={{ background: "rgba(196,68,10,0.05)", border: "1px solid rgba(196,68,10,0.2)", padding: "0.75rem 1rem", marginBottom: "0.75rem" }}>
+                <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.78rem", color: "#C4440A", margin: 0 }}>
+                  <strong>Heavy or oversized bridal piece?</strong> The $24 large tier may not cover all lehengas — some heavy sets ship for $28–35. Enter a custom amount below if yours is heavier than average.
+                </p>
+              </div>
+            )}
+
+            {/* Custom amount input */}
+            {shippingTier === "custom" && (
+              <div style={{ marginBottom: "0.75rem" }}>
+                <label style={label}>Custom shipping amount ($)</label>
+                <input
+                  type="number"
+                  min={(shippingSettings.minCents / 100).toFixed(0)}
+                  max={(shippingSettings.maxCents / 100).toFixed(0)}
+                  step="1"
+                  style={inp}
+                  value={customShippingAmt}
+                  onChange={e => setCustomShippingAmt(e.target.value)}
+                  placeholder={`$${shippingSettings.minCents / 100}–$${shippingSettings.maxCents / 100}`}
+                />
+                <p style={hint}>
+                  Must be between ${shippingSettings.minCents / 100} and ${shippingSettings.maxCents / 100}. The buyer pays exactly this amount at checkout.
+                </p>
+              </div>
+            )}
+
+            {/* Large tier → custom shortcut */}
+            {shippingTier === "large" && (
+              <button type="button" onClick={() => { setShippingTier("custom"); setCustomShippingAmt("28"); }}
+                style={{ background: "none", border: "none", cursor: "pointer", padding: 0, fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.73rem", color: "#C4440A", textDecoration: "underline", textUnderlineOffset: "3px" }}>
+                Enter a custom amount →
+              </button>
+            )}
+
+            {/* Free shipping warning */}
+            {shippingTier === "free" && (
+              <div style={{ background: "#FFF8F0", border: "1.5px solid #E8A87C", padding: "1rem 1.1rem", marginTop: "0.75rem" }}>
+                <p style={{ fontFamily: "var(--font-jost)", fontWeight: 700, fontSize: "0.75rem", color: "#B85C00", marginBottom: "0.4rem", letterSpacing: "0.05em" }}>
+                  ⚠ You pay the label cost out of pocket
+                </p>
+                <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.78rem", color: "#5C3A00", lineHeight: 1.6, margin: 0 }}>
+                  Free shipping means the buyer sees $0 at checkout and you receive nothing extra in your payout to cover the label. For a lehenga, that label can cost $24–35 out of your own pocket. If you want to offer free shipping, consider raising your item price to absorb the cost.
+                </p>
+              </div>
+            )}
           </section>
 
           <div style={divider} />

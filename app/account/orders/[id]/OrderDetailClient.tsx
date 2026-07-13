@@ -14,6 +14,7 @@ interface Order {
   amount: number;
   platform_fee: number;
   seller_payout: number;
+  shipping_cents: number | null;
   deposit_amount: number | null;
   deposit_held: boolean;
   deposit_release_amount: number | null;
@@ -46,7 +47,7 @@ interface Seller {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-const SHIPPING_CENTS = 1800;
+const FALLBACK_SHIPPING_CENTS = 1400;
 
 function fmt(cents: number) {
   return `$${(cents / 100).toLocaleString("en-US", { minimumFractionDigits: 2 })}`;
@@ -101,7 +102,8 @@ export default function OrderDetailClient({
   const shortId       = `VR-${order.id.slice(0, 6).toUpperCase()}`;
   const isRental      = order.type === "rent";
   const depositCents  = order.deposit_amount ?? 0;
-  const totalCents    = order.amount + order.platform_fee + SHIPPING_CENTS + (isRental ? depositCents : 0);
+  const orderShipping = order.shipping_cents ?? FALLBACK_SHIPPING_CENTS;
+  const totalCents    = order.amount + order.platform_fee + orderShipping + (isRental ? depositCents : 0);
   const canReview     = (order.status === "delivered") && !reviewed;
   const statusStyle   = BUYER_DETAIL_STATUS[order.status] ?? { bg: "#F5F5F5", text: "#555" };
   const timelineSteps = getTimelineSteps(order.status, isRental);
@@ -240,7 +242,7 @@ export default function OrderDetailClient({
           {[
             { label: isRental ? "Rental fee" : "Item price", cents: order.amount },
             { label: "Veeral fee",                           cents: order.platform_fee },
-            { label: "Shipping",                             cents: SHIPPING_CENTS },
+            { label: "Shipping",                             cents: orderShipping },
             ...(isRental && depositCents > 0
               ? [{ label: "Security deposit (refundable)", cents: depositCents }]
               : []),

@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { getFeeSettings, calculateFees } from "@/lib/fees";
+import { getShippingSettings, resolveTierCents, type ShippingTier } from "@/lib/shipping";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-
-const SHIPPING_CENTS = 1800; // $18.00
 
 export async function POST(req: NextRequest) {
   const supabase = createClient();
@@ -34,7 +33,7 @@ export async function POST(req: NextRequest) {
   // ── Fetch listing + seller ────────────────────────────────────────────────
   const { data: listing, error: listingErr } = await supabase
     .from("listings")
-    .select("id, title, price, rent_price, deposit_pct, seller_id, status, type")
+    .select("id, title, price, rent_price, deposit_pct, seller_id, status, type, shipping_tier, shipping_cents")
     .eq("id", listing_id)
     .single();
 
@@ -65,8 +64,19 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // ── Fee settings from platform_settings table ─────────────────────────────
-  const feeSettings = await getFeeSettings();
+  // ── Fee + shipping settings from platform_settings ───────────────────────
+  const [feeSettings, shippingSettings] = await Promise.all([
+    getFeeSettings(),
+    getShippingSettings(),
+  ]);
+
+  // Resolve the listing's chosen shipping tier to cents.
+  // Fee is NEVER applied to shipping — only to item/rental cost.
+  const SHIPPING_CENTS = resolveTierCents(
+    (listing.shipping_tier as ShippingTier | null) ?? null,
+    listing.shipping_cents ?? null,
+    shippingSettings,
+  );
 
   // ── Compute amounts (all in cents) ────────────────────────────────────────
   // Deposit is based on the item's listed price regardless of transaction type.
@@ -102,6 +112,7 @@ export async function POST(req: NextRequest) {
       seller_payout:  fees.sellerReceives,
       deposit_amount: type === "rent" ? depositCents : null,
       status:           "pending",
+      shipping_cents:   SHIPPING_CENTS,
       shipping_address: body.shipping_address ?? null,
       ...(type === "rent" && {
         rental_start: body.start_date,

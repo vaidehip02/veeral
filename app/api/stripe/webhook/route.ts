@@ -174,6 +174,7 @@ async function sendOrderEmails(orderId: string): Promise<void> {
       amount,
       platform_fee,
       seller_payout,
+      shipping_cents,
       created_at,
       listing:listings ( title ),
       seller:seller_profiles ( display_name )
@@ -212,8 +213,7 @@ async function sendOrderEmails(orderId: string): Promise<void> {
   const grossAmount  = order.amount        / 100;
   const platformFee  = order.platform_fee  / 100;
   const sellerPayout = order.seller_payout / 100;
-  // TODO: store shipping in the orders table and read it here
-  const shippingCost = 18;
+  const shippingCost = ((order as unknown as { shipping_cents: number | null }).shipping_cents ?? 1400) / 100;
   const total        = grossAmount + shippingCost;
 
   if (buyerEmail) {
