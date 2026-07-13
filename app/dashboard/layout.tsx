@@ -79,6 +79,20 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             minHeight: "100vh",
           }}
         >
+          <Link href="/" style={{
+            display: "inline-flex", alignItems: "center", gap: "0.35rem",
+            margin: "0 1.75rem 1.25rem",
+            fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.62rem",
+            letterSpacing: "0.18em", textTransform: "uppercase",
+            color: "var(--cream)", background: "var(--burnt-orange)",
+            padding: "0.3rem 0.65rem", textDecoration: "none",
+            transition: "opacity 0.15s",
+          }}
+            onMouseOver={e => (e.currentTarget.style.opacity = "0.8")}
+            onMouseOut={e => (e.currentTarget.style.opacity = "1")}
+          >
+            ← Home
+          </Link>
           <p style={{
             fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.62rem",
             letterSpacing: "0.25em", textTransform: "uppercase",
