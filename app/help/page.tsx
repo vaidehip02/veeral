@@ -26,15 +26,6 @@ function Ul({ items }: { items: string[] }) {
 
 // ── Content data ──────────────────────────────────────────────────────────────
 
-const FEATURED = [
-  { label: "How to ship — US",           section: "shipping" },
-  { label: "How do I get paid?",          section: "payments" },
-  { label: "I haven't received my order", section: "buying"   },
-  { label: "My item is not as described", section: "buying"   },
-  { label: "How do I refund a buyer?",    section: "disputes" },
-  { label: "Will I have to pay tax?",     section: "payments" },
-];
-
 const CATEGORIES = [
   { icon: "🛍", label: "Buying",             section: "buying",    links: ["Finding items", "Making an offer", "Checking out", "Buyer protection", "Fit & alterations"] },
   { icon: "🏷", label: "Selling",            section: "selling",   links: ["Creating a listing", "Sizing guide", "Drafts", "Ratings & reviews", "Fees & taxes"] },
@@ -120,6 +111,28 @@ const CONTENT_SECTIONS: ContentSection[] = [
     ],
   },
 ];
+
+// ── Inline FAQ item ───────────────────────────────────────────────────────────
+
+function InlineFAQ({ q, a, last }: { q: string; a: string; last: boolean }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div style={{ borderBottom: last ? "none" : "1px solid var(--warm-tan)" }}>
+      <button
+        onClick={() => setOpen(v => !v)}
+        style={{ width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center", padding: "1.1rem 1.5rem", background: "none", border: "none", cursor: "pointer", textAlign: "left", gap: "1rem" }}
+      >
+        <span style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "1rem", color: "#3B2F2A", lineHeight: 1.4 }}>{q}</span>
+        <span style={{ fontSize: "1.2rem", color: "var(--burnt-orange)", flexShrink: 0, transition: "transform 0.2s", transform: open ? "rotate(45deg)" : "rotate(0deg)", display: "inline-block" }}>+</span>
+      </button>
+      {open && (
+        <div style={{ padding: "0 1.5rem 1.1rem" }}>
+          <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.97rem", color: "#4A3F3A", lineHeight: 1.85, margin: 0 }}>{a}</p>
+        </div>
+      )}
+    </div>
+  );
+}
 
 // ── Accordion components ───────────────────────────────────────────────────────
 
@@ -254,28 +267,27 @@ export default function HelpCenterPage() {
 
       <div className="max-w-5xl mx-auto" style={{ padding: "3rem 1.5rem 6rem" }}>
 
-        {/* ── Featured articles ── */}
+        {/* ── Common questions ── */}
         <div style={{ marginBottom: "3.5rem" }}>
           <p style={{ fontFamily: "var(--font-jost)", fontWeight: 700, fontSize: "0.82rem", letterSpacing: "0.22em", textTransform: "uppercase", color: "var(--burnt-orange)", marginBottom: "1.25rem" }}>
-            Featured articles
+            Common questions
           </p>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "0.75rem" }}>
-            {FEATURED.map(f => (
-              <button key={f.label} onClick={() => scrollTo(f.section)}
-                style={{ fontFamily: "var(--font-jost)", fontWeight: 500, fontSize: "0.95rem", color: "#3B2F2A", background: "#fff", border: "1px solid var(--warm-tan)", padding: "1rem 1.25rem", cursor: "pointer", textAlign: "left", lineHeight: 1.4, transition: "border-color 0.15s, box-shadow 0.15s" }}
-                onMouseOver={e => { e.currentTarget.style.borderColor = "var(--burnt-orange)"; e.currentTarget.style.boxShadow = "0 2px 10px rgba(0,0,0,0.06)"; }}
-                onMouseOut={e => { e.currentTarget.style.borderColor = "var(--warm-tan)"; e.currentTarget.style.boxShadow = "none"; }}
-              >
-                {f.label}
-              </button>
-            ))}
+          <div style={{ background: "#fff", border: "1px solid var(--warm-tan)" }}>
+            {[
+              { q: "How do I ship my item?", a: "Ship within 7 days of purchase using USPS, UPS, or FedEx with tracking. Once shipped, upload your tracking number in your dashboard. Tracking allows Veeral to confirm delivery and release your payout." },
+              { q: "How and when do I get paid?", a: "Payouts are initiated 2 business days after delivery is confirmed. Veeral’s commission is automatically deducted before the payout is issued. Bank processing times vary by institution." },
+              { q: "I haven’t received my order — what do I do?", a: "Check the tracking number in your order details. If the carrier shows delivery but you haven’t received it, or tracking hasn’t updated in an extended period, contact Veeral Support within 7 days of the expected delivery date." },
+              { q: "My item is not as described — can I return it?", a: "Yes. If the item arrived significantly not as described (wrong item, missing pieces, clear misrepresentation of size, color, or condition), report it through Veeral within 7 days of confirmed delivery with photos. Minor pre-owned wear and fit issues when accurate measurements were provided are not covered." },
+              { q: "How do I refund a buyer?", a: "Refunds for covered disputes are handled through Veeral Support, not directly between sellers and buyers. If a dispute is opened, Veeral will review the case and may issue a refund. Your payout will be on hold during review." },
+              { q: "Will I have to pay tax or customs on my order?", a: "Buyers in the US are responsible for any applicable sales tax. International buyers may be subject to customs duties — these are not included in Veeral’s prices. Sellers are responsible for reporting income taxes on their earnings." },
+            ].map((item, i, arr) => <InlineFAQ key={i} q={item.q} a={item.a} last={i === arr.length - 1} />)}
           </div>
         </div>
 
         {/* ── Categories ── */}
         <div style={{ marginBottom: "4rem" }}>
           <p style={{ fontFamily: "var(--font-jost)", fontWeight: 700, fontSize: "0.82rem", letterSpacing: "0.22em", textTransform: "uppercase", color: "var(--burnt-orange)", marginBottom: "1.25rem" }}>
-            Categories
+            Browse by topic
           </p>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "1.25rem" }}>
             {CATEGORIES.map(cat => (
@@ -304,10 +316,8 @@ export default function HelpCenterPage() {
           </div>
         </div>
 
-        {/* ── Accordion sections ── */}
-        <p style={{ fontFamily: "var(--font-jost)", fontWeight: 700, fontSize: "0.82rem", letterSpacing: "0.22em", textTransform: "uppercase", color: "var(--burnt-orange)", marginBottom: "1.25rem" }}>
-          All topics
-        </p>
+        {/* ── Accordion sections (reached via category card clicks) ── */}
+        <div style={{ height: "1px", background: "var(--warm-tan)", marginBottom: "2.5rem" }} />
         {CONTENT_SECTIONS.map(section => (
           <SectionAccordion key={section.id} section={section} />
         ))}
