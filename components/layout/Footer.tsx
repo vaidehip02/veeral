@@ -55,6 +55,7 @@ export default function Footer() {
           {[
             ["About", "/about"],
             ["Contact", "/contact"],
+            ["Help Center", "/help"],
             ["Instagram", "https://instagram.com"],
             ["TikTok", "https://tiktok.com"],
           ].map(([label, href]) => (
