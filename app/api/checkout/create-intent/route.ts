@@ -75,10 +75,10 @@ export async function POST(req: NextRequest) {
   let depositCents   = 0;
 
   if (type === "rent") {
-    rentalFeeCents = (listing.rent_price ?? 0) * (body.days ?? 1) * 100;
-    depositCents   = Math.round(listing.price * depositPct / 100) * 100;
+    rentalFeeCents = (listing.rent_price ?? 0) * (body.days ?? 1); // rent_price already in cents
+    depositCents   = Math.round(listing.price * depositPct / 100); // price already in cents
   } else {
-    itemCents = listing.price * 100;
+    itemCents = listing.price; // price already in cents
   }
 
   // subtotalCents = item/rental cost only (not shipping, not deposit)
