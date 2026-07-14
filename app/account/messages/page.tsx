@@ -170,10 +170,32 @@ function MessagesInner() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeId, currentUserId]);
 
+  function detectOffPlatform(text: string): string | null {
+    const SOCIAL = "instagram|tiktok|facebook|snapchat|twitter|whatsapp|telegram|signal|wechat|viber|linkedin|pinterest|youtube|fb|insta";
+    const checks: [RegExp, string][] = [
+      [/[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/i, "email addresses"],
+      [/(\+?\d[\s\-.]?)?(\(?\d{3}\)?[\s\-.]?\d{3}[\s\-.]?\d{4})/i, "phone numbers"],
+      [/https?:\/\/[^\s]+|www\.[a-zA-Z0-9\-]+\.[a-zA-Z]{2,}/i, "website links"],
+      [/(^|[\s,])@[a-zA-Z0-9._]{1,30}/i, "@ handles"],
+      [new RegExp(`(${SOCIAL})\\s*(is|at|:|\\bat\\b)[:\\s]+[a-zA-Z0-9._]{2,30}`, "i"), "social media handles"],
+      [new RegExp(`(find|follow|message|dm|reach|contact|add)\\s+(me\\s+)?(on|at)\\s+(${SOCIAL})`, "i"), "off-platform contact requests"],
+      [new RegExp(`my\\s+(${SOCIAL})`, "i"), "off-platform contact requests"],
+      [/\b(whatsapp|telegram|signal|wechat|viber)\b/i, "messaging app links"],
+      [/\b(dm\s+me|text\s+me|call\s+me|email\s+me|reach\s+me|contact\s+me|message\s+me\s+on|find\s+me\s+on|hit\s+me\s+up)\b/i, "off-platform contact requests"],
+      [/\b(venmo|paypal|cashapp|cash\s+app|zelle|gpay|google\s+pay|apple\s+pay)\b/i, "payment app references"],
+    ];
+    for (const [regex, label] of checks) {
+      if (regex.test(text)) return `Messages cannot contain ${label}. All transactions must stay on Veeral.`;
+    }
+    return null;
+  }
+
   async function sendMessage() {
     if (!draft.trim() || !activeId || sending) return;
-    setSending(true);
     const body = draft.trim();
+    const violation = detectOffPlatform(body);
+    if (violation) { setSendError(violation); return; }
+    setSending(true);
     setDraft("");
     const res = await fetch(`/api/conversations/${activeId}/messages`, {
       method: "POST",
