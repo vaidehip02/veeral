@@ -371,7 +371,6 @@ export default function Navbar() {
                 style={{
                   display: "flex", alignItems: "center", gap: "0.75rem",
                   padding: "1rem 0 0.75rem", width: "100%",
-                  borderBottom: "1px solid var(--warm-tan)",
                   background: "none", border: "none", borderBottom: "1px solid var(--warm-tan)",
                   cursor: "pointer", textAlign: "left",
                 }}
