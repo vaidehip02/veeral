@@ -28,13 +28,22 @@ export async function POST(
   if (order.seller_id !== user.id) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   if (order.status !== "paid") return NextResponse.json({ error: "Order cannot be marked as shipped in its current status" }, { status: 409 });
 
+  // Compute payout_due_at from platform_settings.payout_hold_days
+  const { data: settings } = await admin
+    .from("platform_settings")
+    .select("payout_hold_days")
+    .eq("id", 1)
+    .single() as { data: { payout_hold_days?: number } | null };
+  const holdDays   = settings?.payout_hold_days ?? 14;
+  const payoutDueAt = new Date(Date.now() + holdDays * 24 * 60 * 60 * 1000).toISOString();
+
   const { error } = await admin
     .from("orders")
-    .update({ status: "shipped", return_tracking_number: tracking })
+    .update({ status: "shipped", return_tracking_number: tracking, payout_due_at: payoutDueAt })
     .eq("id", params.id)
     .eq("status", "paid"); // idempotency guard
 
   if (error) return NextResponse.json({ error: "Failed to update order" }, { status: 500 });
 
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true, payoutDueAt });
 }

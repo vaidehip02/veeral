@@ -47,24 +47,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "This listing is not available for rent" }, { status: 400 });
   }
 
-  const { data: seller } = await supabase
-    .from("seller_profiles")
-    .select("stripe_account_id, stripe_onboarding_complete")
-    .eq("id", listing.seller_id)
-    .single();
-
-  const isTestMode = process.env.STRIPE_SECRET_KEY?.startsWith("sk_test_");
-  // In test mode, skip Connect onboarding checks so we can test end-to-end
-  // without setting up a real connected account.
-  // TODO: remove isTestMode bypass before launch.
-  if (!isTestMode && (!seller?.stripe_account_id || !seller.stripe_onboarding_complete)) {
-    return NextResponse.json(
-      { error: "Seller has not completed Stripe onboarding" },
-      { status: 422 }
-    );
-  }
-
   // ── Fee + shipping settings from platform_settings ───────────────────────
+  // NOTE: With separate charges + transfers, no seller Stripe account is needed
+  // at checkout — the full payment lands on Veeral's platform balance and the
+  // seller's share is transferred later by the payout-release cron.
+  // Onboarding is checked at transfer time, not here.
   const [feeSettings, shippingSettings] = await Promise.all([
     getFeeSettings(),
     getShippingSettings(),
@@ -132,20 +119,18 @@ export async function POST(req: NextRequest) {
   try {
     if (type === "rent") {
       // ── TWO PaymentIntents for rental ──────────────────────────────────────
-      // PI 1: rental cost + Veeral fee + shipping — transferred to seller minus fee.
-      //        application_fee_amount = Veeral's cut (applied only to rental cost).
-      // PI 2: deposit — NO transfer, NO fee, retained by platform until return confirmed.
+      // PI 1: rental cost + Veeral fee + shipping.
+      //        No transfer_data — funds land on Veeral's platform balance.
+      //        Seller's share is transferred by confirm-return or process-auto-release.
+      // PI 2: deposit — no transfer, no fee, platform-held until return confirmed.
+      // platform_fee is recorded on the order for internal accounting only.
 
-      const hasConnectedAccount = !!seller?.stripe_account_id;
       const rentalPi = await stripe.paymentIntents.create({
         // Buyer pays: rental cost + fee + shipping
         amount:   rentalFeeCents + fees.feeAmount + SHIPPING_CENTS,
         currency: "usd",
         automatic_payment_methods: { enabled: true },
-        ...(hasConnectedAccount && {
-          application_fee_amount: fees.applicationFee,
-          transfer_data: { destination: seller.stripe_account_id },
-        }),
+        // No application_fee_amount / transfer_data — separate charges model.
         metadata: {
           order_id:    orderId,
           pi_role:     "rental_fee",
@@ -195,16 +180,15 @@ export async function POST(req: NextRequest) {
     } else {
       // ── Single PaymentIntent for sale ──────────────────────────────────────
       // Buyer pays: item price + Veeral fee + shipping.
-      // application_fee_amount = Veeral's cut (on item price only).
+      // No transfer_data — funds land on Veeral's platform balance.
+      // Seller's share is transferred by process-payout-release after hold window.
+      // platform_fee is recorded on the order for internal accounting only.
 
       const pi = await stripe.paymentIntents.create({
         amount:   itemCents + fees.feeAmount + SHIPPING_CENTS,
         currency: "usd",
         automatic_payment_methods: { enabled: true },
-        ...(seller?.stripe_account_id && {
-          application_fee_amount: fees.applicationFee,
-          transfer_data: { destination: seller.stripe_account_id },
-        }),
+        // No application_fee_amount / transfer_data — separate charges model.
         metadata: {
           order_id:  orderId,
           pi_role:   "sale",

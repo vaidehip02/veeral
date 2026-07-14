@@ -200,16 +200,13 @@ async function cancelOrder(
   const piId = order.stripe_payment_intent_id;
   if (piId) {
     try {
-      await stripe.refunds.create({
-        payment_intent:        piId,
-        reverse_transfer:      true,
-        refund_application_fee: true,
-      });
+      // Simple refund — funds never left Veeral's platform balance (separate
+      // charges model), so no reverse_transfer needed.
+      await stripe.refunds.create({ payment_intent: piId });
     } catch (stripeErr) {
       const msg = stripeErr instanceof Error ? stripeErr.message : String(stripeErr);
       console.error(`[ship-deadline] Stripe refund failed for order ${order.id}:`, msg);
-      // Don't bail — listing relist and emails should still fire. Admin must
-      // manually refund the buyer in the Stripe dashboard for this order.
+      // Don't bail — listing relist and emails should still fire.
     }
   } else {
     console.warn(`[ship-deadline] No stripe_payment_intent_id for order ${order.id} — refund skipped, needs manual action.`);

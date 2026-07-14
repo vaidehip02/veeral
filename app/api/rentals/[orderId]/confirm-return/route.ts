@@ -6,6 +6,7 @@ import { getLateFeeSettings, computeLateFee, computeDaysOverdue } from "@/lib/re
 import { sendEmail } from "@/lib/email/send";
 import { createElement } from "react";
 import DepositReleased from "@/lib/email/templates/DepositReleased";
+import { stripe } from "@/lib/stripe";
 
 export async function POST(
   _req: NextRequest,
@@ -62,14 +63,17 @@ export async function POST(
   const renterRefund = Math.max(0, depositCents - lateFee);
   const sellerAmount = depositCents - renterRefund; // = lateFee (capped)
 
-  // ── Seller's Stripe Connect account ──────────────────────────────
-  const { data: sellerProfile } = await admin
-    .from("seller_profiles")
-    .select("stripe_account_id")
-    .eq("id", user.id)
-    .single();
+  // ── Seller's Stripe Connect account + rental fee payout amount ───
+  const [{ data: sellerProfile }, { data: rentalOrder }] = await Promise.all([
+    admin.from("seller_profiles").select("stripe_account_id, stripe_onboarding_complete").eq("id", user.id).single(),
+    admin.from("orders").select("seller_payout, shipping_cents, payout_released_at").eq("id", orderId).single(),
+  ]);
 
-  const connectedAccountId = (sellerProfile as { stripe_account_id?: string } | null)?.stripe_account_id ?? null;
+  const connectedAccountId   = (sellerProfile as { stripe_account_id?: string } | null)?.stripe_account_id ?? null;
+  const sellerOnboarded      = !!(sellerProfile as { stripe_onboarding_complete?: boolean } | null)?.stripe_onboarding_complete;
+  const rentalFeePayoutCents = ((rentalOrder as { seller_payout?: number } | null)?.seller_payout ?? 0)
+                             + ((rentalOrder as { shipping_cents?: number | null } | null)?.shipping_cents ?? 0);
+  const rentalFeePaidOut     = !!(rentalOrder as { payout_released_at?: string | null } | null)?.payout_released_at;
 
   // ── Release deposit ───────────────────────────────────────────────
   const releaseReason = overdueDays > 0
@@ -96,6 +100,39 @@ export async function POST(
 
   if (result.warning) {
     console.warn("[confirm-return] releaseDeposit warning:", result.warning);
+  }
+
+  // ── Transfer rental fee to seller (event-triggered, immediate) ────
+  // The deposit has its own review window; the rental fee releases now
+  // because the seller has the item back and has inspected it.
+  let rentalFeeTransferId: string | null = null;
+  if (connectedAccountId && sellerOnboarded && rentalFeePayoutCents > 0 && !rentalFeePaidOut) {
+    try {
+      const transfer = await stripe.transfers.create(
+        {
+          amount:      rentalFeePayoutCents,
+          currency:    "usd",
+          destination: connectedAccountId,
+          metadata:    { order_id: orderId, reason: "rental_fee_release" },
+        },
+        { idempotencyKey: `rental_fee_${orderId}` },
+      );
+      rentalFeeTransferId = transfer.id;
+      await admin.from("orders").update({
+        payout_released_at: new Date().toISOString(),
+        payout_transfer_id: transfer.id,
+        payout_blocked_reason: null,
+      }).eq("id", orderId);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error("[confirm-return] Rental fee transfer failed:", msg);
+      // Don't fail the whole request — deposit already released. Log for admin.
+    }
+  } else if (!rentalFeePaidOut) {
+    // Seller not onboarded yet — mark blocked so admin can see it
+    await admin.from("orders").update({
+      payout_blocked_reason: "seller_not_onboarded",
+    }).eq("id", orderId);
   }
 
   // ── Update order status ───────────────────────────────────────────
@@ -128,10 +165,11 @@ export async function POST(
   });
 
   return NextResponse.json({
-    ok:                 true,
-    renterRefundCents:  renterRefund,
+    ok:                   true,
+    renterRefundCents:    renterRefund,
     lateFee,
     overdueDays,
-    warning:            result.warning,
+    rentalFeeTransferId,
+    warning:              result.warning,
   });
 }

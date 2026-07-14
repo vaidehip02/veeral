@@ -6,6 +6,7 @@ import { reviewWindowLapsed } from "@/lib/rentals/businessDays";
 import { sendEmail } from "@/lib/email/send";
 import { createElement } from "react";
 import DepositReleased from "@/lib/email/templates/DepositReleased";
+import { stripe } from "@/lib/stripe";
 
 /**
  * GET /api/rentals/process-auto-release
@@ -31,6 +32,7 @@ export async function GET(req: NextRequest) {
     .from("orders")
     .select(`
       id, buyer_id, seller_id, deposit_amount, return_noted_at, rental_end,
+      seller_payout, shipping_cents, payout_released_at,
       listing:listings(title, rent_price)
     `)
     .eq("type", "rent")
@@ -48,6 +50,9 @@ export async function GET(req: NextRequest) {
     deposit_amount: number | null;
     return_noted_at: string | null;
     rental_end: string | null;
+    seller_payout: number | null;
+    shipping_cents: number | null;
+    payout_released_at: string | null;
     listing: { title?: string; rent_price?: number } | { title?: string; rent_price?: number }[] | null;
   }>;
 
@@ -109,6 +114,28 @@ export async function GET(req: NextRequest) {
       .eq("id", order.id);
 
     released++;
+
+    // ── Transfer rental fee if not already paid out ────────────────
+    if (!order.payout_released_at && connectedAccountId) {
+      const rentalFeePayoutCents = (order.seller_payout ?? 0) + (order.shipping_cents ?? 0);
+      if (rentalFeePayoutCents > 0) {
+        try {
+          const transfer = await stripe.transfers.create(
+            { amount: rentalFeePayoutCents, currency: "usd", destination: connectedAccountId,
+              metadata: { order_id: order.id, reason: "rental_fee_auto_release" } },
+            { idempotencyKey: `rental_fee_${order.id}` },
+          );
+          await admin.from("orders").update({
+            payout_released_at: now.toISOString(),
+            payout_transfer_id: transfer.id,
+          }).eq("id", order.id);
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : String(err);
+          console.error("[auto-release] Rental fee transfer failed:", order.id, msg);
+          errors.push(`rental_fee_transfer ${order.id}: ${msg}`);
+        }
+      }
+    }
 
     // Email buyer (fire-and-forget)
     admin.auth.admin.getUserById(order.buyer_id).then(({ data }) => {
