@@ -796,7 +796,7 @@ function ListingsInner({ typeParam }: { typeParam: string | null }) {
               <>
                 <div
                   className="results-grid"
-                  style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:"1.1rem" }}
+                  style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:"0.85rem" }}
                 >
                   {paged.map(l => <ListingCard key={l.id} listing={l} />)}
                 </div>

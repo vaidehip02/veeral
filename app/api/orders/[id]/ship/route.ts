@@ -37,6 +37,13 @@ export async function POST(
   const holdDays   = settings?.payout_hold_days ?? 14;
   const payoutDueAt = new Date(Date.now() + holdDays * 24 * 60 * 60 * 1000).toISOString();
 
+  // Fetch listing_id before updating so we can mark it sold
+  const { data: fullOrder } = await admin
+    .from("orders")
+    .select("listing_id")
+    .eq("id", params.id)
+    .single();
+
   const { error } = await admin
     .from("orders")
     .update({ status: "shipped", return_tracking_number: tracking, payout_due_at: payoutDueAt })
@@ -44,6 +51,11 @@ export async function POST(
     .eq("status", "paid"); // idempotency guard
 
   if (error) return NextResponse.json({ error: "Failed to update order" }, { status: 500 });
+
+  // Mark listing as sold so it no longer appears in browse/search
+  if (fullOrder?.listing_id) {
+    await admin.from("listings").update({ status: "sold" }).eq("id", fullOrder.listing_id);
+  }
 
   return NextResponse.json({ ok: true, payoutDueAt });
 }

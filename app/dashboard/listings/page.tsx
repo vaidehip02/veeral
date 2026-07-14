@@ -39,7 +39,8 @@ export default function ListingsPage() {
   const [listings, setListings] = useState<SellerListing[]>([]);
   const [loading,  setLoading]  = useState(true);
   const [filter,   setFilter]   = useState<FilterTab>("all");
-  const [deleting, setDeleting] = useState<string | null>(null);
+  const [deleting,  setDeleting]  = useState<string | null>(null);
+  const [archiving, setArchiving] = useState<string | null>(null);
 
   useEffect(() => {
     const supabase = createClient();
@@ -66,6 +67,22 @@ export default function ListingsPage() {
       }
     } finally {
       setDeleting(null);
+    }
+  }
+
+  async function archiveListing(id: string) {
+    setArchiving(id);
+    try {
+      const supabase = createClient();
+      const { error } = await supabase
+        .from("listings")
+        .update({ status: "archived" })
+        .eq("id", id);
+      if (!error) {
+        setListings(prev => prev.map(l => l.id === id ? { ...l, status: "archived" as ListingStatus } : l));
+      }
+    } finally {
+      setArchiving(null);
     }
   }
 
@@ -149,7 +166,9 @@ export default function ListingsPage() {
           {visible.map(listing => {
             const badge = STATUS_BADGE[listing.status] ?? STATUS_BADGE.active;
             const thumb = listing.images?.[0] ?? null;
-            const isDraft = listing.status === "draft";
+            const isDraft    = listing.status === "draft";
+            const isSold     = listing.status === "sold";
+            const isArchived = listing.status === "archived";
 
             return (
               <div
@@ -162,14 +181,28 @@ export default function ListingsPage() {
                 )}
 
                 {/* Thumbnail */}
-                <div style={{ aspectRatio: "4/3", background: "#EDE6DE", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <div style={{ aspectRatio: "4/3", background: "#EDE6DE", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", position: "relative" }}>
                   {thumb ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={thumb} alt={listing.title ?? "Draft"} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                    <img src={thumb} alt={listing.title ?? "Draft"} style={{ width: "100%", height: "100%", objectFit: "cover", filter: (isSold || isArchived) ? "brightness(0.7)" : "none" }} />
                   ) : (
                     <span style={{ fontFamily: "var(--font-jost)", fontSize: "0.7rem", letterSpacing: "0.1em", color: "var(--muted)", opacity: 0.4, textTransform: "uppercase" }}>
                       {listing.category ?? "No photo yet"}
                     </span>
+                  )}
+                  {isSold && (
+                    <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none" }}>
+                      <span style={{ fontFamily: "var(--font-jost)", fontWeight: 700, fontSize: "1rem", letterSpacing: "0.3em", textTransform: "uppercase", color: "#fff", background: "rgba(230,81,0,0.85)", padding: "0.35rem 1rem" }}>
+                        Sold
+                      </span>
+                    </div>
+                  )}
+                  {isArchived && (
+                    <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none" }}>
+                      <span style={{ fontFamily: "var(--font-jost)", fontWeight: 700, fontSize: "0.85rem", letterSpacing: "0.25em", textTransform: "uppercase", color: "#fff", background: "rgba(80,80,80,0.8)", padding: "0.3rem 0.9rem" }}>
+                        Archived
+                      </span>
+                    </div>
                   )}
                 </div>
 
@@ -221,6 +254,35 @@ export default function ListingsPage() {
                           {deleting === listing.id ? "…" : "Delete"}
                         </button>
                       </>
+                    ) : isSold ? (
+                      <>
+                        <Link
+                          href={`/listings/${listing.id}`}
+                          style={{ flex: 1, textAlign: "center", fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.6rem", letterSpacing: "0.14em", textTransform: "uppercase", padding: "0.45rem 0", color: "var(--muted)", border: "1px solid var(--warm-tan)", textDecoration: "none", transition: "border-color 0.15s" }}
+                          onMouseOver={e => { e.currentTarget.style.borderColor = "var(--muted)"; }}
+                          onMouseOut={e => { e.currentTarget.style.borderColor = "var(--warm-tan)"; }}
+                        >
+                          View
+                        </Link>
+                        <button
+                          onClick={() => archiveListing(listing.id)}
+                          disabled={archiving === listing.id}
+                          style={{ flex: 1, fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.6rem", letterSpacing: "0.14em", textTransform: "uppercase", padding: "0.45rem 0", color: "#757575", border: "1px solid #E0E0E0", background: "transparent", cursor: archiving === listing.id ? "not-allowed" : "pointer", opacity: archiving === listing.id ? 0.5 : 1, transition: "border-color 0.15s" }}
+                          onMouseOver={e => { if (archiving !== listing.id) e.currentTarget.style.borderColor = "#757575"; }}
+                          onMouseOut={e => { e.currentTarget.style.borderColor = "#E0E0E0"; }}
+                        >
+                          {archiving === listing.id ? "…" : "Archive"}
+                        </button>
+                      </>
+                    ) : isArchived ? (
+                      <Link
+                        href={`/listings/${listing.id}`}
+                        style={{ flex: 1, textAlign: "center", fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.6rem", letterSpacing: "0.14em", textTransform: "uppercase", padding: "0.45rem 0", color: "var(--muted)", border: "1px solid var(--warm-tan)", textDecoration: "none", transition: "border-color 0.15s" }}
+                        onMouseOver={e => { e.currentTarget.style.borderColor = "var(--muted)"; }}
+                        onMouseOut={e => { e.currentTarget.style.borderColor = "var(--warm-tan)"; }}
+                      >
+                        View
+                      </Link>
                     ) : (
                       <>
                         <Link
