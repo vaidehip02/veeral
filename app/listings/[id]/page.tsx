@@ -31,6 +31,7 @@ interface Listing {
   dry_clean_only: boolean | null;
   included: string[] | null;
   care_instructions: string | null;
+  status: string;
   seller: {
     id: string;
     username: string;
@@ -83,7 +84,7 @@ export default function ListingPage({ params: _params }: { params: { id: string 
       .select(`
         id, title, description, price, rent_price, rent_duration_days,
         deposit_pct, type, category, condition, size, color, brand,
-        location, images, seller_id
+        location, images, seller_id, status
       `)
       .eq("id", _params.id)
       .single()
@@ -320,42 +321,20 @@ export default function ListingPage({ params: _params }: { params: { id: string 
             </div>
 
             {/* Action buttons */}
-            <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-              {(l.type === "sale" || l.type === "both") && (
-                <button
-                  onClick={() => router.push(`/checkout/${l.id}?type=sale`)}
-                  style={{
-                    width: "100%", padding: "1rem",
-                    background: "#C4440A", border: "none", cursor: "pointer",
-                    fontFamily: "var(--font-jost)", fontWeight: 600,
-                    fontSize: "0.7rem", letterSpacing: "0.2em", textTransform: "uppercase",
-                    color: "var(--cream)", transition: "opacity 0.2s"
-                  }}
-                  onMouseOver={e => (e.currentTarget.style.opacity = "0.85")}
-                  onMouseOut={e => (e.currentTarget.style.opacity = "1")}
-                >
-                  Buy now — {formatPrice(l.price)}
-                </button>
-              )}
-
-              <div style={{ display: "flex", gap: "0.75rem" }}>
-                {(l.type === "sale" || l.type === "both") && (
-                  <button
-                    onClick={() => router.push(`/checkout/${l.id}?type=sale`)}
-                    style={{
-                      flex: 1, padding: "1rem",
-                      background: "transparent", border: "1px solid #C4440A", cursor: "pointer",
-                      fontFamily: "var(--font-jost)", fontWeight: 600,
-                      fontSize: "0.7rem", letterSpacing: "0.2em", textTransform: "uppercase",
-                      color: "#C4440A", transition: "opacity 0.2s"
-                    }}
-                    onMouseOver={e => (e.currentTarget.style.opacity = "0.65")}
-                    onMouseOut={e => (e.currentTarget.style.opacity = "1")}
-                  >
-                    Add to cart
-                  </button>
-                )}
-
+            {l.status === "sold" ? (
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                <div style={{
+                  width: "100%", padding: "1rem",
+                  background: "#F5F0EB", border: "1px solid #D4C4A8",
+                  fontFamily: "var(--font-jost)", fontWeight: 700,
+                  fontSize: "0.7rem", letterSpacing: "0.25em", textTransform: "uppercase",
+                  color: "#9A8A7E", textAlign: "center",
+                }}>
+                  Sold
+                </div>
+                <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.78rem", color: "var(--muted)", opacity: 0.65, textAlign: "center" }}>
+                  This item has been sold. Browse similar listings below.
+                </p>
                 <button
                   onClick={() => setSaved(!saved)}
                   aria-label="Save listing"
@@ -365,30 +344,83 @@ export default function ListingPage({ params: _params }: { params: { id: string 
                     border: `1px solid ${saved ? "#C4440A" : "var(--warm-tan)"}`,
                     cursor: "pointer", fontSize: "1.1rem",
                     color: saved ? "#C4440A" : "#3D3830",
-                    transition: "all 0.2s", flexShrink: 0,
+                    transition: "all 0.2s",
                   }}
                 >
                   {saved ? "♥" : "♡"}
                 </button>
               </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                {(l.type === "sale" || l.type === "both") && (
+                  <button
+                    onClick={() => router.push(`/checkout/${l.id}?type=sale`)}
+                    style={{
+                      width: "100%", padding: "1rem",
+                      background: "#C4440A", border: "none", cursor: "pointer",
+                      fontFamily: "var(--font-jost)", fontWeight: 600,
+                      fontSize: "0.7rem", letterSpacing: "0.2em", textTransform: "uppercase",
+                      color: "var(--cream)", transition: "opacity 0.2s"
+                    }}
+                    onMouseOver={e => (e.currentTarget.style.opacity = "0.85")}
+                    onMouseOut={e => (e.currentTarget.style.opacity = "1")}
+                  >
+                    Buy now — {formatPrice(l.price)}
+                  </button>
+                )}
 
-              {(l.type === "rent" || l.type === "both") && l.rent_price && (
-                <button
-                  onClick={() => setRentalOpen(true)}
-                  style={{
-                    width: "100%", padding: "1rem",
-                    background: "var(--dark)", border: "none", cursor: "pointer",
-                    fontFamily: "var(--font-jost)", fontWeight: 600,
-                    fontSize: "0.7rem", letterSpacing: "0.2em", textTransform: "uppercase",
-                    color: "var(--cream)", transition: "opacity 0.2s"
-                  }}
-                  onMouseOver={e => (e.currentTarget.style.opacity = "0.8")}
-                  onMouseOut={e => (e.currentTarget.style.opacity = "1")}
-                >
-                  Rent from {formatPrice(l.rent_price)} / day
-                </button>
-              )}
-            </div>
+                <div style={{ display: "flex", gap: "0.75rem" }}>
+                  {(l.type === "sale" || l.type === "both") && (
+                    <button
+                      onClick={() => router.push(`/checkout/${l.id}?type=sale`)}
+                      style={{
+                        flex: 1, padding: "1rem",
+                        background: "transparent", border: "1px solid #C4440A", cursor: "pointer",
+                        fontFamily: "var(--font-jost)", fontWeight: 600,
+                        fontSize: "0.7rem", letterSpacing: "0.2em", textTransform: "uppercase",
+                        color: "#C4440A", transition: "opacity 0.2s"
+                      }}
+                      onMouseOver={e => (e.currentTarget.style.opacity = "0.65")}
+                      onMouseOut={e => (e.currentTarget.style.opacity = "1")}
+                    >
+                      Add to cart
+                    </button>
+                  )}
+
+                  <button
+                    onClick={() => setSaved(!saved)}
+                    aria-label="Save listing"
+                    style={{
+                      width: "52px", padding: "1rem",
+                      background: "transparent",
+                      border: `1px solid ${saved ? "#C4440A" : "var(--warm-tan)"}`,
+                      cursor: "pointer", fontSize: "1.1rem",
+                      color: saved ? "#C4440A" : "#3D3830",
+                      transition: "all 0.2s", flexShrink: 0,
+                    }}
+                  >
+                    {saved ? "♥" : "♡"}
+                  </button>
+                </div>
+
+                {(l.type === "rent" || l.type === "both") && l.rent_price && (
+                  <button
+                    onClick={() => setRentalOpen(true)}
+                    style={{
+                      width: "100%", padding: "1rem",
+                      background: "var(--dark)", border: "none", cursor: "pointer",
+                      fontFamily: "var(--font-jost)", fontWeight: 600,
+                      fontSize: "0.7rem", letterSpacing: "0.2em", textTransform: "uppercase",
+                      color: "var(--cream)", transition: "opacity 0.2s"
+                    }}
+                    onMouseOver={e => (e.currentTarget.style.opacity = "0.8")}
+                    onMouseOut={e => (e.currentTarget.style.opacity = "1")}
+                  >
+                    Rent from {formatPrice(l.rent_price)} / day
+                  </button>
+                )}
+              </div>
+            )}
 
             {l.location && (
               <p style={{ fontFamily: "var(--font-jost)", fontWeight: 500, fontSize: "0.85rem", letterSpacing: "0.08em", color: "var(--muted)" }}>
