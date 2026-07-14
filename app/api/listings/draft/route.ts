@@ -118,11 +118,11 @@ export async function GET(req: NextRequest) {
     )
     .eq("id", id)
     .eq("seller_id", user.id)
-    .eq("status", "draft")
+    .in("status", ["draft", "active"])
     .single();
 
   if (error || !data) {
-    return NextResponse.json({ error: "Draft not found" }, { status: 404 });
+    return NextResponse.json({ error: "Listing not found" }, { status: 404 });
   }
 
   return NextResponse.json(data);

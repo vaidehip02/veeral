@@ -41,8 +41,8 @@ interface Listing {
 
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-function formatPrice(dollars: number) {
-  return `$${dollars.toLocaleString("en-US")}`;
+function formatPrice(cents: number) {
+  return `$${(cents / 100).toLocaleString("en-US")}`;
 }
 
 const CONDITION_LABEL: Record<string, string> = {
@@ -479,8 +479,8 @@ export default function ListingPage({ params: _params }: { params: { id: string 
         <RentalDrawer
           listingId={l.id}
           title={l.title}
-          pricePerDay={l.rent_price}
-          salePrice={l.price}
+          pricePerDay={l.rent_price / 100}
+          salePrice={l.price / 100}
           depositPct={l.deposit_pct ?? 40}
           maxDays={l.rent_duration_days ?? 14}
           careInstructions={l.care_instructions ?? undefined}

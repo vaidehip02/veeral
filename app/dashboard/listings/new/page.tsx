@@ -158,6 +158,7 @@ function NewListingForm() {
   const autoSaveTimer  = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isDirtyRef     = useRef(false); // don't auto-save until user changes something
   const isLoadingDraft = useRef(false);
+  const editIdRef      = useRef<string | null>(null); // set when ?edit=<id>
 
   // Photo state: savedImages = already-uploaded Cloudinary URLs; newPhotos = pending
   const [savedImages, setSavedImages] = useState<string[]>([]);
@@ -255,6 +256,66 @@ function NewListingForm() {
         setLoadingDraft(false);
         isLoadingDraft.current = false;
         isDirtyRef.current = false; // don't treat the restore as a change
+      });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Load existing active listing if ?edit=<id> ───────────────────────────────
+  useEffect(() => {
+    const id = searchParams.get("edit");
+    if (!id) return;
+
+    editIdRef.current = id;
+    setLoadingDraft(true);
+    isLoadingDraft.current = true;
+
+    fetch(`/api/listings/draft?id=${id}`)
+      .then(r => r.json())
+      .then((data: {
+        title?: string; description?: string; category?: string; condition?: string;
+        price?: number | null; rent_price?: number | null; rent_duration_days?: number | null;
+        type?: string; size?: string; color?: string; brand?: string;
+        images?: string[];
+        shipping_tier?: string | null; shipping_cents?: number | null;
+        draft_data?: {
+          fabric?: string; occasions?: string[]; embellishments?: string[];
+          included?: string[]; careInstructions?: string; originalPrice?: string;
+          dryCleanOnly?: boolean; isRental?: boolean; rentPrice?: string;
+          maxRentalDays?: string; depositPercent?: string;
+        } | null;
+      }) => {
+        if (data.images?.length) setSavedImages(data.images);
+        const dd = data.draft_data ?? {};
+        setForm(f => ({
+          ...f,
+          title:            data.title            ?? "",
+          description:      data.description      ?? "",
+          garmentType:      data.category         ?? "",
+          condition:        data.condition        ?? "",
+          price:            data.price != null    ? (data.price / 100).toString() : "",
+          rentPrice:        data.rent_price != null ? (data.rent_price / 100).toString() : "",
+          maxRentalDays:    data.rent_duration_days?.toString() ?? "14",
+          us_size:          data.size             ?? "",
+          color:            data.color            ?? "",
+          brand:            data.brand            ?? "",
+          fabric:           dd.fabric             ?? "",
+          careInstructions: dd.careInstructions   ?? "",
+          originalPrice:    dd.originalPrice      ?? "",
+          dryCleanOnly:     dd.dryCleanOnly       ?? false,
+          isRental:         dd.isRental           ?? (data.type === "rent" || data.type === "both"),
+          depositPercent:   dd.depositPercent     ?? "40",
+        }));
+        if (dd.occasions?.length)      setOccasions(dd.occasions);
+        if (dd.embellishments?.length) setEmbellishments(dd.embellishments);
+        if (dd.included?.length)       setIncluded(dd.included);
+        if (data.shipping_tier)        setShippingTier(data.shipping_tier as ShippingTier);
+        if (data.shipping_cents != null && data.shipping_tier === "custom")
+          setCustomShippingAmt((data.shipping_cents / 100).toString());
+      })
+      .catch(() => {})
+      .finally(() => {
+        setLoadingDraft(false);
+        isLoadingDraft.current = false;
+        isDirtyRef.current = false;
       });
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -474,7 +535,15 @@ function NewListingForm() {
 
     let dbErr: { message: string } | null = null;
 
-    if (draftIdRef.current) {
+    if (editIdRef.current) {
+      // Editing an existing active listing — patch it in place
+      const { error } = await supabase
+        .from("listings")
+        .update(payload)
+        .eq("id", editIdRef.current)
+        .eq("seller_id", user.id);
+      dbErr = error;
+    } else if (draftIdRef.current) {
       // Promote existing draft → active
       const { error } = await supabase
         .from("listings")
@@ -489,7 +558,7 @@ function NewListingForm() {
     }
 
     if (dbErr) { setError(dbErr.message); setPublishing(false); }
-    else router.push("/dashboard?published=true");
+    else router.push(editIdRef.current ? `/listings/${editIdRef.current}` : "/dashboard?published=true");
   }
 
   // ── Combined photo slot entries ──────────────────────────────────────────────
@@ -860,7 +929,7 @@ function NewListingForm() {
             </button>
             <button type="button" onClick={publish} disabled={saving || publishing}
               style={{ flex: 2, padding: "1rem", background: "#C4440A", border: "none", cursor: "pointer", fontFamily: "var(--font-jost)", fontWeight: 700, fontSize: "0.72rem", letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--cream)", opacity: publishing ? 0.6 : 1, transition: "opacity 0.2s" }}>
-              {publishing ? "Publishing…" : "Publish listing"}
+              {publishing ? (editIdRef.current ? "Saving…" : "Publishing…") : (editIdRef.current ? "Save changes" : "Publish listing")}
             </button>
           </div>
           <p style={{ ...hint, textAlign: "center" }}>Published listings are immediately visible to buyers.</p>

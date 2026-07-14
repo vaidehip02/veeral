@@ -231,6 +231,14 @@ export default function ListingsPage() {
                         >
                           View
                         </Link>
+                        <Link
+                          href={`/dashboard/listings/new?edit=${listing.id}`}
+                          style={{ flex: 1, textAlign: "center", fontFamily: "var(--font-jost)", fontWeight: 700, fontSize: "0.6rem", letterSpacing: "0.14em", textTransform: "uppercase", padding: "0.45rem 0", color: "#C4440A", border: "1px solid #C4440A", textDecoration: "none", transition: "opacity 0.15s" }}
+                          onMouseOver={e => { e.currentTarget.style.opacity = "0.75"; }}
+                          onMouseOut={e => { e.currentTarget.style.opacity = "1"; }}
+                        >
+                          Edit
+                        </Link>
                       </>
                     )}
                   </div>

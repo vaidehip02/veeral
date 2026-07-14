@@ -211,22 +211,23 @@ export default function CheckoutPage({ params: _params }: { params: { listingId:
       .catch(() => {});
   }, []);
 
-  // Display amounts (dollars, for the summary — actual cents used for Stripe)
-  const rentPricePerDay   = l?.rent_price ?? 0;
-  const rentalCostDollars = rentPricePerDay * days;
-  const depositDollars    = l ? Math.round(l.price * depositPct / 100) : 0;
+  // DB prices are stored in cents. Convert to dollars for display only.
+  const rentPricePerDayCents = l?.rent_price ?? 0;
+  const rentPricePerDay      = rentPricePerDayCents / 100;
+  const rentalCostDollars    = rentPricePerDay * days;
+  const depositDollars       = l ? Math.round((l.price / 100) * depositPct / 100) : 0;
   // Resolve shipping: listing tier takes precedence; falls back to medium ($14)
   const shippingCents     = l
     ? resolveTierCents(l.shipping_tier as ShippingTier | null, l.shipping_cents, shippingConfig)
     : shippingConfig.mediumCents;
   const shipping          = shippingCents / 100; // dollars for display
-  const subtotalDollars   = isRental ? rentalCostDollars : (l?.price ?? 0);
+  const subtotalDollars   = isRental ? rentalCostDollars : ((l?.price ?? 0) / 100);
   const feePercent: number | null = isRental ? rentalFee : saleFee;
 
-  // Cents (what Stripe actually charges)
-  const rentalCents  = rentalCostDollars * 100;
-  const depositCents = depositDollars * 100;
-  const saleCents    = (l?.price ?? 0) * 100;
+  // Cents (what Stripe actually charges) — DB values are already cents
+  const rentalCents  = Math.round(rentalCostDollars * 100);
+  const depositCents = Math.round(depositDollars * 100);
+  const saleCents    = l?.price ?? 0;
 
   // Checkout state machine
   // sale:   "address" → "paying" → "done"
@@ -396,7 +397,7 @@ export default function CheckoutPage({ params: _params }: { params: { listingId:
                 </div>
                 <div style={{ flexShrink: 0, textAlign: "right" }}>
                   <p style={{ fontFamily: "var(--font-cormorant)", fontWeight: 600, fontSize: "1.3rem", color: "#C4440A" }}>
-                    {isRental ? `$${rentalCostDollars.toLocaleString()}` : `$${l.price.toLocaleString()}`}
+                    {isRental ? `$${rentalCostDollars.toLocaleString()}` : `$${(l.price / 100).toLocaleString()}`}
                   </p>
                   {isRental && (
                     <p style={{ fontFamily: "var(--font-jost)", fontWeight: 500, fontSize: "0.7rem", color: "#3D3830" }}>
@@ -663,7 +664,7 @@ export default function CheckoutPage({ params: _params }: { params: { listingId:
                   <PaymentForm
                     label="Item + Veeral fee + shipping"
                     amount={saleCents + ((veeralFeeDollars ?? 0) * 100) + shippingCents}
-                    buttonLabel={`Pay $${(l.price + (veeralFeeDollars ?? 0) + shipping).toLocaleString()} — complete order`}
+                    buttonLabel={`Pay $${((l.price / 100) + (veeralFeeDollars ?? 0) + shipping).toLocaleString()} — complete order`}
                     onSuccess={() => setStage("done")}
                     onError={setApiError}
                   />

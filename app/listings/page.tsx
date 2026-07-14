@@ -356,7 +356,7 @@ function ListingCard({ listing }: { listing: Listing }) {
                 fontFamily:"var(--font-cormorant)", fontStyle:"italic",
                 fontSize:"1.05rem", color:"#C4440A",
               }}>
-                ${listing.price.toLocaleString()}
+                ${(listing.price / 100).toLocaleString()}
               </span>
             )}
             {listing.rent_price && (listing.type === "rent" || listing.type === "both") && (
@@ -364,7 +364,7 @@ function ListingCard({ listing }: { listing: Listing }) {
                 fontFamily:"var(--font-jost)", fontSize:"0.78rem",
                 color:"var(--muted)", opacity:0.7,
               }}>
-                {listing.type === "both" ? "· " : ""}${listing.rent_price}/day
+                {listing.type === "both" ? "· " : ""}${(listing.rent_price / 100).toLocaleString()}/day
               </span>
             )}
           </div>
@@ -567,7 +567,7 @@ function ListingsInner({ typeParam }: { typeParam: string | null }) {
       // Size
       if (filters.sizes.length && !filters.sizes.includes(l.size ?? "")) return false;
       // Price
-      const effectivePrice = l.type === "rent" ? (l.rent_price ?? 0) : l.price;
+      const effectivePrice = (l.type === "rent" ? (l.rent_price ?? 0) : l.price) / 100;
       if (filters.priceMin && effectivePrice < Number(filters.priceMin)) return false;
       if (filters.priceMax && effectivePrice > Number(filters.priceMax)) return false;
       // Condition
