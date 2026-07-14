@@ -227,11 +227,13 @@ function MessagesInner() {
   const activeConv = conversations.find(c => c.id === activeId);
   const totalUnread = conversations.filter(isUnread).length;
 
+  const showThread = activeConv !== undefined;
+
   return (
     <div style={{ display: "flex", height: "calc(100vh - 140px)", minHeight: "500px", overflow: "hidden", margin: "-2.5rem -2rem -4rem", borderLeft: "1px solid var(--warm-tan)" }}>
 
       {/* ── Inbox list ── */}
-      <div style={{ width: "360px", flexShrink: 0, borderRight: `1px solid ${A.border}`, display: "flex", flexDirection: "column", background: "#fff" }}>
+      <div className={showThread ? "hidden md:flex" : "flex"} style={{ width: "100%", maxWidth: "360px", flexShrink: 0, borderRight: `1px solid ${A.border}`, flexDirection: "column", background: "#fff" }}>
 
         <div style={{ padding: "1.5rem 1.25rem 1rem", borderBottom: `1px solid ${A.border}` }}>
           <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
@@ -308,10 +310,21 @@ function MessagesInner() {
 
       {/* ── Thread panel ── */}
       {activeConv ? (
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0, width: "100%" }}>
 
           {/* Thread header */}
           <div style={{ padding: "1.25rem 1.5rem", borderBottom: `1px solid ${A.border}`, background: "#fff", display: "flex", alignItems: "center", gap: "1rem" }}>
+            {/* Back button — mobile only */}
+            <button
+              className="md:hidden"
+              onClick={() => setActiveId(null)}
+              style={{ background: "none", border: "none", cursor: "pointer", color: A.muted, padding: "0 0.5rem 0 0", flexShrink: 0, display: "flex", alignItems: "center" }}
+              aria-label="Back to inbox"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M19 12H5M5 12l7-7M5 12l7 7"/>
+              </svg>
+            </button>
             <div style={{ flex: 1, minWidth: 0 }}>
               <p style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.9rem", color: A.dark, margin: 0 }}>
                 {activeConv.counterparty?.display_name ?? "Unknown"}

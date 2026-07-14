@@ -365,14 +365,19 @@ export default function Navbar() {
 
           {user ? (
             <>
-              {/* User info */}
-              <div style={{
-                display: "flex", alignItems: "center", gap: "0.75rem",
-                padding: "1rem 0 0.75rem",
-                borderBottom: "1px solid var(--warm-tan)",
-              }}>
+              {/* User info — tappable toggle */}
+              <button
+                onClick={() => setDropdownOpen(o => !o)}
+                style={{
+                  display: "flex", alignItems: "center", gap: "0.75rem",
+                  padding: "1rem 0 0.75rem", width: "100%",
+                  borderBottom: "1px solid var(--warm-tan)",
+                  background: "none", border: "none", borderBottom: "1px solid var(--warm-tan)",
+                  cursor: "pointer", textAlign: "left",
+                }}
+              >
                 {avatar ? (
-                  <img src={avatar} alt={displayName} style={{ width: "36px", height: "36px", borderRadius: "50%", objectFit: "cover" }} />
+                  <img src={avatar} alt={displayName} style={{ width: "36px", height: "36px", borderRadius: "50%", objectFit: "cover", flexShrink: 0 }} />
                 ) : (
                   <div style={{
                     width: "36px", height: "36px", borderRadius: "50%",
@@ -384,46 +389,53 @@ export default function Navbar() {
                     {initials}
                   </div>
                 )}
-                <div>
+                <div style={{ flex: 1, minWidth: 0 }}>
                   <p style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.82rem", color: "#1A1A18" }}>
                     {displayName}
                   </p>
-                  <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.82rem", color: "var(--muted)", opacity: 0.55 }}>
+                  <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.75rem", color: "var(--muted)", opacity: 0.55, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                     {user.email}
                   </p>
                 </div>
-              </div>
-
-              {/* Dropdown items */}
-              {DROPDOWN_ITEMS.filter(item => !item.sellerOnly || isSeller).map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={() => setMenuOpen(false)}
-                  style={{
-                    fontFamily: "var(--font-jost)", fontWeight: 400,
-                    fontSize: "0.78rem", color: "var(--muted)",
-                    textDecoration: "none", padding: "0.65rem 0",
-                    borderBottom: "1px solid var(--warm-tan)",
-                    display: "block",
-                  }}
-                >
-                  {item.label}
-                </Link>
-              ))}
-
-              <button
-                onClick={handleSignOut}
-                style={{
-                  fontFamily: "var(--font-jost)", fontWeight: 400,
-                  fontSize: "0.78rem", color: "var(--muted)",
-                  background: "none", border: "none", cursor: "pointer",
-                  padding: "0.65rem 0", textAlign: "left",
-                  display: "block",
-                }}
-              >
-                Sign out
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" strokeWidth="2"
+                  style={{ transform: dropdownOpen ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s", flexShrink: 0 }}>
+                  <path d="m6 9 6 6 6-6"/>
+                </svg>
               </button>
+
+              {/* Collapsible account links */}
+              {dropdownOpen && (
+                <>
+                  {DROPDOWN_ITEMS.filter(item => !item.sellerOnly || isSeller).map((item) => (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      onClick={() => { setMenuOpen(false); setDropdownOpen(false); }}
+                      style={{
+                        fontFamily: "var(--font-jost)", fontWeight: 400,
+                        fontSize: "0.78rem", color: "var(--muted)",
+                        textDecoration: "none", padding: "0.65rem 0 0.65rem 1rem",
+                        borderBottom: "1px solid var(--warm-tan)",
+                        display: "block",
+                      }}
+                    >
+                      {item.label}
+                    </Link>
+                  ))}
+                  <button
+                    onClick={handleSignOut}
+                    style={{
+                      fontFamily: "var(--font-jost)", fontWeight: 400,
+                      fontSize: "0.78rem", color: "var(--muted)",
+                      background: "none", border: "none", cursor: "pointer",
+                      padding: "0.65rem 0 0.65rem 1rem", textAlign: "left",
+                      display: "block",
+                    }}
+                  >
+                    Sign out
+                  </button>
+                </>
+              )}
             </>
           ) : (
             <>

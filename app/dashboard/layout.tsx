@@ -145,6 +145,24 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         background: "var(--cream)", borderTop: "1px solid var(--warm-tan)",
         display: "flex", zIndex: 50,
       }}>
+        {/* Home button */}
+        <Link
+          href="/"
+          style={{
+            flex: 1, display: "flex", flexDirection: "column",
+            alignItems: "center", justifyContent: "center",
+            gap: "0.2rem", padding: "0.6rem 0",
+            color: "var(--muted)", textDecoration: "none",
+            borderTop: "2px solid transparent",
+          }}
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z"/><path d="M9 21V12h6v9"/>
+          </svg>
+          <span style={{ fontFamily: "var(--font-jost)", fontWeight: 400, fontSize: "0.55rem", letterSpacing: "0.1em", textTransform: "uppercase" }}>
+            Home
+          </span>
+        </Link>
         {TABS.map((tab) => {
           const active = isActive(tab.href);
           return (
