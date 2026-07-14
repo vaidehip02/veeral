@@ -132,7 +132,7 @@ export default function ListingPage({ params: _params }: { params: { id: string 
 
   return (
     <div style={{ background: "var(--cream)", minHeight: "100vh" }}>
-      <div className="max-w-7xl mx-auto px-6 lg:px-10 py-10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-10">
 
         {/* Breadcrumb */}
         <nav style={{ marginBottom: "1.5rem" }}>
@@ -274,7 +274,7 @@ export default function ListingPage({ params: _params }: { params: { id: string 
                 What&apos;s included
               </p>
               {/* 3-column grid: row 1 = Lehenga skirt, Blouse, Dupatta | row 2 = Jacket/Shrug, Belt/Kamarband */}
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "0.6rem 1rem" }}>
+              <div className="included-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "0.6rem 1rem" }}>
                 {INCLUDED_OPTIONS.map(item => {
                   const included = (l.included ?? []).includes(item);
                   return (
@@ -531,6 +531,7 @@ export default function ListingPage({ params: _params }: { params: { id: string 
         @media (max-width: 768px) {
           .listing-grid { grid-template-columns: 1fr !important; gap: 2rem !important; }
           .similar-grid { grid-template-columns: repeat(2, 1fr) !important; }
+          .included-grid { grid-template-columns: repeat(2, 1fr) !important; }
         }
       `}</style>
     </div>

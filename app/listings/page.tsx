@@ -610,7 +610,7 @@ function ListingsInner({ typeParam }: { typeParam: string | null }) {
 
   return (
     <div style={{ background:"var(--cream)", minHeight:"100vh" }}>
-      <div className="max-w-7xl mx-auto" style={{ padding:"0 1.25rem" }}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-5">
 
         {/* ── Page header ── */}
         <div style={{ paddingTop:"2.5rem", paddingBottom:"1.75rem" }}>

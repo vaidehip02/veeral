@@ -347,7 +347,7 @@ export default function CheckoutPage({ params: _params }: { params: { listingId:
 
   return (
     <div style={{ background: "var(--cream)", minHeight: "100vh" }}>
-      <div className="max-w-6xl mx-auto px-6 lg:px-10 py-10">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-10 py-10">
 
         <h1 style={{
           fontFamily: "var(--font-cormorant)", fontStyle: "italic", fontWeight: 500,
@@ -585,7 +585,7 @@ export default function CheckoutPage({ params: _params }: { params: { listingId:
           </div>
 
           {/* ── RIGHT: Address + Payment ───────────────────────── */}
-          <div style={{ display: "flex", flexDirection: "column", gap: "2rem", position: "sticky", top: "6rem" }}>
+          <div className="checkout-right" style={{ display: "flex", flexDirection: "column", gap: "2rem", position: "sticky", top: "6rem" }}>
 
             {/* Step 1: Shipping address */}
             {stage === "address" && (
@@ -723,6 +723,7 @@ export default function CheckoutPage({ params: _params }: { params: { listingId:
       <style>{`
         @media (max-width: 768px) {
           .checkout-grid { grid-template-columns: 1fr !important; gap: 2rem !important; }
+          .checkout-right { position: static !important; }
         }
       `}</style>
     </div>

@@ -134,10 +134,43 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </aside>
 
         {/* ── Main content ─────────────────────────────────── */}
-        <main style={{ flex: 1, padding: "2.5rem 2rem 5rem", minWidth: 0 }}>
+        <main style={{ flex: 1, minWidth: 0 }} className="px-4 md:px-8 pt-10 pb-20">
           {children}
         </main>
       </div>
+
+      {/* ── Mobile bottom tab bar ─────────────────────────── */}
+      <nav className="md:hidden" style={{
+        position: "fixed", bottom: 0, left: 0, right: 0,
+        background: "var(--cream)", borderTop: "1px solid var(--warm-tan)",
+        display: "flex", zIndex: 50,
+      }}>
+        {TABS.map((tab) => {
+          const active = isActive(tab.href);
+          return (
+            <Link
+              key={tab.href}
+              href={tab.href}
+              style={{
+                flex: 1, display: "flex", flexDirection: "column",
+                alignItems: "center", justifyContent: "center",
+                gap: "0.2rem", padding: "0.6rem 0",
+                color: active ? "var(--burnt-orange)" : "var(--muted)",
+                textDecoration: "none",
+                borderTop: active ? "2px solid var(--burnt-orange)" : "2px solid transparent",
+              }}
+            >
+              <span style={{ opacity: active ? 1 : 0.55 }}>{tab.icon}</span>
+              <span style={{
+                fontFamily: "var(--font-jost)", fontWeight: active ? 600 : 400,
+                fontSize: "0.55rem", letterSpacing: "0.1em", textTransform: "uppercase",
+              }}>
+                {tab.label}
+              </span>
+            </Link>
+          );
+        })}
+      </nav>
 
     </div>
   );

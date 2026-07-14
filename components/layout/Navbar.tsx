@@ -114,7 +114,7 @@ export default function Navbar() {
         style={{ borderBottom: "1px solid var(--warm-tan)" }}
         className="max-w-7xl mx-auto px-6 lg:px-10"
       >
-        <div className="flex items-center justify-between h-24 gap-6">
+        <div className="flex items-center justify-between h-16 md:h-24 gap-6">
 
           {/* Left: nav links */}
           <div className="hidden md:flex items-center gap-8">
