@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
 
@@ -46,6 +47,7 @@ function getAvatar(_user: User): string | null {
 }
 
 export default function Navbar() {
+  const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
@@ -406,20 +408,19 @@ export default function Navbar() {
               {dropdownOpen && (
                 <>
                   {DROPDOWN_ITEMS.filter(item => !item.sellerOnly || isSeller).map((item) => (
-                    <Link
+                    <button
                       key={item.href}
-                      href={item.href}
-                      onClick={() => { setMenuOpen(false); setDropdownOpen(false); }}
+                      onClick={() => { router.push(item.href); setMenuOpen(false); setDropdownOpen(false); }}
                       style={{
                         fontFamily: "var(--font-jost)", fontWeight: 400,
                         fontSize: "0.78rem", color: "var(--muted)",
-                        textDecoration: "none", padding: "0.65rem 0 0.65rem 1rem",
-                        borderBottom: "1px solid var(--warm-tan)",
-                        display: "block",
+                        background: "none", border: "none", borderBottom: "1px solid var(--warm-tan)",
+                        padding: "0.65rem 0 0.65rem 1rem", textAlign: "left",
+                        display: "block", width: "100%", cursor: "pointer",
                       }}
                     >
                       {item.label}
-                    </Link>
+                    </button>
                   ))}
                   <button
                     onClick={handleSignOut}
