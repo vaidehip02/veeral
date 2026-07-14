@@ -1,23 +1,43 @@
 "use client";
 
-import Link from "next/link";
+import { useState } from "react";
 
 const SUMMARY = [
   { label: "Total earned to date", value: "$42,500", sub: "across 12 transactions" },
-  { label: "Pending payouts", value: "$18,900", sub: "2 sales awaiting release" },
-  { label: "Veeral commission", value: "$4,250", sub: "10% platform fee" },
+  { label: "Pending payouts",      value: "$18,900", sub: "2 sales awaiting release" },
 ];
 
 const PAYOUT_HISTORY = [
-  { date: "Jun 7, 2026", item: "Zardozi Saree — Ivory & Gold",    type: "Sale",   gross: 12000, commission: 1200, net: 10800 },
-  { date: "Jun 2, 2026", item: "Indo-Western Sherwani Set",        type: "Sale",   gross: 9500,  commission: 950,  net: 8550  },
-  { date: "May 28, 2026", item: "Embroidered Chanderi Saree",      type: "Sale",   gross: 7800,  commission: 780,  net: 7020  },
-  { date: "May 22, 2026", item: "Mirror-work Lehenga (Rental)",    type: "Rental", gross: 24000, commission: 2400, net: 21600 },
-  { date: "May 14, 2026", item: "Silk Sharara Set",                type: "Sale",   gross: 8600,  commission: 860,  net: 7740  },
-  { date: "May 5, 2026",  item: "Banarasi Silk Lehenga (Rental)",  type: "Rental", gross: 10000, commission: 1000, net: 9000  },
+  { date: "Jun 7, 2026",  item: "Zardozi Saree — Ivory & Gold",   type: "Sale",   net: 10800 },
+  { date: "Jun 2, 2026",  item: "Indo-Western Sherwani Set",       type: "Sale",   net: 8550  },
+  { date: "May 28, 2026", item: "Embroidered Chanderi Saree",      type: "Sale",   net: 7020  },
+  { date: "May 22, 2026", item: "Mirror-work Lehenga (Rental)",    type: "Rental", net: 21600 },
+  { date: "May 14, 2026", item: "Silk Sharara Set",                type: "Sale",   net: 7740  },
+  { date: "May 5, 2026",  item: "Banarasi Silk Lehenga (Rental)",  type: "Rental", net: 9000  },
 ];
 
 export default function EarningsPage() {
+  const [connecting, setConnecting] = useState(false);
+  const [connectError, setConnectError] = useState("");
+
+  async function handleConnectStripe() {
+    setConnecting(true);
+    setConnectError("");
+    try {
+      const res  = await fetch("/api/stripe/connect", { method: "POST" });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        setConnectError(data.error ?? "Failed to start Stripe onboarding");
+        setConnecting(false);
+      }
+    } catch {
+      setConnectError("Something went wrong. Please try again.");
+      setConnecting(false);
+    }
+  }
+
   return (
     <div style={{ maxWidth: "860px" }}>
 
@@ -35,15 +55,12 @@ export default function EarningsPage() {
       </div>
 
       {/* Summary cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4" style={{ marginBottom: "2.5rem" }}>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4" style={{ marginBottom: "2.5rem" }}>
         {SUMMARY.map((card) => (
-          <div
-            key={card.label}
-            style={{
-              background: "#fff", border: "1px solid var(--warm-tan)",
-              padding: "1.4rem 1.25rem", borderRadius: "2px",
-            }}
-          >
+          <div key={card.label} style={{
+            background: "#fff", border: "1px solid var(--warm-tan)",
+            padding: "1.4rem 1.25rem", borderRadius: "2px",
+          }}>
             <p style={{
               fontFamily: "var(--font-jost)", fontSize: "0.62rem", fontWeight: 600,
               letterSpacing: "0.2em", textTransform: "uppercase",
@@ -57,10 +74,7 @@ export default function EarningsPage() {
             }}>
               {card.value}
             </p>
-            <p style={{
-              fontFamily: "var(--font-jost)", fontSize: "0.72rem",
-              color: "var(--muted)", opacity: 0.65
-            }}>
+            <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.72rem", color: "var(--muted)", opacity: 0.65 }}>
               {card.sub}
             </p>
           </div>
@@ -78,13 +92,23 @@ export default function EarningsPage() {
         </svg>
         <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.78rem", color: "var(--muted)", flex: 1 }}>
           Payouts go to your connected bank account via Stripe.{" "}
-          <Link
-            href="/dashboard/payouts"
-            style={{ color: "var(--burnt-orange)", textDecoration: "underline", textUnderlineOffset: "2px" }}
+          <button
+            onClick={handleConnectStripe}
+            disabled={connecting}
+            style={{
+              background: "none", border: "none", padding: 0, cursor: connecting ? "not-allowed" : "pointer",
+              color: "var(--burnt-orange)", textDecoration: "underline", textUnderlineOffset: "2px",
+              fontFamily: "var(--font-jost)", fontSize: "0.78rem", opacity: connecting ? 0.6 : 1,
+            }}
           >
-            Update bank details
-          </Link>
+            {connecting ? "Redirecting…" : "Update bank details"}
+          </button>
         </p>
+        {connectError && (
+          <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.72rem", color: "#C62828", width: "100%" }}>
+            {connectError}
+          </p>
+        )}
       </div>
 
       {/* Payout history */}
@@ -97,38 +121,30 @@ export default function EarningsPage() {
           Payout history
         </p>
 
-        {/* Table header — desktop */}
-        <div
-          className="hidden md:grid"
-          style={{
-            gridTemplateColumns: "110px 1fr 80px 100px 110px 100px",
-            padding: "0.6rem 1rem",
-            borderBottom: "2px solid var(--warm-tan)",
-            fontFamily: "var(--font-jost)", fontWeight: 600,
-            fontSize: "0.6rem", letterSpacing: "0.18em", textTransform: "uppercase",
-            color: "var(--muted)", opacity: 0.6,
-          }}
-        >
+        {/* Table header */}
+        <div className="hidden md:grid" style={{
+          gridTemplateColumns: "110px 1fr 80px 110px",
+          padding: "0.6rem 1rem",
+          borderBottom: "2px solid var(--warm-tan)",
+          fontFamily: "var(--font-jost)", fontWeight: 600,
+          fontSize: "0.6rem", letterSpacing: "0.18em", textTransform: "uppercase",
+          color: "var(--muted)", opacity: 0.6,
+        }}>
           <span>Date</span>
           <span>Item</span>
           <span>Type</span>
-          <span style={{ textAlign: "right" }}>Gross</span>
-          <span style={{ textAlign: "right" }}>Commission</span>
           <span style={{ textAlign: "right" }}>Net payout</span>
         </div>
 
         {PAYOUT_HISTORY.map((row, i) => (
           <div key={i} style={{ borderBottom: "1px solid var(--warm-tan)" }}>
             {/* Desktop row */}
-            <div
-              className="hidden md:grid items-center"
-              style={{
-                gridTemplateColumns: "110px 1fr 80px 100px 110px 100px",
-                padding: "0.9rem 1rem",
-                background: i % 2 === 0 ? "#fff" : "transparent",
-                gap: "0.5rem",
-              }}
-            >
+            <div className="hidden md:grid items-center" style={{
+              gridTemplateColumns: "110px 1fr 80px 110px",
+              padding: "0.9rem 1rem",
+              background: i % 2 === 0 ? "#fff" : "transparent",
+              gap: "0.5rem",
+            }}>
               <span style={{ fontFamily: "var(--font-jost)", fontSize: "0.73rem", color: "var(--muted)", opacity: 0.6 }}>
                 {row.date}
               </span>
@@ -148,18 +164,6 @@ export default function EarningsPage() {
               </span>
               <span style={{
                 fontFamily: "var(--font-cormorant)", fontStyle: "italic",
-                fontSize: "0.95rem", color: "#1A1A18", textAlign: "right"
-              }}>
-                ${row.gross.toLocaleString()}
-              </span>
-              <span style={{
-                fontFamily: "var(--font-jost)", fontSize: "0.78rem",
-                color: "#C62828", textAlign: "right"
-              }}>
-                −${row.commission.toLocaleString()}
-              </span>
-              <span style={{
-                fontFamily: "var(--font-cormorant)", fontStyle: "italic",
                 fontSize: "1rem", fontWeight: 500, color: "#2D6A4F", textAlign: "right"
               }}>
                 ${row.net.toLocaleString()}
@@ -168,7 +172,7 @@ export default function EarningsPage() {
 
             {/* Mobile row */}
             <div className="md:hidden" style={{ padding: "0.9rem 0", background: i % 2 === 0 ? "#fff" : "transparent" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "0.3rem" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                 <div>
                   <p style={{ fontFamily: "var(--font-jost)", fontWeight: 500, fontSize: "0.82rem", color: "#1A1A18" }}>
                     {row.item}
@@ -177,30 +181,22 @@ export default function EarningsPage() {
                     {row.date} · {row.type}
                   </p>
                 </div>
-                <div style={{ textAlign: "right" }}>
-                  <p style={{ fontFamily: "var(--font-cormorant)", fontStyle: "italic", fontSize: "1rem", color: "#2D6A4F" }}>
-                    ${row.net.toLocaleString()}
-                  </p>
-                  <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.68rem", color: "#C62828" }}>
-                    −${row.commission.toLocaleString()} fee
-                  </p>
-                </div>
+                <p style={{ fontFamily: "var(--font-cormorant)", fontStyle: "italic", fontSize: "1rem", color: "#2D6A4F" }}>
+                  ${row.net.toLocaleString()}
+                </p>
               </div>
             </div>
           </div>
         ))}
 
         {/* Total row */}
-        <div
-          className="hidden md:grid"
-          style={{
-            gridTemplateColumns: "110px 1fr 80px 100px 110px 100px",
-            padding: "1rem 1rem",
-            borderTop: "2px solid var(--warm-tan)",
-            background: "rgba(201,92,26,0.04)",
-            gap: "0.5rem",
-          }}
-        >
+        <div className="hidden md:grid" style={{
+          gridTemplateColumns: "110px 1fr 80px 110px",
+          padding: "1rem 1rem",
+          borderTop: "2px solid var(--warm-tan)",
+          background: "rgba(201,92,26,0.04)",
+          gap: "0.5rem",
+        }}>
           <span />
           <span style={{
             fontFamily: "var(--font-jost)", fontWeight: 700, fontSize: "0.7rem",
@@ -209,18 +205,6 @@ export default function EarningsPage() {
             Total
           </span>
           <span />
-          <span style={{
-            fontFamily: "var(--font-cormorant)", fontStyle: "italic",
-            fontSize: "1rem", color: "#1A1A18", textAlign: "right", fontWeight: 500
-          }}>
-            ${PAYOUT_HISTORY.reduce((s, r) => s + r.gross, 0).toLocaleString()}
-          </span>
-          <span style={{
-            fontFamily: "var(--font-jost)", fontSize: "0.82rem",
-            color: "#C62828", textAlign: "right", fontWeight: 600
-          }}>
-            −${PAYOUT_HISTORY.reduce((s, r) => s + r.commission, 0).toLocaleString()}
-          </span>
           <span style={{
             fontFamily: "var(--font-cormorant)", fontStyle: "italic",
             fontSize: "1.1rem", color: "#2D6A4F", textAlign: "right", fontWeight: 500
