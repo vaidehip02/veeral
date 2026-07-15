@@ -288,39 +288,7 @@ export default function HelpCenterPage() {
           </div>
         </div>
 
-        {/* ── Categories ── */}
-        <div style={{ marginBottom: "4rem" }}>
-          <p style={{ fontFamily: "var(--font-jost)", fontWeight: 700, fontSize: "0.82rem", letterSpacing: "0.22em", textTransform: "uppercase", color: "var(--burnt-orange)", marginBottom: "1.25rem" }}>
-            Browse by topic
-          </p>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "1.25rem" }}>
-            {CATEGORIES.map(cat => (
-              <div key={cat.label} style={{ background: "#fff", border: "1px solid var(--warm-tan)", padding: "1.5rem 1.5rem 1.25rem" }}>
-                <button onClick={() => scrollTo(cat.section)}
-                  style={{ display: "flex", alignItems: "center", gap: "0.6rem", background: "none", border: "none", cursor: "pointer", padding: 0, marginBottom: "1rem" }}
-                >
-                  <span style={{ fontSize: "1.1rem" }}>{cat.icon}</span>
-                  <span style={{ fontFamily: "var(--font-jost)", fontWeight: 700, fontSize: "1.02rem", color: "#3B2F2A" }}>{cat.label}</span>
-                </button>
-                <ul style={{ margin: 0, padding: 0, listStyle: "none" }}>
-                  {cat.links.map(link => (
-                    <li key={link}>
-                      <button onClick={() => scrollTo(cat.section)}
-                        style={{ fontFamily: "var(--font-jost)", fontSize: "0.92rem", color: "#7A6A62", background: "none", border: "none", cursor: "pointer", padding: "0.2rem 0", textAlign: "left", display: "block", lineHeight: 1.6 }}
-                        onMouseOver={e => (e.currentTarget.style.color = "var(--burnt-orange)")}
-                        onMouseOut={e => (e.currentTarget.style.color = "#7A6A62")}
-                      >
-                        {link}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* ── Accordion sections (reached via category card clicks) ── */}
+        {/* ── Accordion sections ── */}
         <div style={{ height: "1px", background: "var(--warm-tan)", marginBottom: "2.5rem" }} />
         {CONTENT_SECTIONS.map(section => (
           <SectionAccordion key={section.id} section={section} />
