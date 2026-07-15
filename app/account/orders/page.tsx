@@ -106,7 +106,7 @@ export default function BuyerOrdersPage() {
       const res = await fetch("/api/reviews", {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({ order_id: reviewDrawer.orderId, rating: reviewDrawer.rating, comment: reviewDrawer.text }),
+        body:    JSON.stringify({ order_id: reviewDrawer.orderId, rating: reviewDrawer.rating, comment: reviewDrawer.text, reviewer_role: "buyer" }),
       });
       if (!res.ok) {
         const { error } = await res.json();
@@ -250,7 +250,7 @@ export default function BuyerOrdersPage() {
       {reviewDrawer && (
         <>
           <div onClick={() => setReviewDrawer(null)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.35)", zIndex: 60 }} />
-          <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, background: "var(--cream)", zIndex: 70, padding: "2rem", borderTop: "1px solid var(--warm-tan)", maxWidth: "520px", margin: "0 auto", maxHeight: "85vh", overflowY: "auto" }}>
+          <div style={{ position: "fixed", top: "50%", left: "50%", transform: "translate(-50%, -50%)", background: "var(--cream)", zIndex: 70, padding: "2rem", border: "1px solid var(--warm-tan)", width: "90%", maxWidth: "520px", maxHeight: "85vh", overflowY: "auto" }}>
             <h2 style={{ fontFamily: "var(--font-cormorant)", fontStyle: "italic", fontWeight: 400, fontSize: "1.5rem", color: "#1A1A18", marginBottom: "0.25rem" }}>
               Leave a review
             </h2>
