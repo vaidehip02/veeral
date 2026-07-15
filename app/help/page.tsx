@@ -109,8 +109,8 @@ const CONTENT_SECTIONS: ContentSection[] = [
   {
     id: "account", label: "Your Account", icon: "👤",
     items: [
-      { title: "Logging In", body: <P>Access your Veeral account via the website using your registered email and password. If you&apos;ve forgotten your password, use the &ldquo;Forgot Password&rdquo; link on the login page.</P> },
-      { title: "Managing Your Account", body: <P>From your account settings you can update your profile information, linked bank account for payouts, notification preferences, and saved addresses.</P> },
+      { title: "Logging In", body: <P>You can sign in with your email and password, or with Google, Apple, or Facebook. If you use email and have forgotten your password, use the &ldquo;Forgot Password&rdquo; link on the login page.</P> },
+      { title: "Managing Your Account", body: <P>From your account settings you can update your profile information, notification preferences, and saved addresses. Payout and bank account details are managed directly in your Stripe Express dashboard — go to <strong>Dashboard &rarr; Earnings</strong> to access it.</P> },
       { title: "Technical Issues", body: <P>If you experience a technical problem, try refreshing the page or clearing your browser cache. If the issue persists, contact Veeral Support through the website.</P> },
     ],
   },
