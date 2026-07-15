@@ -26,14 +26,6 @@ function Ul({ items }: { items: string[] }) {
 
 // ── Content data ──────────────────────────────────────────────────────────────
 
-const CATEGORIES = [
-  { icon: "🛍", label: "Buying",             section: "buying",    links: ["Finding items", "Checking out", "Buyer protection", "Fit & alterations"] },
-  { icon: "🏷", label: "Selling",            section: "selling",   links: ["Creating a listing", "Sizing guide", "Drafts", "Ratings & reviews", "Fees & taxes"] },
-  { icon: "📦", label: "Shipping",           section: "shipping",  links: ["Shipping requirements", "Tracking number", "Who pays for shipping", "Can't ship in time", "Lost or damaged in transit", "Packaging tips"] },
-  { icon: "💳", label: "Payments",           section: "payments",  links: ["Getting paid", "Payout timing", "Pending payments", "Payout issues"] },
-  { icon: "👤", label: "Your Account",       section: "account",   links: ["Logging in", "Managing your account", "Technical issues"] },
-  { icon: "🤝", label: "Community & Safety", section: "community", links: ["Community guidelines", "Safety tips"] },
-];
 
 interface ContentItem { title: string; body: React.ReactNode }
 interface ContentSection { id: string; label: string; icon: string; items: ContentItem[] }
