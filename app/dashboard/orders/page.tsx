@@ -46,7 +46,7 @@ function fmt(cents: number) {
   return `$${(cents / 100).toLocaleString("en-US", { minimumFractionDigits: 2 })}`;
 }
 
-interface ShipDrawer { orderId: string; tracking: string; }
+interface ShipDrawer { orderId: string; tracking: string; amount: number; listingTitle: string; }
 
 const labelStyle: React.CSSProperties = {
   fontFamily: "var(--font-jost)", fontWeight: 600,
@@ -206,7 +206,7 @@ export default function SellerOrdersPage() {
                 Sales ({sales.length})
               </p>
               <div style={{ display: "flex", flexDirection: "column", gap: "1px", background: "var(--warm-tan)" }}>
-                {sales.map((order) => <OrderCard key={order.id} order={order} statusMap={SELLER_SALE_STATUS} onShip={() => { setDrawer({ orderId: order.id, tracking: "" }); setShipError(null); }} expandedAddress={expandedAddress} setExpandedAddress={setExpandedAddress} lateFeeMultiplier={lateFeeMultiplier} gracePeriodDays={gracePeriodDays} />)}
+                {sales.map((order) => <OrderCard key={order.id} order={order} statusMap={SELLER_SALE_STATUS} onShip={() => { setDrawer({ orderId: order.id, tracking: "", amount: order.amount, listingTitle: order.listing_title }); setShipError(null); }} expandedAddress={expandedAddress} setExpandedAddress={setExpandedAddress} lateFeeMultiplier={lateFeeMultiplier} gracePeriodDays={gracePeriodDays} />)}
               </div>
             </section>
           )}
@@ -218,7 +218,7 @@ export default function SellerOrdersPage() {
                 Rentals ({rentals.length})
               </p>
               <div style={{ display: "flex", flexDirection: "column", gap: "1px", background: "var(--warm-tan)" }}>
-                {rentals.map((order) => <OrderCard key={order.id} order={order} statusMap={SELLER_RENT_STATUS} onShip={() => { setDrawer({ orderId: order.id, tracking: "" }); setShipError(null); }} expandedAddress={expandedAddress} setExpandedAddress={setExpandedAddress} lateFeeMultiplier={lateFeeMultiplier} gracePeriodDays={gracePeriodDays} />)}
+                {rentals.map((order) => <OrderCard key={order.id} order={order} statusMap={SELLER_RENT_STATUS} onShip={() => { setDrawer({ orderId: order.id, tracking: "", amount: order.amount, listingTitle: order.listing_title }); setShipError(null); }} expandedAddress={expandedAddress} setExpandedAddress={setExpandedAddress} lateFeeMultiplier={lateFeeMultiplier} gracePeriodDays={gracePeriodDays} />)}
               </div>
             </section>
           )}
@@ -233,6 +233,16 @@ export default function SellerOrdersPage() {
             <h2 style={{ fontFamily: "var(--font-cormorant)", fontStyle: "italic", fontWeight: 400, fontSize: "1.5rem", color: "#1A1A18", marginBottom: "1.5rem" }}>
               Mark as shipped
             </h2>
+            {drawer.amount >= 100000 && (
+              <div style={{ background: "#FFF8F0", border: "1px solid #C4440A", padding: "0.9rem 1rem", marginBottom: "1.25rem" }}>
+                <p style={{ fontFamily: "var(--font-jost)", fontWeight: 700, fontSize: "0.72rem", letterSpacing: "0.16em", textTransform: "uppercase", color: "#C4440A", marginBottom: "0.3rem" }}>
+                  Insurance required
+                </p>
+                <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.82rem", color: "#4A3F3A", lineHeight: 1.6, margin: 0 }}>
+                  This item is valued at <strong>{fmt(drawer.amount)}</strong> — orders at or above $1,000 must be shipped with carrier insurance covering the full declared value. Purchase insurance when buying your label from USPS, UPS, or FedEx. If the item is lost or damaged without insurance, the loss falls on you. Keep your insurance documentation until the buyer confirms receipt.
+                </p>
+              </div>
+            )}
             <label style={labelStyle}>Tracking number</label>
             <input
               type="text"
