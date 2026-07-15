@@ -77,6 +77,8 @@ export default function ListingPage({ params: _params }: { params: { id: string 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [sellerListings, setSellerListings] = useState<{ id: string; title: string; price: number; images: string[] }[]>([]);
+  const [similarListings, setSimilarListings] = useState<{ id: string; title: string; price: number; images: string[] }[]>([]);
 
   useEffect(() => {
     const supabase = createClient();
@@ -113,6 +115,26 @@ export default function ListingPage({ params: _params }: { params: { id: string 
         };
         setListing(built);
         setLoading(false);
+
+        // Fetch more from this seller (up to 4, exclude current listing)
+        supabase
+          .from("listings")
+          .select("id, title, price, images")
+          .eq("seller_id", data.seller_id)
+          .eq("status", "active")
+          .neq("id", _params.id)
+          .limit(4)
+          .then(({ data: sl }) => setSellerListings(sl ?? []));
+
+        // Fetch similar items by category (up to 4, exclude current listing)
+        supabase
+          .from("listings")
+          .select("id, title, price, images")
+          .eq("category", data.category)
+          .eq("status", "active")
+          .neq("id", _params.id)
+          .limit(4)
+          .then(({ data: sim }) => setSimilarListings(sim ?? []));
       });
   }, [_params.id]);
 
@@ -385,7 +407,7 @@ export default function ListingPage({ params: _params }: { params: { id: string 
                       onMouseOver={e => (e.currentTarget.style.opacity = "0.65")}
                       onMouseOut={e => (e.currentTarget.style.opacity = "1")}
                     >
-                      Add to cart
+                      Checkout
                     </button>
                   )}
 
@@ -460,50 +482,60 @@ export default function ListingPage({ params: _params }: { params: { id: string 
         </div>
 
         {/* ── More from this seller ── */}
-        <div style={{ marginTop: "3rem" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "1.2rem" }}>
-            <h2 style={{
-              fontFamily: "var(--font-cormorant)", fontWeight: 500,
-              fontSize: "1.4rem", letterSpacing: "0.03em", color: "var(--dark)", whiteSpace: "nowrap"
-            }}>
-              More from @{l.seller.username}
-            </h2>
-            <div style={{ flex: 1, height: "1px", background: "var(--warm-tan)" }} />
-            <Link href={`/sellers/${l.seller.username}`} style={{
-              fontFamily: "var(--font-jost)", fontWeight: 500,
-              fontSize: "0.85rem", letterSpacing: "0.18em", textTransform: "uppercase",
-              color: "#C4440A", whiteSpace: "nowrap", textDecoration: "none"
-            }}>
-              View all →
-            </Link>
+        {sellerListings.length > 0 && (
+          <div style={{ marginTop: "3rem" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "1.2rem" }}>
+              <h2 style={{ fontFamily: "var(--font-cormorant)", fontWeight: 500, fontSize: "1.4rem", letterSpacing: "0.03em", color: "var(--dark)", whiteSpace: "nowrap" }}>
+                More from @{l.seller.username}
+              </h2>
+              <div style={{ flex: 1, height: "1px", background: "var(--warm-tan)" }} />
+              <Link href={`/sellers/${l.seller.username}`} style={{ fontFamily: "var(--font-jost)", fontWeight: 500, fontSize: "0.85rem", letterSpacing: "0.18em", textTransform: "uppercase", color: "#C4440A", whiteSpace: "nowrap", textDecoration: "none" }}>
+                View all →
+              </Link>
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "1rem" }}>
+              {sellerListings.map(item => (
+                <Link key={item.id} href={`/listings/${item.id}`} style={{ textDecoration: "none" }}>
+                  <div style={{ aspectRatio: "3/4", background: "#EDE6DE", overflow: "hidden", marginBottom: "0.6rem" }}>
+                    {item.images?.[0] && (
+                      <img src={item.images[0]} alt={item.title ?? ""} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                    )}
+                  </div>
+                  <p style={{ fontFamily: "var(--font-jost)", fontWeight: 500, fontSize: "0.8rem", color: "var(--dark)", marginBottom: "0.15rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.title}</p>
+                  <p style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.8rem", color: "#C4440A" }}>{formatPrice(item.price)}</p>
+                </Link>
+              ))}
+            </div>
           </div>
-          <div style={{ display: "flex", gap: "1rem", overflowX: "auto", paddingBottom: "0.5rem" }}>
-            {/* TODO: fetch other listings from this seller */}
-          </div>
-        </div>
+        )}
 
         {/* ── Similar items ── */}
-        <div style={{ marginTop: "3rem", marginBottom: "2rem" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "1.2rem" }}>
-            <h2 style={{
-              fontFamily: "var(--font-cormorant)", fontWeight: 500,
-              fontSize: "1.4rem", letterSpacing: "0.03em", color: "var(--dark)", whiteSpace: "nowrap"
-            }}>
-              Similar items
-            </h2>
-            <div style={{ flex: 1, height: "1px", background: "var(--warm-tan)" }} />
-            <Link href="/listings?category=lehenga" style={{
-              fontFamily: "var(--font-jost)", fontWeight: 500,
-              fontSize: "0.85rem", letterSpacing: "0.18em", textTransform: "uppercase",
-              color: "#C4440A", whiteSpace: "nowrap", textDecoration: "none"
-            }}>
-              Browse all →
-            </Link>
+        {similarListings.length > 0 && (
+          <div style={{ marginTop: "3rem", marginBottom: "2rem" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "1.2rem" }}>
+              <h2 style={{ fontFamily: "var(--font-cormorant)", fontWeight: 500, fontSize: "1.4rem", letterSpacing: "0.03em", color: "var(--dark)", whiteSpace: "nowrap" }}>
+                Similar items
+              </h2>
+              <div style={{ flex: 1, height: "1px", background: "var(--warm-tan)" }} />
+              <Link href={`/listings?category=${encodeURIComponent(l.category)}`} style={{ fontFamily: "var(--font-jost)", fontWeight: 500, fontSize: "0.85rem", letterSpacing: "0.18em", textTransform: "uppercase", color: "#C4440A", whiteSpace: "nowrap", textDecoration: "none" }}>
+                Browse all →
+              </Link>
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "1rem" }}>
+              {similarListings.map(item => (
+                <Link key={item.id} href={`/listings/${item.id}`} style={{ textDecoration: "none" }}>
+                  <div style={{ aspectRatio: "3/4", background: "#EDE6DE", overflow: "hidden", marginBottom: "0.6rem" }}>
+                    {item.images?.[0] && (
+                      <img src={item.images[0]} alt={item.title ?? ""} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                    )}
+                  </div>
+                  <p style={{ fontFamily: "var(--font-jost)", fontWeight: 500, fontSize: "0.8rem", color: "var(--dark)", marginBottom: "0.15rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.title}</p>
+                  <p style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.8rem", color: "#C4440A" }}>{formatPrice(item.price)}</p>
+                </Link>
+              ))}
+            </div>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "1rem" }} className="similar-grid">
-            {/* TODO: fetch similar listings by category */}
-          </div>
-        </div>
+        )}
 
       </div>
 
