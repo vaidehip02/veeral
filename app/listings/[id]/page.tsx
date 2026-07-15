@@ -76,9 +76,11 @@ export default function ListingPage({ params: _params }: { params: { id: string 
   const [listing, setListing] = useState<Listing | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   useEffect(() => {
     const supabase = createClient();
+    supabase.auth.getUser().then(({ data }) => setCurrentUserId(data.user?.id ?? null));
     supabase
       .from("listings")
       .select(`
@@ -453,8 +455,7 @@ export default function ListingPage({ params: _params }: { params: { id: string 
         <div style={{ marginTop: "3rem" }}>
           <Reviews
             listingId={l.id}
-            reviews={[]}
-            canReview={false} // TODO: check if logged-in user has purchased this item
+            currentUserId={currentUserId}
           />
         </div>
 
