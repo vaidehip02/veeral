@@ -114,7 +114,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "You have already reviewed this order" }, { status: 409 });
     }
     console.error("[reviews] Insert error:", insertErr);
-    return NextResponse.json({ error: "Failed to submit review" }, { status: 500 });
+    return NextResponse.json({ error: insertErr.message ?? "Failed to submit review", code: insertErr.code }, { status: 500 });
   }
 
   // ── Blind reveal: if the counterpart already submitted, reveal both now ────────
