@@ -50,6 +50,7 @@ export default function Navbar() {
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [mobileProfileOpen, setMobileProfileOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [customBanner, setCustomBanner] = useState<{ text: string; active: boolean } | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -369,7 +370,7 @@ export default function Navbar() {
             <>
               {/* User info — tappable toggle */}
               <button
-                onClick={() => setDropdownOpen(o => !o)}
+                onClick={() => setMobileProfileOpen(o => !o)}
                 style={{
                   display: "flex", alignItems: "center", gap: "0.75rem",
                   padding: "1rem 0 0.75rem", width: "100%",
@@ -399,18 +400,18 @@ export default function Navbar() {
                   </p>
                 </div>
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" strokeWidth="2"
-                  style={{ transform: dropdownOpen ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s", flexShrink: 0 }}>
+                  style={{ transform: mobileProfileOpen ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s", flexShrink: 0 }}>
                   <path d="m6 9 6 6 6-6"/>
                 </svg>
               </button>
 
               {/* Collapsible account links */}
-              {dropdownOpen && (
+              {mobileProfileOpen && (
                 <>
                   {DROPDOWN_ITEMS.filter(item => !item.sellerOnly || isSeller).map((item) => (
                     <button
                       key={item.href}
-                      onClick={() => { router.push(item.href); setMenuOpen(false); setDropdownOpen(false); }}
+                      onClick={() => { router.push(item.href); setMenuOpen(false); setMobileProfileOpen(false); }}
                       style={{
                         fontFamily: "var(--font-jost)", fontWeight: 400,
                         fontSize: "0.78rem", color: "var(--muted)",
