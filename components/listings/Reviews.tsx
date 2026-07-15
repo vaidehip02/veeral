@@ -84,7 +84,7 @@ export default function Reviews({ listingId, currentUserId }: ReviewsProps) {
         const rows = reviewData ?? [];
 
         // Batch-fetch reviewer display names from seller_profiles
-        const reviewerIds = [...new Set(rows.map(r => r.reviewer_id).filter(Boolean))];
+        const reviewerIds = Array.from(new Set(rows.map(r => r.reviewer_id).filter(Boolean)));
         let profileMap: Record<string, { username: string | null; display_name: string | null }> = {};
         if (reviewerIds.length > 0) {
           const { data: profiles } = await supabase
