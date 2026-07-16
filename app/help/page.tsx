@@ -68,7 +68,7 @@ const CONTENT_SECTIONS: ContentSection[] = [
   {
     id: "disputes", label: "Dispute Resolution", icon: "⚖️",
     items: [
-      { title: "How Disputes Work", body: <><Ul items={["Buyer contacts Veeral Support within 7 days of receiving the item with supporting photos","Veeral Support acknowledges the report within 3 business days","Both parties may be asked to provide additional information","Veeral issues a resolution within 7 business days of the dispute being opened"]} /><P>To open a dispute, email <strong>help@shopveeral.com</strong> with your order details and photos. Our team will review the case and follow up with both parties.</P></> },
+      { title: "How Disputes Work", body: <><Ul items={["Buyer contacts Veeral Support within 7 days of receiving the item with supporting photos","Veeral Support will acknowledge your report as soon as possible","Both parties may be asked to provide additional information","Veeral issues a resolution within 7 business days of the dispute being opened"]} /><P>To open a dispute, email <strong>help@shopveeral.com</strong> with your order details and photos. Our team will review the case and follow up with both parties.</P></> },
       { title: "Possible Outcomes", body: <><Ul items={["Full refund to buyer and return of item to seller","Partial refund issued to buyer","Dispute dismissed — no action taken"]} /><P>Veeral will review the case and issue a resolution. For how disputes are ultimately handled, see our Terms &amp; Conditions.</P></> },
     ],
   },
