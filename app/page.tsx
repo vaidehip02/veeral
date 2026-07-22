@@ -1,6 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
+import { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
 import HeroCarousel from "@/components/home/HeroCarousel";
 
 const CATEGORIES = [
@@ -17,15 +20,32 @@ const MARQUEE_ITEMS = [
   "New Arrivals", "Wedding Season", "Daily Wear",
 ];
 
-// Placeholder listing cards — replace with real Supabase data
-const TRENDING = [
-  { id: 1, title: "Red Bridal Lehenga", price: "$450", type: "Sale", bg: "#DDD0C5" },
-  { id: 2, title: "Silk Banarasi Saree", price: "$120 / day", type: "Rent", bg: "#D5C9BE" },
-  { id: 3, title: "Anarkali Suit", price: "$280", type: "Sale", bg: "#CABDB1" },
-  { id: 4, title: "Sherwani Set", price: "$90 / day", type: "Rent", bg: "#C3B5A8" },
-];
+interface Listing {
+  id: string;
+  title: string;
+  price: number;
+  listing_type: "sale" | "rent";
+  images: string[];
+}
+
+const BG_FALLBACKS = ["#DDD0C5", "#D5C9BE", "#CABDB1", "#C3B5A8"];
 
 export default function HomePage() {
+  const [trending, setTrending] = useState<Listing[]>([]);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase
+      .from("listings")
+      .select("id, title, price, listing_type, images")
+      .eq("status", "active")
+      .order("created_at", { ascending: false })
+      .limit(4)
+      .then(({ data }) => {
+        if (data && data.length > 0) setTrending(data);
+      });
+  }, []);
+
   return (
     <div style={{ background: "var(--cream)" }}>
 
@@ -92,93 +112,98 @@ export default function HomePage() {
       </div>
 
       {/* ── Trending Now ──────────────────────────────────────── */}
-      <section className="max-w-7xl mx-auto px-6 lg:px-10 py-16">
-        <div className="flex items-center gap-4 mb-8">
-          <h2 style={{
-            fontFamily: "var(--font-cormorant)", fontWeight: 500,
-            fontSize: "clamp(1.4rem, 2.5vw, 2rem)", letterSpacing: "0.03em",
-            color: "var(--dark)", whiteSpace: "nowrap"
-          }}>
-            Trending now
-          </h2>
-          <div style={{ flex: 1, height: "1px", background: "var(--warm-tan)" }} />
-          <Link
-            href="/listings"
-            style={{
-              fontFamily: "var(--font-jost)", fontWeight: 500,
-              fontSize: "0.75rem", letterSpacing: "0.18em", textTransform: "uppercase",
-              color: "var(--burnt-orange)", whiteSpace: "nowrap", transition: "opacity 0.2s"
-            }}
-            onMouseOver={e => (e.currentTarget.style.opacity = "0.6")}
-            onMouseOut={e => (e.currentTarget.style.opacity = "1")}
-          >
-            View all →
-          </Link>
-        </div>
-
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          {TRENDING.map((item) => (
+      {trending.length > 0 && (
+        <section className="max-w-7xl mx-auto px-6 lg:px-10 py-16">
+          <div className="flex items-center gap-4 mb-8">
+            <h2 style={{
+              fontFamily: "var(--font-cormorant)", fontWeight: 500,
+              fontSize: "clamp(1.4rem, 2.5vw, 2rem)", letterSpacing: "0.03em",
+              color: "var(--dark)", whiteSpace: "nowrap"
+            }}>
+              Trending now
+            </h2>
+            <div style={{ flex: 1, height: "1px", background: "var(--warm-tan)" }} />
             <Link
-              key={item.id}
-              href={`/listings/${item.id}`}
-              className="group block"
-              style={{ textDecoration: "none" }}
+              href="/listings"
+              style={{
+                fontFamily: "var(--font-jost)", fontWeight: 500,
+                fontSize: "0.75rem", letterSpacing: "0.18em", textTransform: "uppercase",
+                color: "var(--burnt-orange)", whiteSpace: "nowrap", transition: "opacity 0.2s"
+              }}
+              onMouseOver={e => (e.currentTarget.style.opacity = "0.6")}
+              onMouseOut={e => (e.currentTarget.style.opacity = "1")}
             >
-              {/* Photo placeholder */}
-              <div
-                style={{
-                  background: item.bg, aspectRatio: "3/4",
-                  position: "relative", overflow: "hidden",
-                  transition: "opacity 0.2s"
-                }}
-                onMouseOver={e => (e.currentTarget.style.opacity = "0.85")}
-                onMouseOut={e => (e.currentTarget.style.opacity = "1")}
-              >
-                {/* Type badge */}
-                <span style={{
-                  position: "absolute", top: "0.75rem", left: "0.75rem",
-                  fontFamily: "var(--font-jost)", fontWeight: 500,
-                  fontSize: "0.5rem", letterSpacing: "0.18em", textTransform: "uppercase",
-                  color: "var(--cream)", background: item.type === "Rent" ? "var(--dark)" : "var(--burnt-orange)",
-                  padding: "0.3rem 0.6rem"
-                }}>
-                  {item.type}
-                </span>
-                {/* Add photo hint */}
-                <div style={{
-                  position: "absolute", inset: 0, display: "flex",
-                  alignItems: "center", justifyContent: "center"
-                }}>
-                  <span style={{
-                    fontFamily: "var(--font-jost)", fontSize: "0.5rem",
-                    letterSpacing: "0.18em", textTransform: "uppercase",
-                    color: "var(--muted)", opacity: 0.5
-                  }}>
-                    Add photo
-                  </span>
-                </div>
-              </div>
-
-              {/* Info */}
-              <div style={{ padding: "0.75rem 0" }}>
-                <p style={{
-                  fontFamily: "var(--font-jost)", fontWeight: 500,
-                  fontSize: "0.75rem", letterSpacing: "0.05em",
-                  color: "var(--dark)", marginBottom: "0.2rem"
-                }}>
-                  {item.title}
-                </p>
-                <p style={{
-                  fontFamily: "var(--font-cormorant)", fontWeight: 600,
-                  fontSize: "1rem", color: "var(--burnt-orange)"
-                }}>
-                  {item.price}
-                </p>
-              </div>
+              View all →
             </Link>
-          ))}
-        </div>
-      </section>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            {trending.map((item, i) => {
+              const img = item.images?.[0];
+              const isRent = item.listing_type === "rent";
+              const priceLabel = isRent
+                ? `$${(item.price / 100).toFixed(0)} / day`
+                : `$${(item.price / 100).toFixed(0)}`;
+
+              return (
+                <Link
+                  key={item.id}
+                  href={`/listings/${item.id}`}
+                  className="group block"
+                  style={{ textDecoration: "none" }}
+                >
+                  <div
+                    style={{
+                      background: BG_FALLBACKS[i % BG_FALLBACKS.length],
+                      aspectRatio: "3/4",
+                      position: "relative", overflow: "hidden",
+                      transition: "opacity 0.2s"
+                    }}
+                    onMouseOver={e => (e.currentTarget.style.opacity = "0.85")}
+                    onMouseOut={e => (e.currentTarget.style.opacity = "1")}
+                  >
+                    {img && (
+                      <Image
+                        src={img}
+                        alt={item.title}
+                        fill
+                        sizes="(max-width: 640px) 50vw, 25vw"
+                        style={{ objectFit: "cover" }}
+                      />
+                    )}
+                    <span style={{
+                      position: "absolute", top: "0.75rem", left: "0.75rem",
+                      fontFamily: "var(--font-jost)", fontWeight: 500,
+                      fontSize: "0.5rem", letterSpacing: "0.18em", textTransform: "uppercase",
+                      color: "var(--cream)", background: isRent ? "var(--dark)" : "var(--burnt-orange)",
+                      padding: "0.3rem 0.6rem"
+                    }}>
+                      {isRent ? "Rent" : "Sale"}
+                    </span>
+                  </div>
+
+                  <div style={{ padding: "0.75rem 0" }}>
+                    <p style={{
+                      fontFamily: "var(--font-jost)", fontWeight: 500,
+                      fontSize: "0.75rem", letterSpacing: "0.05em",
+                      color: "var(--dark)", marginBottom: "0.2rem",
+                      overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap"
+                    }}>
+                      {item.title}
+                    </p>
+                    <p style={{
+                      fontFamily: "var(--font-cormorant)", fontWeight: 600,
+                      fontSize: "1rem", color: "var(--burnt-orange)"
+                    }}>
+                      {priceLabel}
+                    </p>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        </section>
+      )}
 
       {/* ── AI Assistant ──────────────────────────────────────── */}
       <section style={{ background: "#EDE8E2", padding: "5rem 1.5rem", textAlign: "center" }}>
