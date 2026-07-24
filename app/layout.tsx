@@ -28,7 +28,7 @@ export const metadata: Metadata = {
   title: "Veeral — Buy, Sell & Rent Indian Clothing",
   description:
     "A marketplace for South Asian fashion. Buy, sell, and rent lehengas, sarees, sherwanis, and more.",
-  icons: { icon: "/icon.png" },
+  icons: { icon: "/favicon.ico" },
   openGraph: {
     title: "Veeral",
     description: "Buy, sell, and rent South Asian fashion.",
