@@ -88,7 +88,7 @@ export default function ListingPage({ params: _params }: { params: { id: string 
       .select(`
         id, title, description, price, rent_price, rent_duration_days,
         deposit_pct, type, category, condition, size, color, brand,
-        location, images, seller_id, status
+        location, images, seller_id, status, included
       `)
       .eq("id", _params.id)
       .single()
@@ -109,7 +109,7 @@ export default function ListingPage({ params: _params }: { params: { id: string 
           original_price: null,
           tags: null,
           dry_clean_only: null,
-          included: null,
+          included: data.included ?? null,
           care_instructions: null,
           seller,
         };
