@@ -10,9 +10,14 @@ const MAINTENANCE_MODE = process.env.MAINTENANCE_MODE === "true";
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Maintenance mode — allow only /coming-soon and bypass token
+  // Maintenance mode — allow only /coming-soon, the bypass route, and cookie holders
   const bypassToken = request.cookies.get("veeral_bypass")?.value;
-  if (MAINTENANCE_MODE && pathname !== "/coming-soon" && bypassToken !== "veeralbeta2025") {
+  if (
+    MAINTENANCE_MODE &&
+    pathname !== "/coming-soon" &&
+    pathname !== "/api/bypass" &&
+    bypassToken !== "veeralbeta2025"
+  ) {
     return NextResponse.redirect(new URL("/coming-soon", request.url));
   }
 
