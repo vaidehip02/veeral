@@ -1,27 +1,29 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
 
-const STAT_CARDS = [
-  { label: "Total earnings", value: "$42,500", sub: "across 12 sales" },
-  { label: "Active listings", value: "8", sub: "3 for rent, 5 for sale" },
-  { label: "Pending orders", value: "2", sub: "awaiting shipment" },
-  { label: "Active rentals", value: "1", sub: "return due Jun 14" },
-];
+interface Stats {
+  displayName: string;
+  totalEarnings: number;
+  activeListings: number;
+  rentListings: number;
+  saleListings: number;
+  pendingOrders: number;
+  activeRentals: number;
+  nextReturnDate: string | null;
+}
 
-const QUICK_ACTIONS = [
-  { label: "Create new listing", href: "/dashboard/listings/new", primary: true },
-  { label: "View all orders", href: "/dashboard/orders", primary: false },
-  { label: "View all rentals", href: "/dashboard/rentals", primary: false },
-];
-
-const ACTIVITY = [
-  { icon: "✦", label: "New order received", detail: "Ananya M. purchased Banarasi Silk Lehenga", time: "2h ago", color: "#2D6A4F" },
-  { icon: "↗", label: "Item shipped", detail: "Tracking added for Zardozi Saree (Order #1042)", time: "Yesterday", color: "var(--burnt-orange)" },
-  { icon: "↩", label: "Rental returned", detail: "Mirror-work Lehenga returned in good condition", time: "2 days ago", color: "#1D4E89" },
-  { icon: "$", label: "Payout received", detail: "$8,100 deposited to your bank account", time: "3 days ago", color: "#2D6A4F" },
-  { icon: "✦", label: "New order received", detail: "Priya K. purchased Indo-Western Sherwani", time: "4 days ago", color: "#2D6A4F" },
-];
+interface ActivityItem {
+  id: string;
+  type: "order" | "rental_return";
+  label: string;
+  detail: string;
+  time: string;
+  color: string;
+  icon: string;
+}
 
 const btnBase: React.CSSProperties = {
   fontFamily: "var(--font-jost)", fontWeight: 600,
@@ -30,7 +32,130 @@ const btnBase: React.CSSProperties = {
   display: "inline-block",
 };
 
+function timeAgo(dateStr: string) {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  if (days === 1) return "Yesterday";
+  return `${days} days ago`;
+}
+
 export default function DashboardOverview() {
+  const [stats, setStats] = useState<Stats | null>(null);
+  const [activity, setActivity] = useState<ActivityItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function load() {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const [profileRes, listingsRes, ordersRes] = await Promise.all([
+        supabase
+          .from("seller_profiles")
+          .select("display_name")
+          .eq("id", user.id)
+          .single(),
+        supabase
+          .from("listings")
+          .select("id, type, status")
+          .eq("seller_id", user.id),
+        supabase
+          .from("orders")
+          .select("id, type, status, amount, seller_payout, created_at, rental_end, listings(title)")
+          .eq("seller_id", user.id)
+          .order("created_at", { ascending: false })
+          .limit(50),
+      ]);
+
+      const profile = profileRes.data;
+      const listings = listingsRes.data ?? [];
+      const orders = ordersRes.data ?? [];
+
+      const activeListings = listings.filter(l => l.status === "active");
+      const rentListings = activeListings.filter(l => l.type === "rent" || l.type === "both").length;
+      const saleListings = activeListings.filter(l => l.type === "sale" || l.type === "both").length;
+
+      const pendingOrders = orders.filter(o => o.status === "paid" && o.type === "sale").length;
+
+      const today = new Date().toISOString().split("T")[0];
+      const activeRentals = orders.filter(
+        o => o.type === "rent" && ["paid", "shipped", "delivered"].includes(o.status) && o.rental_end >= today
+      );
+
+      const nextReturn = activeRentals
+        .map(o => o.rental_end)
+        .filter(Boolean)
+        .sort()[0] ?? null;
+
+      const totalEarnings = orders
+        .filter(o => ["shipped", "delivered"].includes(o.status))
+        .reduce((sum, o) => sum + (o.seller_payout ?? 0), 0);
+
+      setStats({
+        displayName: profile?.display_name?.split(" ")[0] ?? "there",
+        totalEarnings,
+        activeListings: activeListings.length,
+        rentListings,
+        saleListings,
+        pendingOrders,
+        activeRentals: activeRentals.length,
+        nextReturnDate: nextReturn,
+      });
+
+      // Build activity feed from recent orders
+      const recentActivity: ActivityItem[] = orders.slice(0, 5).map(o => {
+        const title = (o.listings as any)?.title ?? "item";
+        if (o.type === "rent" && o.status === "delivered") {
+          return {
+            id: o.id,
+            type: "rental_return",
+            label: "Rental returned",
+            detail: `${title} returned`,
+            time: timeAgo(o.created_at),
+            color: "#1D4E89",
+            icon: "↩",
+          };
+        }
+        if (o.status === "shipped") {
+          return {
+            id: o.id,
+            type: "order",
+            label: "Item shipped",
+            detail: `Tracking added for ${title}`,
+            time: timeAgo(o.created_at),
+            color: "var(--burnt-orange)",
+            icon: "↗",
+          };
+        }
+        return {
+          id: o.id,
+          type: "order",
+          label: "New order received",
+          detail: `Someone purchased ${title}`,
+          time: timeAgo(o.created_at),
+          color: "#2D6A4F",
+          icon: "✦",
+        };
+      });
+
+      setActivity(recentActivity);
+      setLoading(false);
+    }
+
+    load();
+  }, []);
+
+  const QUICK_ACTIONS = [
+    { label: "Create new listing", href: "/listings/new", primary: true },
+    { label: "View all orders", href: "/dashboard/orders", primary: false },
+    { label: "View all rentals", href: "/dashboard/rentals", primary: false },
+  ];
+
   return (
     <div style={{ maxWidth: "860px" }}>
 
@@ -41,7 +166,7 @@ export default function DashboardOverview() {
           fontSize: "clamp(2rem, 4vw, 2.8rem)", color: "#1A1A18", lineHeight: 1.1,
           marginBottom: "0.4rem",
         }}>
-          Hi, Priya
+          {loading ? "Hi" : `Hi, ${stats?.displayName}`}
         </h1>
         <p style={{
           fontFamily: "var(--font-jost)", fontSize: "0.85rem", fontWeight: 400,
@@ -53,7 +178,28 @@ export default function DashboardOverview() {
 
       {/* Stat cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4" style={{ marginBottom: "2.5rem" }}>
-        {STAT_CARDS.map((card) => (
+        {[
+          {
+            label: "Total earnings",
+            value: loading ? "—" : `$${((stats?.totalEarnings ?? 0) / 100).toLocaleString()}`,
+            sub: loading ? "" : `across ${stats?.activeListings ?? 0} active listings`,
+          },
+          {
+            label: "Active listings",
+            value: loading ? "—" : String(stats?.activeListings ?? 0),
+            sub: loading ? "" : `${stats?.rentListings ?? 0} for rent, ${stats?.saleListings ?? 0} for sale`,
+          },
+          {
+            label: "Pending orders",
+            value: loading ? "—" : String(stats?.pendingOrders ?? 0),
+            sub: "awaiting shipment",
+          },
+          {
+            label: "Active rentals",
+            value: loading ? "—" : String(stats?.activeRentals ?? 0),
+            sub: stats?.nextReturnDate ? `return due ${new Date(stats.nextReturnDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })}` : "no returns due",
+          },
+        ].map((card) => (
           <div
             key={card.label}
             style={{
@@ -113,14 +259,23 @@ export default function DashboardOverview() {
           Recent activity
         </p>
 
+        {!loading && activity.length === 0 && (
+          <p style={{
+            fontFamily: "var(--font-jost)", fontSize: "0.82rem",
+            color: "var(--muted)", opacity: 0.6, padding: "1.5rem 0"
+          }}>
+            No activity yet — create your first listing to get started.
+          </p>
+        )}
+
         <div style={{ display: "flex", flexDirection: "column" }}>
-          {ACTIVITY.map((item, i) => (
+          {activity.map((item, i) => (
             <div
-              key={i}
+              key={item.id}
               style={{
                 display: "flex", alignItems: "flex-start", gap: "1rem",
                 padding: "1rem 0",
-                borderBottom: i < ACTIVITY.length - 1 ? "1px solid var(--warm-tan)" : "none",
+                borderBottom: i < activity.length - 1 ? "1px solid var(--warm-tan)" : "none",
               }}
             >
               <div style={{
