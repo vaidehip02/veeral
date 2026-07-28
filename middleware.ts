@@ -5,7 +5,16 @@ const PROTECTED_ROUTES = ["/dashboard", "/listings/new", "/checkout", "/onboardi
 const AUTH_ROUTES      = ["/login", "/signup", "/forgot-password"];
 const ADMIN_EMAIL      = "vaidehip02@gmail.com"; // only this account can access /admin
 
+const MAINTENANCE_MODE = process.env.MAINTENANCE_MODE === "true";
+
 export async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  // Maintenance mode — allow only /coming-soon and static assets
+  if (MAINTENANCE_MODE && pathname !== "/coming-soon") {
+    return NextResponse.redirect(new URL("/coming-soon", request.url));
+  }
+
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient(
