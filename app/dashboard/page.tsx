@@ -109,7 +109,7 @@ export default function DashboardOverview() {
 
       // Build activity feed from recent orders
       const recentActivity: ActivityItem[] = orders.slice(0, 5).map(o => {
-        const title = (o.listings as any)?.title ?? "item";
+        const title = (o.listings as { title?: string } | null)?.title ?? "item";
         if (o.type === "rent" && o.status === "delivered") {
           return {
             id: o.id,
