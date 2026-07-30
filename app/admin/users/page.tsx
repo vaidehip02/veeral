@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ConfirmDialog from "@/components/admin/ConfirmDialog";
+import { createClient } from "@/lib/supabase/client";
 
 const A = {
   dark: "#0D0906", muted: "#6B5E52", label: "#9C8B7E",
@@ -23,18 +24,6 @@ interface AdminUser {
   joined: string; orders: number; listings: number;
 }
 
-const INITIAL_USERS: AdminUser[] = [
-  { id:"u1",  username:"priya_sharma",   email:"priya@example.com",    name:"Priya Sharma",  role:"both",   status:"active",    verified:true,  joined:"Mar 2024", orders:12, listings:12 },
-  { id:"u2",  username:"ananya_m",       email:"ananya@example.com",   name:"Ananya Mehta",  role:"both",   status:"active",    verified:false, joined:"Jan 2025", orders:8,  listings:4  },
-  { id:"u3",  username:"meera_b",        email:"meera@example.com",    name:"Meera Bhat",    role:"both",   status:"active",    verified:true,  joined:"May 2024", orders:5,  listings:6  },
-  { id:"u4",  username:"kavitha_wears",  email:"kavitha@example.com",  name:"Kavitha R.",    role:"seller", status:"active",    verified:false, joined:"Aug 2024", orders:0,  listings:8  },
-  { id:"u5",  username:"sana.rents",     email:"sana@example.com",     name:"Sana Khan",     role:"both",   status:"active",    verified:false, joined:"Nov 2024", orders:3,  listings:5  },
-  { id:"u6",  username:"raj_styles",     email:"raj@example.com",      name:"Raj Patel",     role:"seller", status:"active",    verified:true,  joined:"Feb 2024", orders:0,  listings:14 },
-  { id:"u7",  username:"divya.looks",    email:"divya@example.com",    name:"Divya S.",      role:"both",   status:"active",    verified:false, joined:"Dec 2024", orders:7,  listings:3  },
-  { id:"u8",  username:"riya.wears",     email:"riya@example.com",     name:"Riya Joshi",    role:"buyer",  status:"active",    verified:false, joined:"Apr 2025", orders:4,  listings:0  },
-  { id:"u9",  username:"new_seller_1",   email:"newseller@example.com",name:"Aarav Singh",   role:"seller", status:"active",    verified:false, joined:"Jun 2026", orders:0,  listings:1  },
-  { id:"u10", username:"flagged_user",   email:"flagged@example.com",  name:"Anonymous",     role:"buyer",  status:"suspended", verified:false, joined:"May 2026", orders:1,  listings:0  },
-];
 
 const ROLE_COLOR: Record<UserRole, { bg: string; text: string }> = {
   buyer:  { bg: "#F3F4F6", text: "#6B7280" },
@@ -43,9 +32,43 @@ const ROLE_COLOR: Record<UserRole, { bg: string; text: string }> = {
 };
 
 export default function AdminUsersPage() {
-  const [users,  setUsers]  = useState(INITIAL_USERS);
+  const supabase = createClient();
+  const [users,  setUsers]  = useState<AdminUser[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [confirm, setConfirm] = useState<{ userId: string; action: "suspend" | "unsuspend" } | null>(null);
+
+  useEffect(() => {
+    supabase
+      .from("seller_profiles")
+      .select("id, username, display_name, stripe_onboarding_complete, created_at")
+      .order("created_at", { ascending: false })
+      .then(async ({ data: profiles }) => {
+        if (!profiles) { setLoading(false); return; }
+
+        const userList: AdminUser[] = await Promise.all(profiles.map(async (p) => {
+          const [ordersRes, listingsRes] = await Promise.all([
+            supabase.from("orders").select("*", { count: "exact", head: true }).eq("buyer_id", p.id),
+            supabase.from("listings").select("*", { count: "exact", head: true }).eq("seller_id", p.id),
+          ]);
+          return {
+            id: p.id,
+            username: p.username,
+            email: "",
+            name: p.display_name,
+            role: (listingsRes.count ?? 0) > 0 ? "both" : "buyer" as UserRole,
+            status: "active" as UserStatus,
+            verified: p.stripe_onboarding_complete ?? false,
+            joined: new Date(p.created_at).toLocaleDateString("en-US", { month: "short", year: "numeric" }),
+            orders: ordersRes.count ?? 0,
+            listings: listingsRes.count ?? 0,
+          };
+        }));
+
+        setUsers(userList);
+        setLoading(false);
+      });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const filtered = users.filter(u => {
     const q = search.toLowerCase();
@@ -85,7 +108,7 @@ export default function AdminUsersPage() {
         <h1 style={{ fontFamily: "var(--font-cormorant)", fontStyle: "italic", fontWeight: 400, fontSize: "2.2rem", color: A.dark, marginBottom: "0.25rem" }}>
           Users
         </h1>
-        <p style={{ ...muted, fontSize: "0.78rem" }}>{users.length} registered accounts</p>
+        <p style={{ ...muted, fontSize: "0.78rem" }}>{loading ? "Loading…" : `${users.length} registered accounts`}</p>
       </div>
 
       <div style={{ position: "relative", marginBottom: "1.5rem", maxWidth: "380px" }}>

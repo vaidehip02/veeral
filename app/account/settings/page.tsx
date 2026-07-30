@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { createClient } from "@/lib/supabase/client";
 
 interface Address {
   id: string;
@@ -12,11 +13,6 @@ interface Address {
   zip: string;
   isDefault: boolean;
 }
-
-const INITIAL_ADDRESSES: Address[] = [
-  { id:"a1", label:"Home",   line1:"247 West 72nd Street", line2:"Apt 4B", city:"New York", state:"NY", zip:"10023", isDefault:true  },
-  { id:"a2", label:"Office", line1:"350 Fifth Avenue",                      city:"New York", state:"NY", zip:"10118", isDefault:false },
-];
 
 function SectionHeader({ title }: { title: string }) {
   return (
@@ -70,16 +66,18 @@ function TextInput({ value, onChange, placeholder, type = "text", disabled }: {
   );
 }
 
-function SaveButton({ onClick, saved }: { onClick: () => void; saved: boolean }) {
+function SaveButton({ onClick, saved, disabled }: { onClick: () => void; saved: boolean; disabled?: boolean }) {
   return (
     <button
       onClick={onClick}
+      disabled={disabled}
       style={{
         fontFamily: "var(--font-jost)", fontWeight: 600,
         fontSize: "0.78rem", letterSpacing: "0.18em", textTransform: "uppercase",
         padding: "0.65rem 1.4rem",
         background: saved ? "#2D6A4F" : "var(--burnt-orange)", color: "var(--cream)",
-        border: "none", cursor: "pointer", transition: "all 0.2s",
+        border: "none", cursor: disabled ? "not-allowed" : "pointer",
+        transition: "all 0.2s", opacity: disabled ? 0.6 : 1,
       }}
     >
       {saved ? "✓ Saved" : "Save changes"}
@@ -88,38 +86,84 @@ function SaveButton({ onClick, saved }: { onClick: () => void; saved: boolean })
 }
 
 export default function SettingsPage() {
-  // Profile
-  const [name,  setName]  = useState("Ananya Mehta");
-  const [email, setEmail] = useState("ananya.m@gmail.com");
-  const [profileSaved, setProfileSaved] = useState(false);
+  const supabase = createClient();
 
-  // Addresses
-  const [addresses, setAddresses] = useState<Address[]>(INITIAL_ADDRESSES);
+  const [name,  setName]  = useState("");
+  const [email, setEmail] = useState("");
+  const [profileSaved, setProfileSaved] = useState(false);
+  const [profileSaving, setProfileSaving] = useState(false);
+  const [profileError, setProfileError] = useState("");
+
+  const [addresses, setAddresses] = useState<Address[]>([]);
   const [addingAddress, setAddingAddress] = useState(false);
   const [newAddr, setNewAddr] = useState<Omit<Address, "id" | "isDefault">>({ label:"", line1:"", line2:"", city:"", state:"", zip:"" });
 
-  // Notifications
   const [notifs, setNotifs] = useState({ orders:true, rentals:true, messages:true, promotions:false });
   const [notifSaved, setNotifSaved] = useState(false);
 
-  // Password
   const [pw, setPw] = useState({ current:"", next:"", confirm:"" });
   const [pwSaved, setPwSaved] = useState(false);
+  const [pwError, setPwError] = useState("");
 
-  // Danger
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [deleteInput,   setDeleteInput]   = useState("");
 
-  const handleSaveProfile = () => { setProfileSaved(true); setTimeout(() => setProfileSaved(false), 2500); };
-  const handleSaveNotifs  = () => { setNotifSaved(true);   setTimeout(() => setNotifSaved(false), 2500); };
-  const handleSavePw      = () => { setPwSaved(true);      setTimeout(() => setPwSaved(false), 2500); setPw({ current:"", next:"", confirm:"" }); };
+  // Load real user data
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) return;
+      setEmail(user.email ?? "");
+      // Try seller_profiles for display_name, fall back to user metadata
+      supabase
+        .from("seller_profiles")
+        .select("display_name")
+        .eq("id", user.id)
+        .single()
+        .then(({ data }) => {
+          setName(data?.display_name ?? user.user_metadata?.full_name ?? "");
+        });
+    });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleSaveProfile = async () => {
+    setProfileSaving(true);
+    setProfileError("");
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { error } = await supabase
+      .from("seller_profiles")
+      .update({ display_name: name })
+      .eq("id", user.id);
+
+    if (error) {
+      setProfileError("Failed to save. Please try again.");
+    } else {
+      setProfileSaved(true);
+      setTimeout(() => setProfileSaved(false), 2500);
+    }
+    setProfileSaving(false);
+  };
+
+  const handleSaveNotifs = () => { setNotifSaved(true); setTimeout(() => setNotifSaved(false), 2500); };
+
+  const handleSavePw = async () => {
+    setPwError("");
+    if (pw.next !== pw.confirm) { setPwError("Passwords don't match."); return; }
+    if (pw.next.length < 8) { setPwError("Password must be at least 8 characters."); return; }
+    const { error } = await supabase.auth.updateUser({ password: pw.next });
+    if (error) { setPwError(error.message); return; }
+    setPwSaved(true);
+    setTimeout(() => setPwSaved(false), 2500);
+    setPw({ current:"", next:"", confirm:"" });
+  };
 
   const setDefault = (id: string) => setAddresses(prev => prev.map(a => ({ ...a, isDefault: a.id === id })));
   const removeAddr = (id: string) => setAddresses(prev => prev.filter(a => a.id !== id));
 
   const addAddress = () => {
     if (!newAddr.line1 || !newAddr.city) return;
-    setAddresses(prev => [...prev, { ...newAddr, id:`a${Date.now()}`, isDefault:false }]);
+    setAddresses(prev => [...prev, { ...newAddr, id:`a${Date.now()}`, isDefault: prev.length === 0 }]);
     setAddingAddress(false);
     setNewAddr({ label:"", line1:"", line2:"", city:"", state:"", zip:"" });
   };
@@ -132,7 +176,6 @@ export default function SettingsPage() {
   return (
     <div style={{ maxWidth:"620px" }}>
 
-      {/* Header */}
       <div style={{ marginBottom:"2rem" }}>
         <h1 style={{
           fontFamily:"var(--font-cormorant)", fontStyle:"italic", fontWeight:400,
@@ -149,15 +192,13 @@ export default function SettingsPage() {
       <div style={card}>
         <SectionHeader title="Personal info" />
         <Field label="Display name">
-          <TextInput value={name} onChange={setName} />
+          <TextInput value={name} onChange={setName} placeholder="Your name" />
         </Field>
         <Field label="Email address">
-          <TextInput value={email} onChange={setEmail} type="email" />
+          <TextInput value={email} disabled type="email" />
         </Field>
         <Field label="Profile photo">
-          <div style={{
-            display:"flex", alignItems:"center", gap:"1rem",
-          }}>
+          <div style={{ display:"flex", alignItems:"center", gap:"1rem" }}>
             <div style={{
               width:"52px", height:"52px", borderRadius:"50%",
               background:"var(--warm-tan)", flexShrink:0,
@@ -165,7 +206,7 @@ export default function SettingsPage() {
               fontFamily:"var(--font-cormorant)", fontStyle:"italic",
               fontSize:"1.4rem", color:"var(--muted)",
             }}>
-              {name[0]}
+              {name[0] ?? "?"}
             </div>
             <button style={{
               fontFamily:"var(--font-jost)", fontWeight:600,
@@ -178,13 +219,23 @@ export default function SettingsPage() {
             </button>
           </div>
         </Field>
-        <SaveButton onClick={handleSaveProfile} saved={profileSaved} />
+        {profileError && (
+          <p style={{ fontFamily:"var(--font-jost)", fontSize:"0.75rem", color:"#C62828", marginBottom:"0.75rem" }}>
+            {profileError}
+          </p>
+        )}
+        <SaveButton onClick={handleSaveProfile} saved={profileSaved} disabled={profileSaving} />
       </div>
 
       {/* ── Addresses ── */}
       <div style={card}>
         <SectionHeader title="Shipping addresses" />
         <div style={{ display:"flex", flexDirection:"column", gap:"0.75rem", marginBottom:"1.25rem" }}>
+          {addresses.length === 0 && (
+            <p style={{ fontFamily:"var(--font-jost)", fontSize:"0.8rem", color:"var(--muted)", opacity:0.6 }}>
+              No saved addresses yet.
+            </p>
+          )}
           {addresses.map(addr => (
             <div key={addr.id} style={{
               padding:"1rem", border:`1px solid ${addr.isDefault ? "var(--burnt-orange)" : "var(--warm-tan)"}`,
@@ -219,29 +270,23 @@ export default function SettingsPage() {
               </div>
               <div style={{ display:"flex", gap:"0.5rem", flexShrink:0 }}>
                 {!addr.isDefault && (
-                  <button
-                    onClick={() => setDefault(addr.id)}
-                    style={{
-                      fontFamily:"var(--font-jost)", fontWeight:600,
-                      fontSize:"0.75rem", letterSpacing:"0.12em", textTransform:"uppercase",
-                      padding:"0.3rem 0.6rem",
-                      background:"transparent", color:"var(--muted)",
-                      border:"1px solid var(--warm-tan)", cursor:"pointer",
-                    }}
-                  >
-                    Set default
-                  </button>
-                )}
-                <button
-                  onClick={() => removeAddr(addr.id)}
-                  style={{
+                  <button onClick={() => setDefault(addr.id)} style={{
                     fontFamily:"var(--font-jost)", fontWeight:600,
                     fontSize:"0.75rem", letterSpacing:"0.12em", textTransform:"uppercase",
                     padding:"0.3rem 0.6rem",
-                    background:"transparent", color:"#C62828",
-                    border:"1px solid #FADADD", cursor:"pointer",
-                  }}
-                >
+                    background:"transparent", color:"var(--muted)",
+                    border:"1px solid var(--warm-tan)", cursor:"pointer",
+                  }}>
+                    Set default
+                  </button>
+                )}
+                <button onClick={() => removeAddr(addr.id)} style={{
+                  fontFamily:"var(--font-jost)", fontWeight:600,
+                  fontSize:"0.75rem", letterSpacing:"0.12em", textTransform:"uppercase",
+                  padding:"0.3rem 0.6rem",
+                  background:"transparent", color:"#C62828",
+                  border:"1px solid #FADADD", cursor:"pointer",
+                }}>
                   Remove
                 </button>
               </div>
@@ -283,101 +328,37 @@ export default function SettingsPage() {
               </div>
             </div>
             <div style={{ display:"flex", gap:"0.6rem" }}>
-              <button
-                onClick={addAddress}
-                style={{
-                  fontFamily:"var(--font-jost)", fontWeight:600,
-                  fontSize:"0.75rem", letterSpacing:"0.16em", textTransform:"uppercase",
-                  padding:"0.6rem 1.2rem",
-                  background:"var(--burnt-orange)", color:"var(--cream)",
-                  border:"none", cursor:"pointer",
-                }}
-              >
+              <button onClick={addAddress} style={{
+                fontFamily:"var(--font-jost)", fontWeight:600,
+                fontSize:"0.75rem", letterSpacing:"0.16em", textTransform:"uppercase",
+                padding:"0.6rem 1.2rem",
+                background:"var(--burnt-orange)", color:"var(--cream)",
+                border:"none", cursor:"pointer",
+              }}>
                 Add address
               </button>
-              <button
-                onClick={() => setAddingAddress(false)}
-                style={{
-                  fontFamily:"var(--font-jost)", fontWeight:600,
-                  fontSize:"0.75rem", letterSpacing:"0.16em", textTransform:"uppercase",
-                  padding:"0.6rem 1rem",
-                  background:"transparent", color:"var(--muted)",
-                  border:"1px solid var(--warm-tan)", cursor:"pointer",
-                }}
-              >
+              <button onClick={() => setAddingAddress(false)} style={{
+                fontFamily:"var(--font-jost)", fontWeight:600,
+                fontSize:"0.75rem", letterSpacing:"0.16em", textTransform:"uppercase",
+                padding:"0.6rem 1rem",
+                background:"transparent", color:"var(--muted)",
+                border:"1px solid var(--warm-tan)", cursor:"pointer",
+              }}>
                 Cancel
               </button>
             </div>
           </div>
         ) : (
-          <button
-            onClick={() => setAddingAddress(true)}
-            style={{
-              fontFamily:"var(--font-jost)", fontWeight:600,
-              fontSize:"0.75rem", letterSpacing:"0.18em", textTransform:"uppercase",
-              padding:"0.6rem 1.2rem",
-              background:"transparent", color:"var(--muted)",
-              border:"1px solid var(--warm-tan)", cursor:"pointer",
-            }}
-          >
+          <button onClick={() => setAddingAddress(true)} style={{
+            fontFamily:"var(--font-jost)", fontWeight:600,
+            fontSize:"0.75rem", letterSpacing:"0.18em", textTransform:"uppercase",
+            padding:"0.6rem 1.2rem",
+            background:"transparent", color:"var(--muted)",
+            border:"1px solid var(--warm-tan)", cursor:"pointer",
+          }}>
             + Add address
           </button>
         )}
-      </div>
-
-      {/* ── Payment methods ── */}
-      <div style={card}>
-        <SectionHeader title="Payment methods" />
-        <div style={{ display:"flex", flexDirection:"column", gap:"0.6rem", marginBottom:"1.25rem" }}>
-          {[
-            { brand:"Visa",       last4:"4242", expires:"09/28", default:true  },
-            { brand:"Mastercard", last4:"5555", expires:"03/27", default:false },
-          ].map(card => (
-            <div key={card.last4} style={{
-              display:"flex", justifyContent:"space-between", alignItems:"center",
-              padding:"0.85rem 1rem",
-              border:`1px solid ${card.default ? "var(--burnt-orange)" : "var(--warm-tan)"}`,
-            }}>
-              <div style={{ display:"flex", alignItems:"center", gap:"0.75rem" }}>
-                <div style={{
-                  width:"38px", height:"24px", borderRadius:"3px",
-                  background:"var(--warm-tan)", display:"flex",
-                  alignItems:"center", justifyContent:"center",
-                  fontFamily:"var(--font-jost)", fontWeight:700,
-                  fontSize:"0.75rem", color:"var(--muted)",
-                }}>
-                  {card.brand.toUpperCase().slice(0,2)}
-                </div>
-                <div>
-                  <p style={{ fontFamily:"var(--font-jost)", fontWeight:500, fontSize:"0.82rem", color:"#1A1A18" }}>
-                    {card.brand} ···· {card.last4}
-                  </p>
-                  <p style={{ fontFamily:"var(--font-jost)", fontSize:"0.82rem", color:"var(--muted)", opacity:0.55 }}>
-                    Expires {card.expires}
-                  </p>
-                </div>
-              </div>
-              <div style={{ display:"flex", alignItems:"center", gap:"0.5rem" }}>
-                {card.default && (
-                  <span style={{
-                    fontFamily:"var(--font-jost)", fontWeight:600,
-                    fontSize:"0.75rem", letterSpacing:"0.12em", textTransform:"uppercase",
-                    padding:"0.12rem 0.4rem",
-                    background:"rgba(201,92,26,0.1)", color:"var(--burnt-orange)",
-                  }}>
-                    Default
-                  </span>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-        <p style={{ fontFamily:"var(--font-jost)", fontSize:"0.75rem", color:"var(--muted)", opacity:0.6 }}>
-          Payment methods are managed securely via Stripe.{" "}
-          <a href="#" style={{ color:"var(--burnt-orange)", textDecoration:"underline", textUnderlineOffset:"2px" }}>
-            Manage in Stripe ↗
-          </a>
-        </p>
       </div>
 
       {/* ── Notifications ── */}
@@ -423,15 +404,17 @@ export default function SettingsPage() {
       {/* ── Change password ── */}
       <div style={card}>
         <SectionHeader title="Change password" />
-        <Field label="Current password">
-          <TextInput value={pw.current} onChange={v => setPw(p => ({ ...p, current:v }))} type="password" placeholder="••••••••" />
-        </Field>
         <Field label="New password">
           <TextInput value={pw.next} onChange={v => setPw(p => ({ ...p, next:v }))} type="password" placeholder="••••••••" />
         </Field>
         <Field label="Confirm new password">
           <TextInput value={pw.confirm} onChange={v => setPw(p => ({ ...p, confirm:v }))} type="password" placeholder="••••••••" />
         </Field>
+        {pwError && (
+          <p style={{ fontFamily:"var(--font-jost)", fontSize:"0.75rem", color:"#C62828", marginBottom:"0.75rem" }}>
+            {pwError}
+          </p>
+        )}
         <SaveButton onClick={handleSavePw} saved={pwSaved} />
       </div>
 
@@ -441,7 +424,6 @@ export default function SettingsPage() {
         <p style={{ fontFamily:"var(--font-jost)", fontSize:"0.82rem", color:"var(--muted)", opacity:0.75, marginBottom:"1.25rem", lineHeight:1.65 }}>
           Deleting your account is permanent. All saved items, order history, and messages will be removed and cannot be recovered.
         </p>
-
         {!deleteConfirm ? (
           <button
             onClick={() => setDeleteConfirm(true)}
@@ -450,8 +432,7 @@ export default function SettingsPage() {
               fontSize:"0.78rem", letterSpacing:"0.18em", textTransform:"uppercase",
               padding:"0.65rem 1.4rem",
               background:"transparent", color:"#C62828",
-              border:"1px solid #FADADD", cursor:"pointer",
-              transition:"border-color 0.15s",
+              border:"1px solid #FADADD", cursor:"pointer", transition:"border-color 0.15s",
             }}
             onMouseOver={e => (e.currentTarget.style.borderColor = "#C62828")}
             onMouseOut={e => (e.currentTarget.style.borderColor = "#FADADD")}
@@ -460,10 +441,7 @@ export default function SettingsPage() {
           </button>
         ) : (
           <div style={{ border:"1px solid #FADADD", padding:"1.25rem" }}>
-            <p style={{
-              fontFamily:"var(--font-jost)", fontWeight:600,
-              fontSize:"0.78rem", color:"#C62828", marginBottom:"0.75rem",
-            }}>
+            <p style={{ fontFamily:"var(--font-jost)", fontWeight:600, fontSize:"0.78rem", color:"#C62828", marginBottom:"0.75rem" }}>
               Type DELETE to confirm
             </p>
             <input
