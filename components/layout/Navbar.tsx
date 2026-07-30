@@ -52,6 +52,7 @@ export default function Navbar() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [mobileProfileOpen, setMobileProfileOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
+  const [unreadMessages, setUnreadMessages] = useState(false);
   const [customBanner, setCustomBanner] = useState<{ text: string; active: boolean } | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const supabase = createClient();
@@ -65,12 +66,31 @@ export default function Navbar() {
   }, []);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => setUser(data.user));
+    supabase.auth.getUser().then(({ data }) => {
+      setUser(data.user);
+      if (data.user) checkUnread(data.user.id);
+    });
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
+      if (session?.user) checkUnread(session.user.id);
+      else setUnreadMessages(false);
     });
     return () => subscription.unsubscribe();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  async function checkUnread(userId: string) {
+    const { data } = await supabase
+      .from("conversations")
+      .select("participant_a_id, last_message_at, a_last_read_at, b_last_read_at")
+      .or(`participant_a_id.eq.${userId},participant_b_id.eq.${userId}`)
+      .not("last_message_at", "is", null);
+
+    const hasUnread = (data ?? []).some(c => {
+      const lastRead = c.participant_a_id === userId ? c.a_last_read_at : c.b_last_read_at;
+      return !lastRead || new Date(c.last_message_at) > new Date(lastRead);
+    });
+    setUnreadMessages(hasUnread);
+  }
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -172,6 +192,23 @@ export default function Navbar() {
                 <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
               </svg>
             </Link>
+
+            {/* Messages icon — only for logged-in users */}
+            {user && (
+              <Link href="/account/messages" aria-label="Messages" style={{ color: "var(--muted)", position: "relative", display: "inline-flex" }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                </svg>
+                {unreadMessages && (
+                  <span style={{
+                    position: "absolute", top: "-3px", right: "-3px",
+                    width: "7px", height: "7px", borderRadius: "50%",
+                    background: "var(--burnt-orange)",
+                    border: "1.5px solid var(--cream)",
+                  }} />
+                )}
+              </Link>
+            )}
 
             <div style={{ width: "1px", height: "16px", background: "var(--warm-tan)" }} />
 
