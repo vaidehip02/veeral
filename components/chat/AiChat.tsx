@@ -10,8 +10,12 @@ const SUGGESTIONS = [
   "Is renting better than selling for a one-time outfit?",
 ];
 
-export default function AiChat() {
+export default function AiChat({ externalOpen, onClose }: { externalOpen?: boolean; onClose?: () => void } = {}) {
   const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    if (externalOpen) setOpen(true);
+  }, [externalOpen]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -67,7 +71,7 @@ export default function AiChat() {
               <p className="font-semibold">Veeral AI</p>
               <p className="text-xs text-rose-200">Ask me anything about Indian fashion</p>
             </div>
-            <button onClick={() => setOpen(false)} className="text-rose-200 hover:text-white text-lg">
+            <button onClick={() => { setOpen(false); onClose?.(); }} className="text-rose-200 hover:text-white text-lg">
               ✕
             </button>
           </div>

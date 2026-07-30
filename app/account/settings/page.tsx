@@ -458,6 +458,11 @@ export default function SettingsPage() {
             <div style={{ display:"flex", gap:"0.6rem" }}>
               <button
                 disabled={deleteInput !== "DELETE"}
+                onClick={async () => {
+                  if (deleteInput !== "DELETE") return;
+                  await supabase.auth.signOut();
+                  window.location.href = "/";
+                }}
                 style={{
                   fontFamily:"var(--font-jost)", fontWeight:600,
                   fontSize:"0.78rem", letterSpacing:"0.18em", textTransform:"uppercase",

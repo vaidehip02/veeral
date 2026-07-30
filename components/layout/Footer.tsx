@@ -53,8 +53,8 @@ export default function Footer() {
         <div>
           <p style={headingStyle}>Company</p>
           {[
-            ["About", "/about"],
-            ["Contact", "/contact"],
+            ["About", "/help"],
+            ["Contact", "/help"],
             ["Help Center", "/help"],
             ["Instagram", "https://instagram.com"],
             ["TikTok", "https://tiktok.com"],

@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import HeroCarousel from "@/components/home/HeroCarousel";
+import AiChat from "@/components/chat/AiChat";
 
 const CATEGORIES = [
   { label: "Lehengas", slug: "lehenga" },
@@ -32,6 +33,7 @@ const BG_FALLBACKS = ["#DDD0C5", "#D5C9BE", "#CABDB1", "#C3B5A8"];
 
 export default function HomePage() {
   const [trending, setTrending] = useState<Listing[]>([]);
+  const [chatOpen, setChatOpen] = useState(false);
 
   useEffect(() => {
     const supabase = createClient();
@@ -230,6 +232,7 @@ export default function HomePage() {
           or how to create your first listing.
         </p>
         <button
+          onClick={() => setChatOpen(true)}
           style={{
             fontFamily: "var(--font-jost)", fontWeight: 600,
             fontSize: "0.75rem", letterSpacing: "0.2em", textTransform: "uppercase",
@@ -241,6 +244,7 @@ export default function HomePage() {
         >
           Chat with Veeral AI
         </button>
+        <AiChat externalOpen={chatOpen} onClose={() => setChatOpen(false)} />
       </section>
 
     </div>

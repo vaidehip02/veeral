@@ -15,7 +15,8 @@ interface BuyerOrder {
   listing_id: string;
   seller_id: string;
   amount: number;       // cents
-  platform_fee: number; // cents
+  platform_fee: number;  // cents
+  shipping_cents: number | null;
   status: DBStatus;
   created_at: string;
   title: string;
@@ -58,7 +59,7 @@ export default function BuyerOrdersPage() {
 
       const { data: rawOrders } = await supabase
         .from("orders")
-        .select("id, listing_id, seller_id, amount, platform_fee, status, created_at, return_tracking_number")
+        .select("id, listing_id, seller_id, amount, platform_fee, shipping_cents, status, created_at, return_tracking_number")
         .eq("buyer_id", user.id)
         .is("rental_start", null)
         .order("created_at", { ascending: false });
@@ -153,7 +154,7 @@ export default function BuyerOrdersPage() {
             const canReview = order.status === "delivered" && !submitted.has(order.id);
             const reviewed  = submitted.has(order.id);
             const thumbnail = order.images[0] ?? null;
-            const total     = (order.amount + order.platform_fee + 1800) / 100;
+            const total     = (order.amount + (order.shipping_cents ?? 0)) / 100;
 
             return (
               <div key={order.id} style={{ background: "var(--cream)", padding: "1.25rem 1.5rem" }}>

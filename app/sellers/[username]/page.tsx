@@ -215,7 +215,7 @@ export default function SellerProfilePage({ params }: { params: { username: stri
             )}
           </div>
           <Link
-            href={`/account/messages`}
+            href={`/account/messages?seller=${params.username}`}
             style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.78rem", letterSpacing: "0.18em", textTransform: "uppercase", padding: "0.6rem 1.4rem", background: "transparent", color: "var(--muted)", border: "1px solid var(--warm-tan)", textDecoration: "none", marginBottom: "0.25rem", transition: "border-color 0.15s", display: "inline-block" }}
           >
             Message
@@ -318,12 +318,12 @@ export default function SellerProfilePage({ params }: { params: { username: stri
                       <div style={{ display: "flex", alignItems: "baseline", gap: "0.35rem", flexWrap: "wrap" }}>
                         {(l.type === "sale" || l.type === "both") && (
                           <span style={{ fontFamily: "var(--font-cormorant)", fontStyle: "italic", fontSize: "1.05rem", color: "#C4440A" }}>
-                            ${l.price.toLocaleString()}
+                            ${(l.price / 100).toLocaleString()}
                           </span>
                         )}
                         {l.rent_price && (l.type === "rent" || l.type === "both") && (
                           <span style={{ fontFamily: "var(--font-jost)", fontSize: "0.78rem", color: "var(--muted)", opacity: 0.7 }}>
-                            {l.type === "both" ? "· " : ""}${l.rent_price}/day
+                            {l.type === "both" ? "· " : ""}${(l.rent_price / 100).toLocaleString()}/day
                           </span>
                         )}
                       </div>
