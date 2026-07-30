@@ -83,6 +83,7 @@ export default function BuyerOrdersPage() {
           seller_id:        o.seller_id,
           amount:           o.amount,
           platform_fee:     o.platform_fee,
+          shipping_cents:   o.shipping_cents ?? null,
           status:           o.status as DBStatus,
           created_at:       o.created_at,
           title:            l?.title ?? "Item",
