@@ -65,7 +65,11 @@ export default function SavedItemsPage() {
     });
   }, []);
 
-  const remove = (savedId: string) => setItems(prev => prev.filter(i => i.saved_id !== savedId));
+  const remove = async (savedId: string) => {
+    setItems(prev => prev.filter(i => i.saved_id !== savedId));
+    const supabase = createClient();
+    await supabase.from("saved_listings").delete().eq("id", savedId);
+  };
 
   return (
     <div style={{ maxWidth: "860px" }}>
@@ -138,11 +142,11 @@ export default function SavedItemsPage() {
                 {item.available ? (
                   <div style={{ display: "flex", alignItems: "baseline", gap: "0.35rem", flexWrap: "wrap", marginBottom: "0.25rem" }}>
                     <span style={{ fontFamily: "var(--font-cormorant)", fontStyle: "italic", fontSize: "1.05rem", color: "#C4440A" }}>
-                      {item.type === "rent" && item.rent_price ? `$${item.rent_price}/day` : `$${item.price.toLocaleString()}`}
+                      {item.type === "rent" && item.rent_price ? `$${(item.rent_price / 100).toLocaleString()}/day` : `$${(item.price / 100).toLocaleString()}`}
                     </span>
                     {item.rent_price && item.type === "both" && (
                       <span style={{ fontFamily: "var(--font-jost)", fontSize: "0.78rem", color: "var(--muted)", opacity: 0.7 }}>
-                        · ${item.rent_price}/day
+                        · ${(item.rent_price / 100).toLocaleString()}/day
                       </span>
                     )}
                   </div>

@@ -70,6 +70,8 @@ function Tag({ children }: { children: React.ReactNode }) {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default function ListingPage({ params: _params }: { params: { id: string } }) {
   const [saved, setSaved] = useState(false);
+  const [savedRowId, setSavedRowId] = useState<string | null>(null);
+  const [saveLoading, setSaveLoading] = useState(false);
   const [rentalOpen, setRentalOpen] = useState(false);
   const router = useRouter();
   const [sizeChartOpen, setSizeChartOpen] = useState(false);
@@ -79,10 +81,25 @@ export default function ListingPage({ params: _params }: { params: { id: string 
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [sellerListings, setSellerListings] = useState<{ id: string; title: string; price: number; images: string[] }[]>([]);
   const [similarListings, setSimilarListings] = useState<{ id: string; title: string; price: number; images: string[] }[]>([]);
+  const [sellerStats, setSellerStats] = useState<{ totalListings: number; rating: number | null }>({ totalListings: 0, rating: null });
 
   useEffect(() => {
     const supabase = createClient();
-    supabase.auth.getUser().then(({ data }) => setCurrentUserId(data.user?.id ?? null));
+    supabase.auth.getUser().then(({ data }) => {
+      const uid = data.user?.id ?? null;
+      setCurrentUserId(uid);
+      if (uid) {
+        supabase
+          .from("saved_listings")
+          .select("id")
+          .eq("user_id", uid)
+          .eq("listing_id", _params.id)
+          .maybeSingle()
+          .then(({ data: row }) => {
+            if (row) { setSaved(true); setSavedRowId(row.id); }
+          });
+      }
+    });
     supabase
       .from("listings")
       .select(`
@@ -115,6 +132,18 @@ export default function ListingPage({ params: _params }: { params: { id: string 
         };
         setListing(built);
         setLoading(false);
+
+        // Fetch seller stats (listing count + average rating)
+        Promise.all([
+          supabase.from("listings").select("*", { count: "exact", head: true }).eq("seller_id", data.seller_id).eq("status", "active"),
+          supabase.from("reviews").select("rating").eq("seller_id", data.seller_id),
+        ]).then(([{ count }, { data: revs }]) => {
+          const total = count ?? 0;
+          const avgRating = revs?.length
+            ? Math.round((revs.reduce((s, r) => s + r.rating, 0) / revs.length) * 10) / 10
+            : null;
+          setSellerStats({ totalListings: total, rating: avgRating });
+        });
 
         // Fetch more from this seller (up to 4, exclude current listing)
         supabase
@@ -412,7 +441,24 @@ export default function ListingPage({ params: _params }: { params: { id: string 
                   )}
 
                   <button
-                    onClick={() => setSaved(!saved)}
+                    onClick={async () => {
+                      if (saveLoading) return;
+                      if (!currentUserId) { router.push("/login"); return; }
+                      setSaveLoading(true);
+                      const supabase = createClient();
+                      if (saved && savedRowId) {
+                        await supabase.from("saved_listings").delete().eq("id", savedRowId);
+                        setSaved(false); setSavedRowId(null);
+                      } else {
+                        const { data: row } = await supabase
+                          .from("saved_listings")
+                          .insert({ user_id: currentUserId, listing_id: _params.id })
+                          .select("id")
+                          .single();
+                        if (row) { setSaved(true); setSavedRowId(row.id); }
+                      }
+                      setSaveLoading(false);
+                    }}
                     aria-label="Save listing"
                     style={{
                       width: "52px", padding: "1rem",
@@ -467,8 +513,8 @@ export default function ListingPage({ params: _params }: { params: { id: string 
             username={l.seller.username}
             displayName={l.seller.display_name ?? l.seller.username}
             avatarUrl={l.seller.avatar_url ?? ""}
-            totalListings={0}
-            rating={0}
+            totalListings={sellerStats.totalListings}
+            rating={sellerStats.rating ?? undefined}
             listingId={l.id}
           />
         </div>

@@ -41,7 +41,7 @@ export default function AdminUsersPage() {
   useEffect(() => {
     supabase
       .from("seller_profiles")
-      .select("id, username, display_name, stripe_onboarding_complete, created_at")
+      .select("id, username, display_name, stripe_onboarding_complete, is_suspended, created_at")
       .order("created_at", { ascending: false })
       .then(async ({ data: profiles }) => {
         if (!profiles) { setLoading(false); return; }
@@ -57,7 +57,7 @@ export default function AdminUsersPage() {
             email: "",
             name: p.display_name,
             role: (listingsRes.count ?? 0) > 0 ? "both" : "buyer" as UserRole,
-            status: "active" as UserStatus,
+            status: (p.is_suspended ? "suspended" : "active") as UserStatus,
             verified: p.stripe_onboarding_complete ?? false,
             joined: new Date(p.created_at).toLocaleDateString("en-US", { month: "short", year: "numeric" }),
             orders: ordersRes.count ?? 0,
@@ -77,16 +77,35 @@ export default function AdminUsersPage() {
 
   const targetUser = confirm ? users.find(u => u.id === confirm.userId) : null;
 
-  const executeSuspend = () => {
+  const executeSuspend = async () => {
     if (!confirm) return;
-    setUsers(prev => prev.map(u =>
-      u.id === confirm.userId ? { ...u, status: u.status === "active" ? "suspended" : "active" } : u
-    ));
+    const target = users.find(u => u.id === confirm.userId);
+    if (!target) return;
+    const newSuspended = target.status === "active";
+    const { error } = await supabase
+      .from("seller_profiles")
+      .update({ is_suspended: newSuspended })
+      .eq("id", confirm.userId);
+    if (!error) {
+      setUsers(prev => prev.map(u =>
+        u.id === confirm.userId ? { ...u, status: newSuspended ? "suspended" : "active" } : u
+      ));
+    }
     setConfirm(null);
   };
 
-  const toggleVerify = (id: string) =>
-    setUsers(prev => prev.map(u => u.id === id ? { ...u, verified: !u.verified } : u));
+  const toggleVerify = async (id: string) => {
+    const target = users.find(u => u.id === id);
+    if (!target) return;
+    const newVerified = !target.verified;
+    const { error } = await supabase
+      .from("seller_profiles")
+      .update({ stripe_onboarding_complete: newVerified })
+      .eq("id", id);
+    if (!error) {
+      setUsers(prev => prev.map(u => u.id === id ? { ...u, verified: newVerified } : u));
+    }
+  };
 
   return (
     <div>

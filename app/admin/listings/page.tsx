@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { createClient } from "@/lib/supabase/client";
 import ConfirmDialog from "@/components/admin/ConfirmDialog";
 
 const A = {
@@ -19,20 +20,8 @@ type ListingStatus = "pending" | "active" | "rejected" | "removed" | "featured";
 interface AdminListing {
   id: string; title: string; seller: string; price: number;
   type: string; garment: string; status: ListingStatus;
-  submitted: string; bg: string; flagged: boolean;
+  submitted: string; images: string[]; flagged: boolean;
 }
-
-const INITIAL_LISTINGS: AdminListing[] = [
-  { id:"L88", title:"Bridal Lehenga Set — Red & Gold",       seller:"new_seller_1",   price:3200, type:"both",  garment:"Lehenga",   status:"pending",  submitted:"Jun 9",  bg:"#D4C5B5", flagged:false },
-  { id:"L87", title:"Kundan Jewellery Set",                   seller:"fashionista_r",  price:890,  type:"both",  garment:"Jewellery", status:"pending",  submitted:"Jun 8",  bg:"#E8D8B8", flagged:false },
-  { id:"L86", title:"Velvet Sherwani — Midnight",             seller:"trendy_fits",    price:1400, type:"both",  garment:"Sherwani",  status:"pending",  submitted:"Jun 8",  bg:"#C9CDD6", flagged:false },
-  { id:"L85", title:"Banarasi Saree — Crimson",               seller:"silk_road_co",   price:980,  type:"sale",  garment:"Saree",     status:"pending",  submitted:"Jun 7",  bg:"#D8A8A8", flagged:false },
-  { id:"L1",  title:"Red Bridal Lehenga with Gold Embroidery",seller:"priya_sharma",   price:4500, type:"both",  garment:"Lehenga",   status:"featured", submitted:"Jun 1",  bg:"#D4C5B5", flagged:false },
-  { id:"L2",  title:"Zardozi Saree — Ivory & Gold",           seller:"priya_sharma",   price:980,  type:"both",  garment:"Saree",     status:"active",   submitted:"May 28", bg:"#E8DDD3", flagged:false },
-  { id:"L7",  title:"Sequin Lehenga — Midnight Blue",         seller:"priya_sharma",   price:2200, type:"both",  garment:"Lehenga",   status:"active",   submitted:"May 25", bg:"#B8BFCC", flagged:false },
-  { id:"L99", title:"Replica Designer Saree",                 seller:"suspicious_acc", price:150,  type:"sale",  garment:"Saree",     status:"active",   submitted:"Jun 5",  bg:"#C8C8C8", flagged:true  },
-  { id:"L77", title:"Vintage Silk Lehenga",                   seller:"raj_styles",     price:1800, type:"sale",  garment:"Lehenga",   status:"rejected", submitted:"May 20", bg:"#D0C8B8", flagged:false },
-];
 
 const STATUS_COLOR: Record<ListingStatus, { bg: string; text: string }> = {
   pending:  { bg: "#FEF3C7", text: "#92400E" },
@@ -47,24 +36,66 @@ type FilterTab = "all" | "pending" | "active" | "featured" | "flagged";
 type ConfirmAction = { id: string; action: "reject" | "remove" };
 
 export default function AdminListingsPage() {
-  const [listings, setListings] = useState(INITIAL_LISTINGS);
+  const [listings, setListings] = useState<AdminListing[]>([]);
+  const [loading,  setLoading]  = useState(true);
   const [tab,      setTab]      = useState<FilterTab>("all");
   const [search,   setSearch]   = useState("");
   const [confirm,  setConfirm]  = useState<ConfirmAction | null>(null);
+  const [actionErr, setActionErr] = useState<string | null>(null);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase
+      .from("listings")
+      .select("id, title, price, type, category, status, created_at, images, seller_id, flagged")
+      .order("created_at", { ascending: false })
+      .then(async ({ data: rows }) => {
+        if (!rows?.length) { setLoading(false); return; }
+        const sellerIds = Array.from(new Set(rows.map(r => r.seller_id).filter(Boolean)));
+        const { data: profiles } = sellerIds.length
+          ? await supabase.from("seller_profiles").select("id, username").in("id", sellerIds)
+          : { data: [] };
+        setListings(rows.map(r => ({
+          id:        r.id,
+          title:     r.title,
+          seller:    profiles?.find(p => p.id === r.seller_id)?.username ?? "unknown",
+          price:     r.price,
+          type:      r.type ?? "sale",
+          garment:   r.category ?? "—",
+          status:    (r.status as ListingStatus) ?? "pending",
+          submitted: new Date(r.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+          images:    r.images ?? [],
+          flagged:   r.flagged ?? false,
+        })));
+        setLoading(false);
+      });
+  }, []);
 
   const confirmTarget = confirm ? listings.find(l => l.id === confirm.id) : null;
 
-  const setStatus = (id: string, status: ListingStatus) =>
+  const updateStatus = async (id: string, status: ListingStatus) => {
+    setActionErr(null);
+    const supabase = createClient();
+    const { error } = await supabase.from("listings").update({ status }).eq("id", id);
+    if (error) { setActionErr("Failed to update status — " + error.message); return; }
     setListings(prev => prev.map(l => l.id === id ? { ...l, status } : l));
+  };
 
-  const executeConfirm = () => {
+  const executeConfirm = async () => {
     if (!confirm) return;
-    setStatus(confirm.id, confirm.action === "reject" ? "rejected" : "removed");
+    await updateStatus(confirm.id, confirm.action === "reject" ? "rejected" : "removed");
     setConfirm(null);
   };
 
-  const toggleFlag = (id: string) =>
-    setListings(prev => prev.map(l => l.id === id ? { ...l, flagged: !l.flagged } : l));
+  const toggleFlag = async (id: string) => {
+    const listing = listings.find(l => l.id === id);
+    if (!listing) return;
+    const newFlagged = !listing.flagged;
+    const supabase = createClient();
+    const { error } = await supabase.from("listings").update({ flagged: newFlagged }).eq("id", id);
+    if (error) { setActionErr("Failed to update flag — " + error.message); return; }
+    setListings(prev => prev.map(l => l.id === id ? { ...l, flagged: newFlagged } : l));
+  };
 
   const TABS: { id: FilterTab; label: string }[] = [
     { id:"all",      label:`All (${listings.length})` },
@@ -127,6 +158,12 @@ export default function AdminListingsPage() {
         <p style={{ ...muted, fontSize: "0.78rem" }}>{listings.filter(l => l.status === "pending").length} awaiting review</p>
       </div>
 
+      {actionErr && (
+        <div style={{ background: "#FEE2E2", color: "#991B1B", padding: "0.65rem 1rem", marginBottom: "1rem", fontFamily: "var(--font-jost)", fontSize: "0.78rem" }}>
+          {actionErr}
+        </div>
+      )}
+
       <div style={{ display: "flex", gap: "0.35rem", marginBottom: "1.25rem", flexWrap: "wrap" }}>
         {TABS.map(t => (
           <button key={t.id} onClick={() => setTab(t.id)} style={{
@@ -148,81 +185,88 @@ export default function AdminListingsPage() {
       </div>
 
       <div style={{ background: A.card, border: `1px solid ${A.border}`, overflowX: "auto" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "44px 60px 1fr 80px 80px 90px 80px 220px",
-          padding: "0.6rem 1rem", borderBottom: `1px solid ${A.border}`, ...lbl }}>
-          <span /><span>ID</span><span>Listing</span><span>Price</span>
-          <span>Garment</span><span>Status</span><span>Flag</span><span>Actions</span>
-        </div>
-
-        {filtered.map((l, i) => {
-          const sc = STATUS_COLOR[l.status];
-          return (
-            <div key={l.id} style={{
-              display: "grid", gridTemplateColumns: "44px 60px 1fr 80px 80px 90px 80px 220px",
-              padding: "0.8rem 1rem", alignItems: "center",
-              borderBottom: i < filtered.length - 1 ? `1px solid ${A.border}` : "none",
-              background: l.flagged ? "#FFF5F5" : i % 2 === 0 ? A.card : A.bg,
-            }}>
-              <div style={{ width: "36px", height: "36px", background: l.bg, borderRadius: "2px", flexShrink: 0 }} />
-              <p style={{ ...muted, fontSize: "0.68rem" }}>#{l.id}</p>
-              <div>
-                <p style={{ ...dark, fontSize: "0.8rem", fontWeight: 500 }}>{l.title}</p>
-                <p style={{ ...muted, fontSize: "0.65rem" }}>@{l.seller} · {l.submitted}</p>
-              </div>
-              <span className="tabular-nums" style={{ fontFamily: "var(--font-jost)", fontSize: "0.85rem", color: A.dark, fontWeight: 500 }}>
-                ${l.price.toLocaleString()}
-              </span>
-              <p style={{ ...muted, fontSize: "0.72rem" }}>{l.garment}</p>
-              <span style={{ display: "inline-block", padding: "0.18rem 0.45rem",
-                background: sc.bg, color: sc.text,
-                fontFamily: "var(--font-jost)", fontWeight: 700,
-                fontSize: "0.52rem", letterSpacing: "0.1em", textTransform: "uppercase", width: "fit-content" }}>
-                {l.status}
-              </span>
-              <button onClick={() => toggleFlag(l.id)} style={{
-                fontFamily: "var(--font-jost)", fontWeight: 700, fontSize: "0.55rem",
-                letterSpacing: "0.1em", textTransform: "uppercase",
-                padding: "0.28rem 0.55rem", cursor: "pointer",
-                background: l.flagged ? "#FEE2E2" : "#F3F4F6",
-                color: l.flagged ? "#991B1B" : A.muted,
-                border: `1px solid ${l.flagged ? "#FECACA" : A.border}`, transition: "all 0.15s" }}>
-                {l.flagged ? "⚑ Flagged" : "Flag"}
-              </button>
-              <div style={{ display: "flex", gap: "0.35rem", flexWrap: "wrap" }}>
-                {l.status === "pending" && (
-                  <>
-                    <button onClick={() => setStatus(l.id, "active")} style={actionBtn("green")}>Approve</button>
-                    <button onClick={() => setConfirm({ id: l.id, action: "reject" })} style={actionBtn("red")}>Reject</button>
-                  </>
-                )}
-                {l.status === "active" && (
-                  <>
-                    {/* Feature disabled if flagged */}
-                    <button
-                      onClick={() => !l.flagged && setStatus(l.id, "featured")}
-                      style={actionBtn(l.flagged ? "disabled" : "orange")}
-                      title={l.flagged ? "Clear the flag before featuring this listing" : undefined}
-                    >
-                      Feature
-                    </button>
-                    <button onClick={() => setConfirm({ id: l.id, action: "remove" })} style={actionBtn("red")}>Remove</button>
-                  </>
-                )}
-                {l.status === "featured" && (
-                  <button onClick={() => setStatus(l.id, "active")} style={actionBtn("dim")}>Unfeature</button>
-                )}
-                {(l.status === "rejected" || l.status === "removed") && (
-                  <button onClick={() => setStatus(l.id, "active")} style={actionBtn("green")}>Restore</button>
-                )}
-              </div>
+        {loading ? (
+          <div style={{ padding: "3rem", textAlign: "center", ...muted, fontSize: "0.82rem" }}>Loading…</div>
+        ) : (
+          <>
+            <div style={{ display: "grid", gridTemplateColumns: "44px 1fr 80px 80px 90px 80px 220px",
+              padding: "0.6rem 1rem", borderBottom: `1px solid ${A.border}`, ...lbl }}>
+              <span /><span>Listing</span><span>Price</span>
+              <span>Type</span><span>Status</span><span>Flag</span><span>Actions</span>
             </div>
-          );
-        })}
 
-        {filtered.length === 0 && (
-          <div style={{ padding: "3rem", textAlign: "center", ...muted, fontSize: "0.82rem" }}>
-            No listings in this view.
-          </div>
+            {filtered.map((l, i) => {
+              const sc = STATUS_COLOR[l.status];
+              const thumb = l.images?.[0];
+              return (
+                <div key={l.id} style={{
+                  display: "grid", gridTemplateColumns: "44px 1fr 80px 80px 90px 80px 220px",
+                  padding: "0.8rem 1rem", alignItems: "center",
+                  borderBottom: i < filtered.length - 1 ? `1px solid ${A.border}` : "none",
+                  background: l.flagged ? "#FFF5F5" : i % 2 === 0 ? A.card : A.bg,
+                }}>
+                  <div style={{ width: "36px", height: "36px", background: "#EDE6DE", borderRadius: "2px", flexShrink: 0, overflow: "hidden" }}>
+                    {thumb && <img src={thumb} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />}
+                  </div>
+                  <div>
+                    <p style={{ ...dark, fontSize: "0.8rem", fontWeight: 500 }}>{l.title}</p>
+                    <p style={{ ...muted, fontSize: "0.65rem" }}>@{l.seller} · {l.submitted}</p>
+                  </div>
+                  <span className="tabular-nums" style={{ fontFamily: "var(--font-jost)", fontSize: "0.85rem", color: A.dark, fontWeight: 500 }}>
+                    ${(l.price / 100).toLocaleString()}
+                  </span>
+                  <p style={{ ...muted, fontSize: "0.72rem" }}>{l.type}</p>
+                  <span style={{ display: "inline-block", padding: "0.18rem 0.45rem",
+                    background: sc.bg, color: sc.text,
+                    fontFamily: "var(--font-jost)", fontWeight: 700,
+                    fontSize: "0.52rem", letterSpacing: "0.1em", textTransform: "uppercase", width: "fit-content" }}>
+                    {l.status}
+                  </span>
+                  <button onClick={() => toggleFlag(l.id)} style={{
+                    fontFamily: "var(--font-jost)", fontWeight: 700, fontSize: "0.55rem",
+                    letterSpacing: "0.1em", textTransform: "uppercase",
+                    padding: "0.28rem 0.55rem", cursor: "pointer",
+                    background: l.flagged ? "#FEE2E2" : "#F3F4F6",
+                    color: l.flagged ? "#991B1B" : A.muted,
+                    border: `1px solid ${l.flagged ? "#FECACA" : A.border}`, transition: "all 0.15s" }}>
+                    {l.flagged ? "⚑ Flagged" : "Flag"}
+                  </button>
+                  <div style={{ display: "flex", gap: "0.35rem", flexWrap: "wrap" }}>
+                    {l.status === "pending" && (
+                      <>
+                        <button onClick={() => updateStatus(l.id, "active")} style={actionBtn("green")}>Approve</button>
+                        <button onClick={() => setConfirm({ id: l.id, action: "reject" })} style={actionBtn("red")}>Reject</button>
+                      </>
+                    )}
+                    {l.status === "active" && (
+                      <>
+                        <button
+                          onClick={() => !l.flagged && updateStatus(l.id, "featured")}
+                          style={actionBtn(l.flagged ? "disabled" : "orange")}
+                          title={l.flagged ? "Clear the flag before featuring this listing" : undefined}
+                        >
+                          Feature
+                        </button>
+                        <button onClick={() => setConfirm({ id: l.id, action: "remove" })} style={actionBtn("red")}>Remove</button>
+                      </>
+                    )}
+                    {l.status === "featured" && (
+                      <button onClick={() => updateStatus(l.id, "active")} style={actionBtn("dim")}>Unfeature</button>
+                    )}
+                    {(l.status === "rejected" || l.status === "removed") && (
+                      <button onClick={() => updateStatus(l.id, "active")} style={actionBtn("green")}>Restore</button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+
+            {filtered.length === 0 && (
+              <div style={{ padding: "3rem", textAlign: "center", ...muted, fontSize: "0.82rem" }}>
+                No listings in this view.
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>

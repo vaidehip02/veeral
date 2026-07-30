@@ -28,6 +28,17 @@ interface BuyerOrder {
 }
 
 
+function trackingUrl(num: string): string {
+  const n = num.trim().replace(/\s+/g, "");
+  if (/^1Z/i.test(n) || /^\d{18}$/.test(n))       return `https://www.ups.com/track?tracknum=${n}`;
+  if (/^(94|92|93|94|95)\d{18,20}$/.test(n) ||
+      /^[0-9]{20,22}$/.test(n))                    return `https://tools.usps.com/go/TrackConfirmAction?tLabels=${n}`;
+  if (/^\d{12}$/.test(n) || /^\d{15}$/.test(n) ||
+      /^\d{20}$/.test(n) || /^\d{22}$/.test(n))   return `https://www.fedex.com/apps/fedextrack/?tracknumbers=${n}`;
+  // fallback: USPS covers most domestic packages
+  return `https://tools.usps.com/go/TrackConfirmAction?tLabels=${n}`;
+}
+
 function fmtDate(iso: string) {
   return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
@@ -197,7 +208,7 @@ export default function BuyerOrdersPage() {
                     {/* Tracking */}
                     {order.tracking && (
                       <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.73rem", color: "var(--muted)", marginBottom: "0.75rem" }}>
-                        <a href={`https://www.ups.com/track?tracknum=${order.tracking}`} target="_blank" rel="noopener noreferrer" style={{ color: "var(--burnt-orange)", textDecoration: "underline", textUnderlineOffset: "2px" }}>
+                        <a href={trackingUrl(order.tracking)} target="_blank" rel="noopener noreferrer" style={{ color: "var(--burnt-orange)", textDecoration: "underline", textUnderlineOffset: "2px" }}>
                           Track package ↗
                         </a>
                       </p>

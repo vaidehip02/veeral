@@ -64,11 +64,13 @@ function SaveButton({ onClick, saved }: { onClick: () => void; saved: boolean })
 export default function AdminSettingsPage() {
   const [commission, setCommission] = useState("10");
   const [commSaved,  setCommSaved]  = useState(false);
+  const [commError,  setCommError]  = useState<string | null>(null);
 
   const [depositMultiplier, setDepositMultiplier] = useState("5");
   const [depositMin,        setDepositMin]        = useState("50");
   const [depositMax,        setDepositMax]        = useState("2000");
   const [depositSaved,      setDepositSaved]      = useState(false);
+  const [depositError,      setDepositError]      = useState<string | null>(null);
 
   const [lateFeeType,       setLateFeeType]       = useState<"flat" | "multiplier">("multiplier");
   const [lateFeeValue,      setLateFeeValue]      = useState("1.5");
@@ -90,6 +92,19 @@ export default function AdminSettingsPage() {
         setBannerActive(parsed.active ?? false);
       }
     } catch { /* ignore */ }
+  }, []);
+
+  // Load commission/deposit settings from DB on mount
+  useEffect(() => {
+    fetch("/api/admin/settings/fees")
+      .then(r => r.json())
+      .then(d => {
+        if (d.sale_fee_pct != null)       setCommission(String(d.sale_fee_pct));
+        if (d.deposit_multiplier != null)  setDepositMultiplier(String(d.deposit_multiplier));
+        if (d.deposit_min_cents != null)   setDepositMin(String(d.deposit_min_cents / 100));
+        if (d.deposit_max_cents != null)   setDepositMax(String(d.deposit_max_cents / 100));
+      })
+      .catch(() => { /* use defaults */ });
   }, []);
 
   // Load late-fee settings from DB on mount
@@ -160,7 +175,24 @@ export default function AdminSettingsPage() {
             </div>
           ))}
         </div>
-        <SaveButton onClick={() => save(setCommSaved)} saved={commSaved} />
+        {commError && <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.72rem", color: "#991B1B", marginBottom: "0.75rem" }}>{commError}</p>}
+        <SaveButton
+          onClick={async () => {
+            setCommError(null);
+            const pct = parseFloat(commission);
+            if (isNaN(pct) || pct < 0 || pct > 100) { setCommError("Enter a valid percentage (0–100)."); return; }
+            try {
+              const res = await fetch("/api/admin/settings/fees", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ sale_fee_pct: pct, rental_fee_pct: pct }),
+              });
+              if (!res.ok) { const d = await res.json(); setCommError(d.error ?? "Save failed."); return; }
+              save(setCommSaved);
+            } catch { setCommError("Network error — try again."); }
+          }}
+          saved={commSaved}
+        />
       </div>
 
       {/* Deposit */}
@@ -175,7 +207,28 @@ export default function AdminSettingsPage() {
           <Field label="Minimum deposit ($)"><LightInput value={depositMin} onChange={setDepositMin} type="number" prefix="$" /></Field>
           <Field label="Maximum deposit ($)"><LightInput value={depositMax} onChange={setDepositMax} type="number" prefix="$" /></Field>
         </div>
-        <SaveButton onClick={() => save(setDepositSaved)} saved={depositSaved} />
+        {depositError && <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.72rem", color: "#991B1B", marginBottom: "0.75rem" }}>{depositError}</p>}
+        <SaveButton
+          onClick={async () => {
+            setDepositError(null);
+            const mult = parseFloat(depositMultiplier);
+            const minC = Math.round(parseFloat(depositMin) * 100);
+            const maxC = Math.round(parseFloat(depositMax) * 100);
+            if (isNaN(mult) || mult <= 0) { setDepositError("Enter a valid multiplier."); return; }
+            if (isNaN(minC) || minC < 0)  { setDepositError("Enter a valid minimum deposit."); return; }
+            if (isNaN(maxC) || maxC < minC) { setDepositError("Maximum must be greater than minimum."); return; }
+            try {
+              const res = await fetch("/api/admin/settings/fees", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ deposit_multiplier: mult, deposit_min_cents: minC, deposit_max_cents: maxC }),
+              });
+              if (!res.ok) { const d = await res.json(); setDepositError(d.error ?? "Save failed."); return; }
+              save(setDepositSaved);
+            } catch { setDepositError("Network error — try again."); }
+          }}
+          saved={depositSaved}
+        />
       </div>
 
       {/* Late fee */}
