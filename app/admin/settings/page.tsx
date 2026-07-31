@@ -82,6 +82,51 @@ export default function AdminSettingsPage() {
   const [bannerActive, setBannerActive] = useState(false);
   const [bannerSaved,  setBannerSaved]  = useState(false);
 
+  // Hero slides
+  interface HeroSlide { id: number; label: string; heading: string; sub: string; cta: string; href: string; image_url: string | null; order_index: number; active: boolean; }
+  const [slides,      setSlides]      = useState<HeroSlide[]>([]);
+  const [slidesDirty, setSlidesDirty] = useState<Record<number, Partial<HeroSlide>>>({});
+  const [slidesSaved, setSlidesSaved] = useState<Record<number, boolean>>({});
+  const [slidesErr,   setSlidesErr]   = useState<string | null>(null);
+  const [addingSlide, setAddingSlide] = useState(false);
+  const [newSlide,    setNewSlide]    = useState({ label: "", heading: "", sub: "", cta: "Shop Now", href: "/listings", image_url: "" });
+
+  // Load hero slides
+  useEffect(() => {
+    fetch("/api/admin/hero-slides")
+      .then(r => r.json())
+      .then(data => setSlides(data))
+      .catch(() => {});
+  }, []);
+
+  const patchSlide = async (id: number, updates: Partial<HeroSlide>) => {
+    setSlidesErr(null);
+    const res = await fetch("/api/admin/hero-slides", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, ...updates }) });
+    if (!res.ok) { const d = await res.json(); setSlidesErr(d.error ?? "Save failed."); return; }
+    const updated = await res.json();
+    setSlides(prev => prev.map(s => s.id === id ? updated : s));
+    setSlidesDirty(prev => { const n = { ...prev }; delete n[id]; return n; });
+    setSlidesSaved(prev => ({ ...prev, [id]: true }));
+    setTimeout(() => setSlidesSaved(prev => { const n = { ...prev }; delete n[id]; return n; }), 2500);
+  };
+
+  const deleteSlide = async (id: number) => {
+    setSlidesErr(null);
+    const res = await fetch("/api/admin/hero-slides", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) });
+    if (!res.ok) { setSlidesErr("Delete failed."); return; }
+    setSlides(prev => prev.filter(s => s.id !== id));
+  };
+
+  const addSlide = async () => {
+    setSlidesErr(null);
+    const res = await fetch("/api/admin/hero-slides", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...newSlide, image_url: newSlide.image_url || null, order_index: slides.length }) });
+    if (!res.ok) { const d = await res.json(); setSlidesErr(d.error ?? "Add failed."); return; }
+    const created = await res.json();
+    setSlides(prev => [...prev, created]);
+    setNewSlide({ label: "", heading: "", sub: "", cta: "Shop Now", href: "/listings", image_url: "" });
+    setAddingSlide(false);
+  };
+
   // Load saved banner from localStorage on mount
   useEffect(() => {
     try {
@@ -322,6 +367,104 @@ export default function AdminSettingsPage() {
         )}
 
         <SaveButton onClick={saveBanner} saved={bannerSaved} />
+      </div>
+
+      {/* Hero carousel slides */}
+      <div style={card}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1.25rem" }}>
+          <p style={lbl}>Homepage carousel slides</p>
+          <button onClick={() => setAddingSlide(v => !v)} style={{ fontFamily: "var(--font-jost)", fontWeight: 700, fontSize: "0.6rem", letterSpacing: "0.14em", textTransform: "uppercase", padding: "0.35rem 0.8rem", background: addingSlide ? "#F3F4F6" : A.accent, color: addingSlide ? A.muted : "#fff", border: `1px solid ${addingSlide ? A.border : A.accent}`, cursor: "pointer" }}>
+            {addingSlide ? "Cancel" : "+ Add slide"}
+          </button>
+        </div>
+
+        {slidesErr && <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.72rem", color: "#991B1B", marginBottom: "0.75rem" }}>{slidesErr}</p>}
+
+        {/* Add slide form */}
+        {addingSlide && (
+          <div style={{ padding: "1rem", background: A.bg, border: `1px solid ${A.border}`, marginBottom: "1.25rem" }}>
+            <p style={{ ...lbl, marginBottom: "0.75rem" }}>New slide</p>
+            {[
+              { key: "label",     label: "Label (small text, e.g. Wedding Season)", ph: "Wedding Season" },
+              { key: "heading",   label: "Heading (main title)",                    ph: "Dress for Every Occasion" },
+              { key: "sub",       label: "Subtext",                                 ph: "Lehengas, sarees & sherwanis…" },
+              { key: "cta",       label: "Button text",                             ph: "Shop Now" },
+              { key: "href",      label: "Button link",                             ph: "/listings?category=lehenga" },
+              { key: "image_url", label: "Image URL (Cloudinary or leave blank)",   ph: "https://res.cloudinary.com/…" },
+            ].map(({ key, label, ph }) => (
+              <div key={key} style={{ marginBottom: "0.65rem" }}>
+                <label style={{ ...lbl, display: "block", marginBottom: "0.3rem" }}>{label}</label>
+                <input value={(newSlide as Record<string, string>)[key]} onChange={e => setNewSlide(prev => ({ ...prev, [key]: e.target.value }))} placeholder={ph}
+                  style={{ width: "100%", padding: "0.55rem 0.75rem", background: "#fff", border: `1px solid ${A.border}`, fontFamily: "var(--font-jost)", fontSize: "0.82rem", color: A.dark, outline: "none", boxSizing: "border-box" }}
+                  onFocus={e => (e.target.style.borderColor = A.accent)}
+                  onBlur={e => (e.target.style.borderColor = A.border)}
+                />
+              </div>
+            ))}
+            <button onClick={addSlide} style={{ fontFamily: "var(--font-jost)", fontWeight: 700, fontSize: "0.65rem", letterSpacing: "0.18em", textTransform: "uppercase", padding: "0.6rem 1.25rem", background: A.accent, color: "#fff", border: "none", cursor: "pointer" }}>
+              Add slide
+            </button>
+          </div>
+        )}
+
+        {/* Existing slides */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "1px", background: A.border }}>
+          {slides.map(slide => {
+            const dirty = slidesDirty[slide.id] ?? {};
+            const val = (k: keyof HeroSlide) => (dirty[k] ?? slide[k] ?? "") as string;
+            const set = (k: keyof HeroSlide, v: string) => setSlidesDirty(prev => ({ ...prev, [slide.id]: { ...prev[slide.id], [k]: v } }));
+            return (
+              <div key={slide.id} style={{ background: A.card, padding: "1rem 1.1rem" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "0.75rem" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                    <span style={{ ...lbl }}>{slide.label || "Slide"}</span>
+                    {/* Active toggle */}
+                    <div onClick={() => patchSlide(slide.id, { active: !slide.active })} style={{ width: "32px", height: "18px", borderRadius: "9px", background: slide.active ? A.accent : "#E5E7EB", position: "relative", cursor: "pointer", transition: "background 0.2s", flexShrink: 0 }}>
+                      <div style={{ position: "absolute", top: "2px", left: slide.active ? "16px" : "2px", width: "14px", height: "14px", borderRadius: "50%", background: "#fff", transition: "left 0.2s" }} />
+                    </div>
+                    <span style={{ fontFamily: "var(--font-jost)", fontSize: "0.65rem", color: A.muted }}>{slide.active ? "Live" : "Hidden"}</span>
+                  </div>
+                  <button onClick={() => deleteSlide(slide.id)} style={{ fontFamily: "var(--font-jost)", fontWeight: 700, fontSize: "0.55rem", letterSpacing: "0.1em", textTransform: "uppercase", padding: "0.25rem 0.55rem", background: "#FEE2E2", color: "#991B1B", border: "1px solid #FECACA", cursor: "pointer" }}>
+                    Delete
+                  </button>
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem", marginBottom: "0.5rem" }}>
+                  {([
+                    ["label",   "Label"],
+                    ["heading", "Heading"],
+                    ["sub",     "Subtext"],
+                    ["cta",     "Button text"],
+                    ["href",    "Button link"],
+                    ["image_url","Image URL"],
+                  ] as [keyof HeroSlide, string][]).map(([k, lbTxt]) => (
+                    <div key={k} style={k === "sub" || k === "image_url" ? { gridColumn: "1 / -1" } : {}}>
+                      <label style={{ ...lbl, display: "block", marginBottom: "0.2rem" }}>{lbTxt}</label>
+                      <input value={val(k)} onChange={e => set(k, e.target.value)}
+                        style={{ width: "100%", padding: "0.45rem 0.65rem", background: A.bg, border: `1px solid ${A.border}`, fontFamily: "var(--font-jost)", fontSize: "0.78rem", color: A.dark, outline: "none", boxSizing: "border-box" }}
+                        onFocus={e => (e.target.style.borderColor = A.accent)}
+                        onBlur={e => (e.target.style.borderColor = A.border)}
+                      />
+                    </div>
+                  ))}
+                </div>
+
+                {Object.keys(dirty).length > 0 && (
+                  <button
+                    onClick={() => patchSlide(slide.id, dirty)}
+                    style={{ fontFamily: "var(--font-jost)", fontWeight: 700, fontSize: "0.6rem", letterSpacing: "0.16em", textTransform: "uppercase", padding: "0.45rem 1rem", background: slidesSaved[slide.id] ? "#D1FAE5" : A.accent, color: slidesSaved[slide.id] ? "#065F46" : "#fff", border: "none", cursor: "pointer", transition: "all 0.2s" }}
+                  >
+                    {slidesSaved[slide.id] ? "✓ Saved" : "Save slide"}
+                  </button>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        <p style={{ ...muted, fontSize: "0.68rem", marginTop: "0.75rem" }}>
+          Changes go live immediately. Toggle a slide off to hide it without deleting.
+        </p>
       </div>
     </div>
   );
