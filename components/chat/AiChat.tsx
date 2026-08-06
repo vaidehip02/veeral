@@ -3,6 +3,9 @@
 import { useState, useRef, useEffect } from "react";
 import { ChatMessage } from "@/types";
 
+const ORANGE = "#C4440A";
+const CREAM  = "#FAF6F1";
+
 const SUGGESTIONS = [
   "How should I price my lehenga?",
   "How do I create a good listing?",
@@ -16,9 +19,10 @@ export default function AiChat({ externalOpen, onClose }: { externalOpen?: boole
   useEffect(() => {
     if (externalOpen) setOpen(true);
   }, [externalOpen]);
+
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [input, setInput] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [input, setInput]       = useState("");
+  const [loading, setLoading]   = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -32,20 +36,12 @@ export default function AiChat({ externalOpen, onClose }: { externalOpen?: boole
     setMessages(updated);
     setInput("");
     setLoading(true);
-
     try {
-      const res = await fetch("/api/ai-chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: updated }),
-      });
+      const res  = await fetch("/api/ai-chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ messages: updated }) });
       const data = await res.json();
       setMessages([...updated, { role: "assistant", content: data.reply }]);
     } catch {
-      setMessages([
-        ...updated,
-        { role: "assistant", content: "Sorry, I couldn't connect. Please try again." },
-      ]);
+      setMessages([...updated, { role: "assistant", content: "Sorry, I couldn't connect. Please try again." }]);
     } finally {
       setLoading(false);
     }
@@ -56,36 +52,64 @@ export default function AiChat({ externalOpen, onClose }: { externalOpen?: boole
       {/* Floating button */}
       <button
         onClick={() => setOpen(true)}
-        className="fixed bottom-6 right-6 z-50 bg-rose-600 text-white rounded-full w-14 h-14 flex items-center justify-center shadow-lg hover:bg-rose-700 transition-colors text-2xl"
         aria-label="Open AI chat"
+        style={{
+          position: "fixed", bottom: "5rem", right: "1.5rem", zIndex: 50,
+          width: "52px", height: "52px", borderRadius: "50%",
+          background: ORANGE, color: "#fff", border: "none",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          boxShadow: "0 4px 16px rgba(196,68,10,0.35)",
+          cursor: "pointer", fontSize: "1.25rem", transition: "opacity 0.2s",
+        }}
+        onMouseOver={e => (e.currentTarget.style.opacity = "0.85")}
+        onMouseOut={e => (e.currentTarget.style.opacity = "1")}
       >
         💬
       </button>
 
       {/* Chat panel */}
       {open && (
-        <div className="fixed bottom-24 right-6 z-50 w-80 sm:w-96 bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-gray-200">
+        <div style={{
+          position: "fixed", bottom: "9rem", right: "1.5rem", zIndex: 50,
+          width: "min(380px, calc(100vw - 2rem))",
+          background: CREAM, border: "1px solid #EDE6DE",
+          boxShadow: "0 8px 40px rgba(0,0,0,0.14)",
+          display: "flex", flexDirection: "column", overflow: "hidden",
+        }}>
           {/* Header */}
-          <div className="bg-rose-600 text-white px-4 py-3 flex items-center justify-between">
+          <div style={{ background: ORANGE, padding: "0.85rem 1.1rem", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <div>
-              <p className="font-semibold">Veeral AI</p>
-              <p className="text-xs text-rose-200">Ask me anything about Indian fashion</p>
+              <p style={{ fontFamily: "var(--font-cormorant)", fontStyle: "italic", fontWeight: 400, fontSize: "1.1rem", color: "#fff", lineHeight: 1.2 }}>
+                Veeral AI
+              </p>
+              <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.65rem", color: "rgba(255,255,255,0.75)", letterSpacing: "0.08em" }}>
+                Ask me anything about South Asian fashion
+              </p>
             </div>
-            <button onClick={() => { setOpen(false); onClose?.(); }} className="text-rose-200 hover:text-white text-lg">
+            <button
+              onClick={() => { setOpen(false); onClose?.(); }}
+              style={{ background: "none", border: "none", color: "rgba(255,255,255,0.8)", cursor: "pointer", fontSize: "1rem", lineHeight: 1, padding: "0.2rem" }}
+              onMouseOver={e => (e.currentTarget.style.color = "#fff")}
+              onMouseOut={e => (e.currentTarget.style.color = "rgba(255,255,255,0.8)")}
+            >
               ✕
             </button>
           </div>
 
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-3 max-h-80">
+          <div style={{ flex: 1, overflowY: "auto", padding: "1rem", display: "flex", flexDirection: "column", gap: "0.65rem", maxHeight: "320px" }}>
             {messages.length === 0 && (
-              <div className="space-y-2">
-                <p className="text-sm text-gray-500 mb-3">Try asking:</p>
-                {SUGGESTIONS.map((s) => (
-                  <button
-                    key={s}
-                    onClick={() => sendMessage(s)}
-                    className="block w-full text-left text-sm bg-gray-50 hover:bg-rose-50 text-gray-700 hover:text-rose-600 px-3 py-2 rounded-xl transition-colors"
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
+                <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.72rem", color: "#9C8B7E", marginBottom: "0.25rem" }}>Try asking:</p>
+                {SUGGESTIONS.map(s => (
+                  <button key={s} onClick={() => sendMessage(s)} style={{
+                    textAlign: "left", padding: "0.55rem 0.75rem",
+                    background: "#fff", border: "1px solid #EDE6DE",
+                    fontFamily: "var(--font-jost)", fontSize: "0.78rem", color: "#3D3830",
+                    cursor: "pointer", transition: "border-color 0.15s, color 0.15s",
+                  }}
+                    onMouseOver={e => { e.currentTarget.style.borderColor = ORANGE; e.currentTarget.style.color = ORANGE; }}
+                    onMouseOut={e => { e.currentTarget.style.borderColor = "#EDE6DE"; e.currentTarget.style.color = "#3D3830"; }}
                   >
                     {s}
                   </button>
@@ -93,24 +117,21 @@ export default function AiChat({ externalOpen, onClose }: { externalOpen?: boole
               </div>
             )}
             {messages.map((m, i) => (
-              <div
-                key={i}
-                className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}
-              >
-                <div
-                  className={`max-w-[80%] px-3 py-2 rounded-2xl text-sm leading-relaxed ${
-                    m.role === "user"
-                      ? "bg-rose-600 text-white rounded-br-sm"
-                      : "bg-gray-100 text-gray-800 rounded-bl-sm"
-                  }`}
-                >
+              <div key={i} style={{ display: "flex", justifyContent: m.role === "user" ? "flex-end" : "flex-start" }}>
+                <div style={{
+                  maxWidth: "80%", padding: "0.55rem 0.8rem",
+                  fontFamily: "var(--font-jost)", fontSize: "0.82rem", lineHeight: 1.55,
+                  background: m.role === "user" ? ORANGE : "#fff",
+                  color: m.role === "user" ? "#fff" : "#3D3830",
+                  border: m.role === "user" ? "none" : "1px solid #EDE6DE",
+                }}>
                   {m.content}
                 </div>
               </div>
             ))}
             {loading && (
-              <div className="flex justify-start">
-                <div className="bg-gray-100 text-gray-500 px-3 py-2 rounded-2xl rounded-bl-sm text-sm">
+              <div style={{ display: "flex", justifyContent: "flex-start" }}>
+                <div style={{ padding: "0.55rem 0.8rem", background: "#fff", border: "1px solid #EDE6DE", fontFamily: "var(--font-jost)", fontSize: "0.82rem", color: "#9C8B7E" }}>
                   Thinking…
                 </div>
               </div>
@@ -119,18 +140,32 @@ export default function AiChat({ externalOpen, onClose }: { externalOpen?: boole
           </div>
 
           {/* Input */}
-          <div className="border-t border-gray-100 p-3 flex gap-2">
+          <div style={{ borderTop: "1px solid #EDE6DE", padding: "0.75rem", display: "flex", gap: "0.5rem", background: "#fff" }}>
             <input
               value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && sendMessage(input)}
+              onChange={e => setInput(e.target.value)}
+              onKeyDown={e => e.key === "Enter" && !e.shiftKey && sendMessage(input)}
               placeholder="Ask about pricing, styling…"
-              className="flex-1 text-sm border border-gray-200 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-rose-300"
+              style={{
+                flex: 1, padding: "0.5rem 0.75rem",
+                border: "1px solid #EDE6DE", background: CREAM,
+                fontFamily: "var(--font-jost)", fontSize: "0.8rem", color: "#3D3830",
+                outline: "none",
+              }}
+              onFocus={e => (e.target.style.borderColor = ORANGE)}
+              onBlur={e => (e.target.style.borderColor = "#EDE6DE")}
             />
             <button
               onClick={() => sendMessage(input)}
               disabled={loading || !input.trim()}
-              className="bg-rose-600 text-white rounded-full w-9 h-9 flex items-center justify-center hover:bg-rose-700 disabled:opacity-40 transition-colors"
+              style={{
+                width: "36px", height: "36px", flexShrink: 0,
+                background: loading || !input.trim() ? "#EDE6DE" : ORANGE,
+                color: loading || !input.trim() ? "#9C8B7E" : "#fff",
+                border: "none", cursor: loading || !input.trim() ? "not-allowed" : "pointer",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontSize: "1rem", transition: "background 0.15s",
+              }}
             >
               ↑
             </button>
