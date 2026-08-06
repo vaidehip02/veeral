@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 // ── Shared components (must be defined before data that uses them) ─────────────
 
