@@ -49,12 +49,12 @@ export default function AiChat({ externalOpen, onClose }: { externalOpen?: boole
 
   return (
     <>
-      {/* Floating button */}
-      <button
+      {/* Floating button — hidden when panel is open */}
+      {!open && <button
         onClick={() => setOpen(true)}
         aria-label="Open AI chat"
         style={{
-          position: "fixed", bottom: "5rem", right: "1.5rem", zIndex: 50,
+          position: "fixed", bottom: "7rem", right: "1.5rem", zIndex: 50,
           width: "52px", height: "52px", borderRadius: "50%",
           background: ORANGE, color: "#fff", border: "none",
           display: "flex", alignItems: "center", justifyContent: "center",
@@ -65,7 +65,7 @@ export default function AiChat({ externalOpen, onClose }: { externalOpen?: boole
         onMouseOut={e => (e.currentTarget.style.opacity = "1")}
       >
         💬
-      </button>
+      </button>}
 
       {/* Chat panel */}
       {open && (
