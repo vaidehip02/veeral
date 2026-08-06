@@ -75,7 +75,7 @@ export default function AiChat({ externalOpen, onClose }: { externalOpen?: boole
         <div style={{
           position: "fixed", bottom: "5rem", right: "1.5rem", zIndex: 99999,
           width: "min(380px, calc(100vw - 2rem))",
-          maxHeight: "calc(100vh - 9rem)",
+          height: "min(480px, calc(100svh - 8rem))",
           background: CREAM, border: "1px solid #EDE6DE",
           boxShadow: "0 -4px 32px rgba(0,0,0,0.12)",
           display: "flex", flexDirection: "column", overflow: "hidden",
@@ -101,7 +101,7 @@ export default function AiChat({ externalOpen, onClose }: { externalOpen?: boole
           </div>
 
           {/* Messages */}
-          <div style={{ flex: 1, overflowY: "auto", padding: "1rem", display: "flex", flexDirection: "column", gap: "0.65rem", maxHeight: "320px" }}>
+          <div style={{ flex: 1, overflowY: "auto", padding: "1rem", display: "flex", flexDirection: "column", gap: "0.65rem", minHeight: 0 }}>
             {messages.length === 0 && (
               <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
                 <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.72rem", color: "#9C8B7E", marginBottom: "0.25rem" }}>Try asking:</p>
