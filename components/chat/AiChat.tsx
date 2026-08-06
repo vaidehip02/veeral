@@ -54,7 +54,7 @@ export default function AiChat({ externalOpen, onClose }: { externalOpen?: boole
         onClick={() => setOpen(true)}
         aria-label="Open AI chat"
         style={{
-          position: "fixed", bottom: "7rem", right: "1.5rem", zIndex: 50,
+          position: "fixed", bottom: "5rem", right: "1.5rem", zIndex: 50,
           width: "52px", height: "52px", borderRadius: "50%",
           background: ORANGE, color: "#fff", border: "none",
           display: "flex", alignItems: "center", justifyContent: "center",
@@ -67,13 +67,17 @@ export default function AiChat({ externalOpen, onClose }: { externalOpen?: boole
         💬
       </button>}
 
+      {/* Backdrop — click outside to close */}
+      {open && <div onClick={() => { setOpen(false); onClose?.(); }} style={{ position: "fixed", inset: 0, zIndex: 49 }} />}
+
       {/* Chat panel */}
       {open && (
         <div style={{
-          position: "fixed", top: "5rem", right: "1.5rem", zIndex: 50,
+          position: "fixed", bottom: 0, right: "1.5rem", zIndex: 50,
           width: "min(380px, calc(100vw - 2rem))",
-          background: CREAM, border: "1px solid #EDE6DE",
-          boxShadow: "0 8px 40px rgba(0,0,0,0.14)",
+          maxHeight: "calc(100vh - 5rem)",
+          background: CREAM, border: "1px solid #EDE6DE", borderBottom: "none",
+          boxShadow: "0 -4px 32px rgba(0,0,0,0.12)",
           display: "flex", flexDirection: "column", overflow: "hidden",
         }}>
           {/* Header */}
