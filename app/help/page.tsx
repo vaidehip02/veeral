@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 // ── Shared components (must be defined before data that uses them) ─────────────
 
@@ -132,12 +132,11 @@ function InlineFAQ({ q, a, last }: { q: string; a: string; last: boolean }) {
 
 // ── Accordion components ───────────────────────────────────────────────────────
 
-function SubAccordion({ title, children }: { title: string; children: React.ReactNode }) {
-  const [open, setOpen] = useState(false);
+function SubAccordion({ title, children, open, onToggle }: { title: string; children: React.ReactNode; open: boolean; onToggle: () => void }) {
   return (
     <div style={{ borderBottom: "1px solid var(--warm-tan)" }}>
       <button
-        onClick={() => setOpen(v => !v)}
+        onClick={onToggle}
         style={{ width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center", padding: "1.1rem 1.75rem", background: "none", border: "none", cursor: "pointer", textAlign: "left", gap: "1rem" }}
       >
         <span style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "1rem", color: "#3B2F2A", lineHeight: 1.4 }}>
@@ -156,12 +155,17 @@ function SubAccordion({ title, children }: { title: string; children: React.Reac
   );
 }
 
-function SectionAccordion({ section }: { section: ContentSection }) {
-  const [open, setOpen] = useState(false);
+function SectionAccordion({ section, open, openItem, onToggleSection, onToggleItem }: {
+  section: ContentSection;
+  open: boolean;
+  openItem: string | null;
+  onToggleSection: () => void;
+  onToggleItem: (title: string) => void;
+}) {
   return (
     <div id={section.id} style={{ scrollMarginTop: "1.5rem", border: "1px solid var(--warm-tan)", marginBottom: "0.75rem", background: "#fff" }}>
       <button
-        onClick={() => setOpen(v => !v)}
+        onClick={onToggleSection}
         style={{ width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center", padding: "1.4rem 1.75rem", background: "none", border: "none", cursor: "pointer", textAlign: "left", gap: "1rem" }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
@@ -177,7 +181,7 @@ function SectionAccordion({ section }: { section: ContentSection }) {
       {open && (
         <div style={{ borderTop: "1px solid var(--warm-tan)" }}>
           {section.items.map((item, i) => (
-            <SubAccordion key={i} title={item.title}>
+            <SubAccordion key={i} title={item.title} open={openItem === item.title} onToggle={() => onToggleItem(item.title)}>
               {item.body}
             </SubAccordion>
           ))}
@@ -191,15 +195,45 @@ function SectionAccordion({ section }: { section: ContentSection }) {
 
 export default function HelpCenterPage() {
   const [query, setQuery] = useState("");
+  // sectionId -> open boolean
+  const [openSections, setOpenSections] = useState<Record<string, boolean>>({});
+  // sectionId -> open item title (only one item open per section)
+  const [openItems, setOpenItems] = useState<Record<string, string | null>>({});
 
-  const searchResults = query.trim().length > 1
+  const q = query.trim().toLowerCase();
+  const searchResults = q.length > 1
     ? CONTENT_SECTIONS.flatMap(s => s.items.map(item => ({ ...item, sectionLabel: s.label, sectionId: s.id })))
-        .filter(item => item.title.toLowerCase().includes(query.toLowerCase()))
+        .filter(item =>
+          item.title.toLowerCase().includes(q) ||
+          item.sectionLabel.toLowerCase().includes(q)
+        )
     : [];
 
-  function scrollTo(id: string) {
-    const el = document.getElementById(id);
-    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+  function handleSearchClick(sectionId: string, itemTitle: string) {
+    setQuery("");
+    setOpenSections(prev => ({ ...prev, [sectionId]: true }));
+    setOpenItems(prev => ({ ...prev, [sectionId]: itemTitle }));
+    setTimeout(() => {
+      document.getElementById(sectionId)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 20);
+  }
+
+  function toggleSection(sectionId: string) {
+    setOpenSections(prev => ({ ...prev, [sectionId]: !prev[sectionId] }));
+    if (openSections[sectionId]) {
+      setOpenItems(prev => ({ ...prev, [sectionId]: null }));
+    }
+  }
+
+  function toggleItem(sectionId: string, itemTitle: string) {
+    setOpenItems(prev => ({
+      ...prev,
+      [sectionId]: prev[sectionId] === itemTitle ? null : itemTitle,
+    }));
+  }
+
+  function scrollToSection(sectionId: string) {
+    document.getElementById(sectionId)?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
   return (
@@ -228,7 +262,7 @@ export default function HelpCenterPage() {
             <div style={{ position: "absolute", top: "100%", left: 0, right: 0, background: "#fff", border: "1px solid var(--warm-tan)", borderTop: "none", boxShadow: "0 4px 20px rgba(0,0,0,0.08)", zIndex: 20, textAlign: "left" }}>
               {searchResults.slice(0, 6).map((item, i) => (
                 <button key={i}
-                  onClick={() => { setQuery(""); scrollTo(item.sectionId); }}
+                  onClick={() => handleSearchClick(item.sectionId, item.title)}
                   style={{ display: "block", width: "100%", padding: "0.9rem 1.25rem", background: "none", border: "none", borderBottom: i < searchResults.length - 1 ? "1px solid var(--warm-tan)" : "none", cursor: "pointer", textAlign: "left" }}
                   onMouseOver={e => (e.currentTarget.style.background = "#FAF7F4")}
                   onMouseOut={e => (e.currentTarget.style.background = "none")}
@@ -250,7 +284,7 @@ export default function HelpCenterPage() {
             { label: "Getting paid",     section: "payments" },
             { label: "Renting",          section: "renting"  },
           ].map(chip => (
-            <button key={chip.label} onClick={() => scrollTo(chip.section)}
+            <button key={chip.label} onClick={() => scrollToSection(chip.section)}
               style={{ fontFamily: "var(--font-jost)", fontSize: "0.88rem", fontWeight: 500, color: "#3B2F2A", background: "#fff", border: "1px solid var(--warm-tan)", padding: "0.3rem 0.85rem", cursor: "pointer", borderRadius: "999px" }}
               onMouseOver={e => (e.currentTarget.style.borderColor = "var(--burnt-orange)")}
               onMouseOut={e => (e.currentTarget.style.borderColor = "var(--warm-tan)")}
@@ -283,7 +317,14 @@ export default function HelpCenterPage() {
         {/* ── Accordion sections ── */}
         <div style={{ height: "1px", background: "var(--warm-tan)", marginBottom: "2.5rem" }} />
         {CONTENT_SECTIONS.map(section => (
-          <SectionAccordion key={section.id} section={section} />
+          <SectionAccordion
+            key={section.id}
+            section={section}
+            open={!!openSections[section.id]}
+            openItem={openItems[section.id] ?? null}
+            onToggleSection={() => toggleSection(section.id)}
+            onToggleItem={(title) => toggleItem(section.id, title)}
+          />
         ))}
 
       </div>
