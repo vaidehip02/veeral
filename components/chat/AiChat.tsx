@@ -73,10 +73,10 @@ export default function AiChat({ externalOpen, onClose }: { externalOpen?: boole
       {/* Chat panel */}
       {open && (
         <div style={{
-          position: "fixed", bottom: 0, right: "1.5rem", zIndex: 50,
+          position: "fixed", bottom: "4rem", right: "1.5rem", zIndex: 50,
           width: "min(380px, calc(100vw - 2rem))",
-          maxHeight: "calc(100vh - 5rem)",
-          background: CREAM, border: "1px solid #EDE6DE", borderBottom: "none",
+          maxHeight: "calc(100vh - 8rem)",
+          background: CREAM, border: "1px solid #EDE6DE",
           boxShadow: "0 -4px 32px rgba(0,0,0,0.12)",
           display: "flex", flexDirection: "column", overflow: "hidden",
         }}>
