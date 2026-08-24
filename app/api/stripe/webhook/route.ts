@@ -213,7 +213,7 @@ async function sendOrderEmails(orderId: string): Promise<void> {
   const grossAmount  = order.amount        / 100;
   const platformFee  = order.platform_fee  / 100;
   const sellerPayout = order.seller_payout / 100;
-  const shippingCost = ((order as unknown as { shipping_cents: number | null }).shipping_cents ?? 1400) / 100;
+  const shippingCost = (order.shipping_cents ?? 0) / 100;
   const total        = grossAmount + shippingCost;
 
   if (buyerEmail) {

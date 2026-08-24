@@ -2,10 +2,8 @@ import { Resend } from "resend";
 import type { ReactElement } from "react";
 
 // ── Sender address ────────────────────────────────────────────────────────────
-// Using Resend's shared test sender while in development.
-// TODO: once veeral.com is verified in Resend (Dashboard → Domains → Add Domain),
-//       change this to: 'Veeral <hello@veeral.com>'
-const FROM = "Veeral <onboarding@resend.dev>";
+// Requires shopveeral.com to be verified in Resend (Dashboard → Domains → Add Domain)
+const FROM = "Veeral <hello@shopveeral.com>";
 
 // Lazily initialised — safe to import in files that might run without the key
 // (e.g. during static build).  Actual sends will warn and no-op if key is missing.

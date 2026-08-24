@@ -241,15 +241,11 @@ export default function CheckoutPage({ params: _params }: { params: { listingId:
   const [apiError, setApiError] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
 
-  const [promoCode,    setPromoCode]    = useState("");
-  const [promoApplied, setPromoApplied] = useState(false);
-  const [promoError,   setPromoError]   = useState("");
   const [feeTooltip,   setFeeTooltip]   = useState(false);
 
-  const discount = promoApplied ? Math.round(subtotalDollars * 0.10) : 0;
-  // Veeral fee is added ON TOP of the (discounted) subtotal — never on shipping or deposit.
+  // Veeral fee is added ON TOP of the subtotal — never on shipping or deposit.
   const veeralFeeDollars = feePercent !== null
-    ? Math.round((subtotalDollars - discount) * (feePercent / 100))
+    ? Math.round(subtotalDollars * (feePercent / 100))
     : null;
 
   const [form, setForm] = useState({
@@ -264,13 +260,6 @@ export default function CheckoutPage({ params: _params }: { params: { listingId:
   }
 
   function applyPromo() {
-    if (promoCode.trim().toUpperCase() === "VEERAL10") {
-      setPromoApplied(true); setPromoError("");
-    } else {
-      setPromoError("Invalid promo code."); setPromoApplied(false);
-    }
-  }
-
   async function handleAddressSubmit(e: React.FormEvent) {
     e.preventDefault();
     setCreating(true);
@@ -434,36 +423,6 @@ export default function CheckoutPage({ params: _params }: { params: { listingId:
               )}
             </section>
 
-            {/* Promo code */}
-            {stage === "address" && (
-              <section>
-                <p style={sectionTitle}>Promo code</p>
-                <div style={{ display: "flex", gap: "0.75rem", alignItems: "flex-end" }}>
-                  <div style={{ flex: 1 }}>
-                    <label style={labelStyle}>Code</label>
-                    <input
-                      style={{ ...inputStyle, textTransform: "uppercase" }}
-                      value={promoCode}
-                      onChange={e => { setPromoCode(e.target.value); setPromoError(""); setPromoApplied(false); }}
-                      placeholder="VEERAL10"
-                    />
-                  </div>
-                  <button
-                    type="button" onClick={applyPromo}
-                    style={{
-                      fontFamily: "var(--font-jost)", fontWeight: 600,
-                      fontSize: "0.85rem", letterSpacing: "0.18em", textTransform: "uppercase",
-                      color: "#C4440A", border: "1px solid #C4440A", background: "transparent",
-                      padding: "0.65rem 1.2rem", cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0,
-                    }}
-                  >
-                    Apply
-                  </button>
-                </div>
-                {promoApplied && <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.85rem", color: "#5a8a5a", marginTop: "0.5rem" }}>✓ Code applied — 10% off</p>}
-                {promoError   && <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.85rem", color: "#C4440A", marginTop: "0.5rem" }}>{promoError}</p>}
-              </section>
-            )}
 
             {/* Order total */}
             <section style={{ border: "1px solid #E8DDD3", padding: "1.2rem" }}>
@@ -479,14 +438,6 @@ export default function CheckoutPage({ params: _params }: { params: { listingId:
                     ${subtotalDollars.toLocaleString()}
                   </span>
                 </div>
-
-                {/* Promo discount */}
-                {promoApplied && (
-                  <div style={rowBetween}>
-                    <span style={{ fontFamily: "var(--font-jost)", fontWeight: 500, fontSize: "0.85rem", color: "#5a8a5a" }}>Promo (VEERAL10)</span>
-                    <span style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.85rem", color: "#5a8a5a" }}>−${discount.toLocaleString()}</span>
-                  </div>
-                )}
 
                 {/* Shipping */}
                 <div style={rowBetween}>
@@ -563,14 +514,14 @@ export default function CheckoutPage({ params: _params }: { params: { listingId:
 
                 <div style={{ height: "1px", background: "#E8DDD3", margin: "0.4rem 0" }} />
 
-                {/* Total = subtotal − discount + shipping + fee + deposit */}
+                {/* Total = subtotal + shipping + fee + deposit */}
                 <div style={rowBetween}>
                   <span style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.82rem", letterSpacing: "0.1em", textTransform: "uppercase", color: "#1A1A18" }}>
                     Total
                   </span>
                   <span style={{ fontFamily: "var(--font-cormorant)", fontWeight: 600, fontSize: "1.7rem", color: "#C4440A" }}>
                     {veeralFeeDollars !== null
-                      ? `$${(subtotalDollars - discount + shipping + veeralFeeDollars + (isRental ? depositDollars : 0)).toLocaleString()}`
+                      ? `$${(subtotalDollars + shipping + veeralFeeDollars + (isRental ? depositDollars : 0)).toLocaleString()}`
                       : "—"}
                   </span>
                 </div>
