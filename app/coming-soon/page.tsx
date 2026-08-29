@@ -15,12 +15,9 @@ export default function ComingSoonPage() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ code }),
-      redirect: "follow",
     });
     setLoading(false);
-    if (res.redirected) {
-      window.location.href = res.url;
-    } else if (res.ok) {
+    if (res.ok) {
       window.location.href = "/";
     } else {
       setError("Incorrect passcode. Try again.");
