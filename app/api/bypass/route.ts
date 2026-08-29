@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const PASSCODE = process.env.SITE_PASSCODE || "veeral2025";
+const PASSCODE = process.env.SITE_PASSCODE || "veeral79423";
 
 // POST — validate passcode and set 30-day bypass cookie
 export async function POST(req: NextRequest) {
