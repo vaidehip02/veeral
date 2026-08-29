@@ -259,7 +259,6 @@ export default function CheckoutPage({ params: _params }: { params: { listingId:
     };
   }
 
-  function applyPromo() {
   async function handleAddressSubmit(e: React.FormEvent) {
     e.preventDefault();
     setCreating(true);
