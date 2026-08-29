@@ -1,13 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 
 export default function ComingSoonPage() {
   const [code, setCode]       = useState("");
   const [error, setError]     = useState("");
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -17,10 +15,13 @@ export default function ComingSoonPage() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ code }),
+      redirect: "follow",
     });
     setLoading(false);
-    if (res.ok) {
-      router.push("/");
+    if (res.redirected) {
+      window.location.href = res.url;
+    } else if (res.ok) {
+      window.location.href = "/";
     } else {
       setError("Incorrect passcode. Try again.");
     }
