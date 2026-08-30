@@ -67,7 +67,7 @@ export default function Footer() {
       {/* US-only notice */}
       <div style={{ borderTop: "1px solid var(--warm-tan)", background: "#FAF6F1", padding: "0.65rem 1.5rem", textAlign: "center" }}>
         <span style={{ fontFamily: "var(--font-jost)", fontSize: "0.75rem", color: "#7A6A62", letterSpacing: "0.04em" }}>
-          🇺🇸 Currently available for US-based transactions only. Payments and seller payouts require a US bank account.
+          🇺🇸 Currently available for US-based transactions only. Payments, seller payouts, and shipping are US-only at this time.
         </span>
       </div>
 
