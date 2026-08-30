@@ -565,6 +565,15 @@ export default function CheckoutPage({ params: _params }: { params: { listingId:
                       <label style={labelStyle}>Address line 2 <span style={{ opacity: 0.5 }}>(optional)</span></label>
                       <input style={inputStyle} value={form.address2} onChange={setField("address2")} placeholder="Apt 4B" />
                     </div>
+                    <div>
+                      <label style={labelStyle}>Country</label>
+                      <div style={{ ...inputStyle, background: "#F5F0E8", color: "#7A6A62", display: "flex", alignItems: "center", cursor: "not-allowed" }}>
+                        🇺🇸 United States (only)
+                      </div>
+                      <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.72rem", color: "#7A6A62", marginTop: "0.35rem" }}>
+                        Veeral currently ships within the US only.
+                      </p>
+                    </div>
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 80px 100px", gap: "1rem" }}>
                       <div>
                         <label style={labelStyle}>City</label>
@@ -576,7 +585,16 @@ export default function CheckoutPage({ params: _params }: { params: { listingId:
                       </div>
                       <div>
                         <label style={labelStyle}>ZIP</label>
-                        <input required style={inputStyle} value={form.zip} onChange={setField("zip")} placeholder="10001" maxLength={10} />
+                        <input
+                          required
+                          style={inputStyle}
+                          value={form.zip}
+                          onChange={setField("zip")}
+                          placeholder="10001"
+                          maxLength={10}
+                          pattern="^\d{5}(-\d{4})?$"
+                          title="Enter a valid US ZIP code (e.g. 10001)"
+                        />
                       </div>
                     </div>
                   </div>
