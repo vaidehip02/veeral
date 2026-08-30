@@ -64,6 +64,13 @@ export default function Footer() {
         </div>
       </div>
 
+      {/* US-only notice */}
+      <div style={{ borderTop: "1px solid var(--warm-tan)", background: "#FAF6F1", padding: "0.65rem 1.5rem", textAlign: "center" }}>
+        <span style={{ fontFamily: "var(--font-jost)", fontSize: "0.75rem", color: "#7A6A62", letterSpacing: "0.04em" }}>
+          🇺🇸 Currently available for US-based transactions only. Payments and seller payouts require a US bank account.
+        </span>
+      </div>
+
       {/* Bottom bar */}
       <div
         className="max-w-7xl mx-auto px-6 lg:px-10 py-5 flex justify-between items-center"
