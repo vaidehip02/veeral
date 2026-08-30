@@ -56,7 +56,7 @@ export default function Footer() {
             ["About", "/help"],
             ["Contact", "/help"],
             ["Help Center", "/help"],
-            ["Instagram", "https://instagram.com"],
+            ["Instagram", "https://www.instagram.com/shopveeral"],
             ["TikTok", "https://tiktok.com"],
           ].map(([label, href]) => (
             <Link key={href} href={href} style={linkStyle}>{label}</Link>
@@ -80,7 +80,7 @@ export default function Footer() {
           © 2026 Veeral
         </span>
         <div className="flex gap-6">
-          {[["Instagram", "https://instagram.com"], ["TikTok", "https://tiktok.com"]].map(([label, href]) => (
+          {[["Instagram", "https://www.instagram.com/shopveeral"], ["TikTok", "https://tiktok.com"]].map(([label, href]) => (
             <Link key={href} href={href} style={{ ...linkStyle, marginBottom: 0 }}>{label}</Link>
           ))}
         </div>
