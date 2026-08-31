@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
   res.cookies.set("veeral_bypass", "veeralbeta2025", {
     httpOnly: true,
     sameSite: "lax",
-    maxAge: 60 * 60 * 24 * 30,
+    maxAge: 60 * 60 * 24,
     path: "/",
   });
   return res;
@@ -26,7 +26,7 @@ export async function GET() {
   res.cookies.set("veeral_bypass", "veeralbeta2025", {
     httpOnly: true,
     sameSite: "lax",
-    maxAge: 60 * 60 * 24 * 30,
+    maxAge: 60 * 60 * 24,
     path: "/",
   });
   return res;
