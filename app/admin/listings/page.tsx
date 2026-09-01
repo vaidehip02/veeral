@@ -15,7 +15,7 @@ const lbl:   React.CSSProperties = {
   fontSize: "0.58rem", letterSpacing: "0.2em", textTransform: "uppercase", color: A.label,
 };
 
-type ListingStatus = "draft" | "pending" | "active" | "rejected" | "removed" | "featured";
+type ListingStatus = "draft" | "pending" | "active" | "rejected" | "removed" | "featured" | "sold" | "archived";
 
 interface AdminListing {
   id: string; title: string; seller: string; price: number;
@@ -23,13 +23,15 @@ interface AdminListing {
   submitted: string; images: string[]; flagged: boolean;
 }
 
-const STATUS_COLOR: Record<ListingStatus, { bg: string; text: string }> = {
+const STATUS_COLOR: Record<string, { bg: string; text: string }> = {
   draft:    { bg: "#FEF3C7", text: "#92400E" },
   pending:  { bg: "#FEF3C7", text: "#92400E" },
   active:   { bg: "#D1FAE5", text: "#065F46" },
   featured: { bg: "rgba(196,68,10,0.1)", text: "#C4440A" },
   rejected: { bg: "#FEE2E2", text: "#991B1B" },
   removed:  { bg: "#F3F4F6", text: "#6B7280" },
+  sold:     { bg: "#F3F4F6", text: "#6B7280" },
+  archived: { bg: "#F3F4F6", text: "#6B7280" },
 };
 
 type FilterTab = "all" | "pending" | "active" | "featured" | "flagged";
@@ -197,7 +199,7 @@ export default function AdminListingsPage() {
             </div>
 
             {filtered.map((l, i) => {
-              const sc = STATUS_COLOR[l.status];
+              const sc = STATUS_COLOR[l.status] ?? { bg: "#F3F4F6", text: "#6B7280" };
               const thumb = l.images?.[0];
               return (
                 <div key={l.id} style={{
