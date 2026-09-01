@@ -64,7 +64,7 @@ export default function EarningsPage() {
       if (data.url) {
         window.location.href = data.url;
       } else {
-        setConnectError(data.error ?? "Failed to start Stripe onboarding");
+        setConnectError("Failed to connect to Stripe. Please try again or contact support.");
         setConnecting(false);
       }
     } catch {
@@ -137,28 +137,29 @@ export default function EarningsPage() {
       {/* Bank note */}
       <div style={{
         background: "rgba(201,92,26,0.06)", border: "1px solid rgba(201,92,26,0.2)",
-        padding: "1rem 1.25rem", marginBottom: "2.5rem",
-        display: "flex", alignItems: "center", gap: "0.75rem", flexWrap: "wrap",
+        padding: "1.25rem 1.5rem", marginBottom: "2.5rem",
       }}>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--burnt-orange)" strokeWidth="1.5" style={{ flexShrink: 0 }}>
-          <circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/>
-        </svg>
-        <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.78rem", color: "var(--muted)", flex: 1 }}>
-          Payouts go to your connected bank account via Stripe.{" "}
-          <button
-            onClick={handleConnectStripe}
-            disabled={connecting}
-            style={{
-              background: "none", border: "none", padding: 0, cursor: connecting ? "not-allowed" : "pointer",
-              color: "var(--burnt-orange)", textDecoration: "underline", textUnderlineOffset: "2px",
-              fontFamily: "var(--font-jost)", fontSize: "0.78rem", opacity: connecting ? 0.6 : 1,
-            }}
-          >
-            {connecting ? "Redirecting…" : "Update bank details"}
-          </button>
+        <p style={{ fontFamily: "var(--font-jost)", fontWeight: 700, fontSize: "0.6rem", letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--burnt-orange)", marginBottom: "0.5rem" }}>
+          Connect your bank account
         </p>
+        <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.78rem", color: "var(--muted)", marginBottom: "1rem", lineHeight: 1.6 }}>
+          To receive payouts when your items sell or are rented, connect your bank account via Stripe. This is required before your first payout.
+        </p>
+        <button
+          onClick={handleConnectStripe}
+          disabled={connecting}
+          style={{
+            fontFamily: "var(--font-jost)", fontWeight: 700,
+            fontSize: "0.62rem", letterSpacing: "0.16em", textTransform: "uppercase",
+            padding: "0.7rem 1.4rem", border: "none", cursor: connecting ? "not-allowed" : "pointer",
+            background: connecting ? "#C8BAA8" : "var(--burnt-orange)",
+            color: "#fff", opacity: connecting ? 0.7 : 1,
+          }}
+        >
+          {connecting ? "Redirecting to Stripe…" : "Connect bank account →"}
+        </button>
         {connectError && (
-          <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.72rem", color: "#C62828", width: "100%" }}>
+          <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.72rem", color: "#C62828", marginTop: "0.75rem" }}>
             {connectError}
           </p>
         )}
