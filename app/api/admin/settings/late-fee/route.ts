@@ -34,11 +34,15 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { lateFeeMultiplier, gracePeriodDays } = body as {
+  const { lateFeeType, lateFeeMultiplier, gracePeriodDays } = body as {
+    lateFeeType: "multiplier" | "flat";
     lateFeeMultiplier: number;
     gracePeriodDays: number;
   };
 
+  if (!["multiplier", "flat"].includes(lateFeeType)) {
+    return NextResponse.json({ error: "lateFeeType must be multiplier or flat" }, { status: 400 });
+  }
   if (typeof lateFeeMultiplier !== "number" || lateFeeMultiplier <= 0 || lateFeeMultiplier > 20) {
     return NextResponse.json(
       { error: "lateFeeMultiplier must be a number between 0 and 20" },
@@ -57,7 +61,7 @@ export async function POST(req: NextRequest) {
   const { error } = await (admin as any)
     .from("platform_settings")
     .update({
-      late_fee_type:       "multiplier",
+      late_fee_type:       lateFeeType,
       late_fee_multiplier: lateFeeMultiplier,
       grace_period_days:   gracePeriodDays,
       updated_at:          new Date().toISOString(),

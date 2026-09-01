@@ -15,7 +15,7 @@ const lbl:   React.CSSProperties = {
   fontSize: "0.58rem", letterSpacing: "0.2em", textTransform: "uppercase", color: A.label,
 };
 
-type ListingStatus = "pending" | "active" | "rejected" | "removed" | "featured";
+type ListingStatus = "draft" | "pending" | "active" | "rejected" | "removed" | "featured";
 
 interface AdminListing {
   id: string; title: string; seller: string; price: number;
@@ -24,6 +24,7 @@ interface AdminListing {
 }
 
 const STATUS_COLOR: Record<ListingStatus, { bg: string; text: string }> = {
+  draft:    { bg: "#FEF3C7", text: "#92400E" },
   pending:  { bg: "#FEF3C7", text: "#92400E" },
   active:   { bg: "#D1FAE5", text: "#065F46" },
   featured: { bg: "rgba(196,68,10,0.1)", text: "#C4440A" },
@@ -99,14 +100,14 @@ export default function AdminListingsPage() {
 
   const TABS: { id: FilterTab; label: string }[] = [
     { id:"all",      label:`All (${listings.length})` },
-    { id:"pending",  label:`Pending (${listings.filter(l => l.status === "pending").length})` },
+    { id:"pending",  label:`Pending (${listings.filter(l => l.status === "draft" || l.status === "pending").length})` },
     { id:"active",   label:`Active (${listings.filter(l => l.status === "active").length})` },
     { id:"featured", label:`Featured (${listings.filter(l => l.status === "featured").length})` },
     { id:"flagged",  label:`Flagged (${listings.filter(l => l.flagged).length})` },
   ];
 
   const filtered = listings.filter(l => {
-    if (tab === "pending"  && l.status !== "pending")  return false;
+    if (tab === "pending"  && l.status !== "pending" && l.status !== "draft") return false;
     if (tab === "active"   && l.status !== "active")   return false;
     if (tab === "featured" && l.status !== "featured") return false;
     if (tab === "flagged"  && !l.flagged)              return false;
@@ -232,7 +233,7 @@ export default function AdminListingsPage() {
                     {l.flagged ? "⚑ Flagged" : "Flag"}
                   </button>
                   <div style={{ display: "flex", gap: "0.35rem", flexWrap: "wrap" }}>
-                    {l.status === "pending" && (
+                    {(l.status === "pending" || l.status === "draft") && (
                       <>
                         <button onClick={() => updateStatus(l.id, "active")} style={actionBtn("green")}>Approve</button>
                         <button onClick={() => setConfirm({ id: l.id, action: "reject" })} style={actionBtn("red")}>Reject</button>

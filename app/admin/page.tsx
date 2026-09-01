@@ -68,12 +68,14 @@ export default async function AdminOverview() {
   ]);
 
   const allOrders = ordersRes.data ?? [];
-  const gmv = allOrders.reduce((s, o) => s + (o.amount ?? 0), 0);
-  const commission = allOrders.reduce((s, o) => s + (o.platform_fee ?? 0), 0);
+  const completedStatuses = new Set(["delivered", "deposit_resolved", "deposit_released"]);
+  const completedOrders = allOrders.filter(o => completedStatuses.has(o.status));
+  const gmv = completedOrders.reduce((s, o) => s + (o.amount ?? 0), 0);
+  const commission = completedOrders.reduce((s, o) => s + (o.platform_fee ?? 0), 0);
   const activeRentals = allOrders.filter(o => o.type === "rent" && (o.status === "paid" || o.status === "shipped")).length;
 
   const STAT_CARDS = [
-    { label: "GMV (all time)",    value: `$${(gmv / 100).toLocaleString()}`,        sub: "gross merchandise value" },
+    { label: "GMV (all time)",    value: `$${(gmv / 100).toLocaleString()}`,        sub: "completed orders only" },
     { label: "Total sellers",     value: String(sellersRes.count ?? 0),              sub: "registered seller accounts" },
     { label: "Active listings",   value: String(activeListRes.count ?? 0),           sub: `${draftListRes.count ?? 0} pending review` },
     { label: "Active rentals",    value: String(activeRentals),                      sub: `${overdueRentalsRes.data?.length ?? 0} overdue` },

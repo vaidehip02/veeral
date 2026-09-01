@@ -313,7 +313,7 @@ export default function AdminSettingsPage() {
               const res = await fetch("/api/admin/settings/late-fee", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ lateFeeMultiplier: mult, gracePeriodDays: grace }),
+                body: JSON.stringify({ lateFeeType, lateFeeMultiplier: mult, gracePeriodDays: grace }),
               });
               if (!res.ok) { const d = await res.json(); setLateFeeError(d.error ?? "Save failed."); return; }
               save(setLateFeeSaved);

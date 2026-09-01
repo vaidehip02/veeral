@@ -95,8 +95,10 @@ export default function AdminOrdersPage() {
     );
   }, [orders, search]);
 
-  const totalGMV        = filtered.reduce((s, o) => s + o.amount + (o.platform_fee ?? 0) + (o.shipping_cents ?? 0), 0);
-  const totalCommission = filtered.reduce((s, o) => s + (o.platform_fee ?? 0), 0);
+  const completedStatuses = new Set(["delivered", "deposit_resolved", "deposit_released"]);
+  const completedFiltered = filtered.filter(o => completedStatuses.has(o.status));
+  const totalGMV        = completedFiltered.reduce((s, o) => s + o.amount + (o.platform_fee ?? 0) + (o.shipping_cents ?? 0), 0);
+  const totalCommission = completedFiltered.reduce((s, o) => s + (o.platform_fee ?? 0), 0);
 
   async function submitFreezeAction() {
     if (!freezeModal) return;

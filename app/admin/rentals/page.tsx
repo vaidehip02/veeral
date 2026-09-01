@@ -75,6 +75,7 @@ export default function AdminRentalsPage() {
   const [loading, setLoading] = useState(true);
   const [resolveDrawer, setResolveDrawer] = useState<ResolveDrawerState | null>(null);
   const [invalidatingId, setInvalidatingId] = useState<string | null>(null);
+  const [escalatingId,   setEscalatingId]   = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/admin/rentals")
@@ -143,7 +144,7 @@ export default function AdminRentalsPage() {
     setResolveDrawer(d => d ? { ...d, submitting: true, error: null } : d);
 
     try {
-      const res = await fetch(`/api/rentals/${rental.id}/resolve-damage`, {
+      const res = await fetch(`/api/admin/rentals/${rental.id}/resolve-damage`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ outcome, retainAmount: retainAmountCents, reason: reason.trim() }),
@@ -159,6 +160,26 @@ export default function AdminRentalsPage() {
       setResolveDrawer(null);
     } catch {
       setResolveDrawer(d => d ? { ...d, submitting: false, error: "Network error. Please try again." } : d);
+    }
+  }
+
+  async function escalateRental(rentalId: string) {
+    if (!window.confirm("Escalate this overdue rental? The order status will be set to 'escalated' and both parties will be notified.")) return;
+    setEscalatingId(rentalId);
+    try {
+      const res = await fetch(`/api/admin/rentals/${rentalId}/escalate`, { method: "POST" });
+      if (!res.ok) {
+        const { error } = await res.json().catch(() => ({}));
+        alert(error ?? "Failed to escalate rental.");
+        return;
+      }
+      setRentals(prev => prev.map(r =>
+        r.id === rentalId ? { ...r, status: "escalated" as AdminRentalStatus } : r,
+      ));
+    } catch {
+      alert("Network error. Please try again.");
+    } finally {
+      setEscalatingId(null);
     }
   }
 
@@ -326,7 +347,15 @@ export default function AdminRentalsPage() {
                     </div>
                   )}
                   <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap" }}>
-                    {rental.status === "active" && days < 0 && <button style={adminBtn("red")}>Escalate</button>}
+                    {rental.status === "active" && days < 0 && (
+                      <button
+                        onClick={() => escalateRental(rental.id)}
+                        disabled={escalatingId === rental.id}
+                        style={{ ...adminBtn("red"), opacity: escalatingId === rental.id ? 0.5 : 1, cursor: escalatingId === rental.id ? "not-allowed" : "pointer" }}
+                      >
+                        {escalatingId === rental.id ? "Escalating…" : "Escalate"}
+                      </button>
+                    )}
                     {rental.buyerId && <MessageButton recipientId={rental.buyerId} orderId={rental.id} label="Message buyer" style={{ fontSize: "0.58rem", padding: "0.3rem 0.7rem" }} />}
                     {rental.sellerId && <MessageButton recipientId={rental.sellerId} orderId={rental.id} label="Message seller" style={{ fontSize: "0.58rem", padding: "0.3rem 0.7rem" }} />}
                   </div>
