@@ -691,6 +691,7 @@ function NewListingForm() {
                   <datalist id="designer-list">
                     {DESIGNERS.map(d => <option key={d} value={d} />)}
                   </datalist>
+                  <p style={hint}>Select from the list or type your own if not listed.</p>
                 </div>
                 <div>
                   <label style={label}>Color</label>
