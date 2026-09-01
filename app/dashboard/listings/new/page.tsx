@@ -37,7 +37,6 @@ const CONDITIONS = [
 const FABRICS = ["Silk", "Georgette", "Chiffon", "Net", "Velvet", "Brocade", "Cotton", "Linen", "Crepe", "Tissue", "Organza", "Other"];
 const EMBELLISHMENTS = ["Zari / Zardozi", "Sequins", "Mirror work", "Thread embroidery", "Beading", "Stone work", "Block print", "Bandhani", "Ikkat", "Plain"];
 const WOMENS_SIZES = ["0", "2", "4", "6", "8", "10", "12", "14", "16"];
-const MENS_SIZES   = ["36", "38", "40", "42", "44", "46"];
 const INCLUDED_OPTS: Record<string, string[]> = {
   lehenga:       ["Lehenga skirt", "Blouse", "Dupatta", "Jacket/Shrug", "Belt/Kamarband"],
   saree:         ["Saree", "Blouse", "Petticoat"],
