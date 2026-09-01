@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 import SocialAuth from "@/components/auth/SocialAuth";
@@ -36,6 +37,7 @@ const labelStyle = {
 
 export default function SignupPage() {
   const supabase = createClient();
+  const router = useRouter();
 
   const [role, setRole] = useState<Role>("buyer");
   const [email, setEmail] = useState("");
@@ -66,8 +68,15 @@ export default function SignupPage() {
       setError(error.message);
       setLoading(false);
     } else {
-      setSuccess(true);
-      setLoading(false);
+      // If Supabase auto-confirms the account (email confirmation disabled),
+      // a session exists immediately — redirect straight to home.
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        router.push("/");
+      } else {
+        setSuccess(true);
+        setLoading(false);
+      }
     }
   }
 

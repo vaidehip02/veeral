@@ -15,10 +15,17 @@ const GARMENT_TYPES = [
   { value: "lehenga",       label: "Lehenga" },
   { value: "saree",         label: "Saree" },
   { value: "salwar_kameez", label: "Salwar Kameez / Suit" },
-  { value: "sherwani",      label: "Sherwani" },
   { value: "indo_western",  label: "Indo-Western" },
   { value: "jewellery",     label: "Jewellery / Accessories" },
   { value: "other",         label: "Other" },
+];
+const DESIGNERS = [
+  "Sabyasachi", "Anita Dongre", "Manish Malhotra", "Tarun Tahiliani", "Ritu Kumar",
+  "Ritu Beri", "Anju Modi", "Abu Jani Sandeep Khosla", "Rohit Bal", "Rohit Gandhi + Rahul Khanna",
+  "Gaurav Gupta", "Anamika Khanna", "Shehla Khan", "Faraz Manan", "Elan", "Sana Safinaz",
+  "Maryam N", "Maria B", "Zara Shahjahan", "HSY", "Asim Jofa",
+  "Frontier Raas", "Kalki Fashion", "Haldi by Rena", "House of Chikankari",
+  "Independent / Local", "Unknown",
 ];
 const OCCASIONS = ["Bridal", "Wedding guest", "Engagement", "Festival", "Eid", "Diwali", "Casual", "Party", "Formal"];
 const CONDITIONS = [
@@ -426,7 +433,7 @@ function NewListingForm() {
   }
 
   // ── Form helpers ─────────────────────────────────────────────────────────────
-  const sizeOptions = form.garmentType === "sherwani" ? MENS_SIZES : WOMENS_SIZES;
+  const sizeOptions = WOMENS_SIZES;
 
   function setF(k: string) {
     return (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
@@ -629,7 +636,7 @@ function NewListingForm() {
             <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
 
               <div id="field-title">
-                <label style={label}>Title</label>
+                <label style={label}>Title <span style={{ color: "#C4440A" }}>*</span></label>
                 <input style={inp} value={form.title} onChange={setF("title")} placeholder="e.g. Red Bridal Lehenga with Gold Zari Embroidery" maxLength={80} />
                 {fieldErrors.title
                   ? <p style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.75rem", color: "#C4440A", marginTop: "0.3rem" }}>{fieldErrors.title}</p>
@@ -639,7 +646,7 @@ function NewListingForm() {
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.2rem" }}>
                 <div id="field-garmentType">
-                  <label style={label}>Garment type</label>
+                  <label style={label}>Garment type <span style={{ color: "#C4440A" }}>*</span></label>
                   <select style={selectStyle} value={form.garmentType}
                     onChange={e => {
                       const val = e.target.value;
@@ -663,7 +670,7 @@ function NewListingForm() {
                   {fieldErrors.garmentType && <p style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.75rem", color: "#C4440A", marginTop: "0.3rem" }}>{fieldErrors.garmentType}</p>}
                 </div>
                 <div id="field-condition">
-                  <label style={label}>Condition</label>
+                  <label style={label}>Condition <span style={{ color: "#C4440A" }}>*</span></label>
                   <select style={selectStyle} value={form.condition} onChange={setF("condition")}>
                     <option value="">Select condition</option>
                     {CONDITIONS.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
@@ -675,7 +682,16 @@ function NewListingForm() {
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.2rem" }}>
                 <div>
                   <label style={label}>Designer / Brand</label>
-                  <input style={inp} value={form.brand} onChange={setF("brand")} placeholder="Anita Dongre, Sabyasachi, Independent…" />
+                  <input
+                    style={inp}
+                    value={form.brand}
+                    onChange={setF("brand")}
+                    placeholder="Type or select a designer…"
+                    list="designer-list"
+                  />
+                  <datalist id="designer-list">
+                    {DESIGNERS.map(d => <option key={d} value={d} />)}
+                  </datalist>
                 </div>
                 <div>
                   <label style={label}>Color</label>
@@ -705,7 +721,7 @@ function NewListingForm() {
               </div>
 
               <div id="field-us_size">
-                <label style={label}>US Size</label>
+                <label style={label}>US Size <span style={{ color: "#C4440A" }}>*</span></label>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
                   {sizeOptions.map(s => (
                     <button key={s} type="button"
@@ -717,7 +733,7 @@ function NewListingForm() {
                 </div>
                 {fieldErrors.us_size
                   ? <p style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.75rem", color: "#C4440A", marginTop: "0.3rem" }}>{fieldErrors.us_size}</p>
-                  : <p style={hint}>{form.garmentType === "sherwani" ? "Men's chest size in inches" : "Women's US dress size"}</p>
+                  : <p style={hint}>Women&apos;s US dress size</p>
                 }
               </div>
 
@@ -732,7 +748,7 @@ function NewListingForm() {
               </div>
 
               <div id="field-description">
-                <label style={label}>Description</label>
+                <label style={label}>Description <span style={{ color: "#C4440A" }}>*</span></label>
                 <textarea value={form.description} onChange={setF("description")} rows={5} maxLength={1000} placeholder="Describe the item — include fabric details, embellishments, condition notes, any flaws or repairs, and note if any pieces are missing from the set" style={{ ...inp, border: `1px solid ${fieldErrors.description ? "#C4440A" : "var(--warm-tan)"}`, borderBottom: undefined, padding: "0.75rem", resize: "none" }} />
                 {fieldErrors.description
                   ? <p style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.75rem", color: "#C4440A", marginTop: "0.3rem" }}>{fieldErrors.description}</p>
@@ -756,7 +772,7 @@ function NewListingForm() {
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.2rem" }}>
                 <div id="field-price">
-                  <label style={label}>Sale price ($)</label>
+                  <label style={label}>Sale price ($) <span style={{ color: "#C4440A" }}>*</span></label>
                   <input type="number" min="1" step="0.01" style={inp} value={form.price} onChange={setF("price")} placeholder="450" />
                   {fieldErrors.price && <p style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.75rem", color: "#C4440A", marginTop: "0.3rem" }}>{fieldErrors.price}</p>}
                   <AIPricingSuggestion
@@ -787,7 +803,7 @@ function NewListingForm() {
                   <div style={{ border: "1px solid var(--warm-tan)", padding: "1.2rem", display: "flex", flexDirection: "column", gap: "1.2rem" }}>
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.2rem" }}>
                       <div id="field-rentPrice">
-                        <label style={label}>Rental price per day ($)</label>
+                        <label style={label}>Rental price per day ($) <span style={{ color: "#C4440A" }}>*</span></label>
                         <input type="number" min="1" step="0.01" style={inp} value={form.rentPrice} onChange={setF("rentPrice")} placeholder="120" />
                         {fieldErrors.rentPrice && <p style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.75rem", color: "#C4440A", marginTop: "0.3rem" }}>{fieldErrors.rentPrice}</p>}
                       </div>
