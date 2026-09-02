@@ -42,8 +42,8 @@ interface Listing {
 
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-function formatPrice(cents: number) {
-  return `$${(cents / 100).toLocaleString("en-US")}`;
+function formatPrice(cents: number, feePct = 0) {
+  return `$${Math.round(cents / 100 * (1 + feePct / 100)).toLocaleString("en-US")}`;
 }
 
 const CONDITION_LABEL: Record<string, string> = {
@@ -82,6 +82,15 @@ export default function ListingPage({ params: _params }: { params: { id: string 
   const [sellerListings, setSellerListings] = useState<{ id: string; title: string; price: number; images: string[] }[]>([]);
   const [similarListings, setSimilarListings] = useState<{ id: string; title: string; price: number; images: string[] }[]>([]);
   const [sellerStats, setSellerStats] = useState<{ totalListings: number; rating: number | null }>({ totalListings: 0, rating: null });
+  const [saleFee,   setSaleFee]   = useState(10);
+  const [rentalFee, setRentalFee] = useState(10);
+
+  useEffect(() => {
+    fetch("/api/platform/fee-settings")
+      .then(r => r.json())
+      .then((d: { saleFee: number; rentalFee: number }) => { setSaleFee(d.saleFee); setRentalFee(d.rentalFee); })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     const supabase = createClient();
@@ -253,7 +262,7 @@ export default function ListingPage({ params: _params }: { params: { id: string 
                   fontFamily: "var(--font-cormorant)", fontWeight: 600,
                   fontSize: "2rem", color: "#C4440A", lineHeight: 1
                 }}>
-                  {formatPrice(l.price)}
+                  {formatPrice(l.price, saleFee)}
                   <span style={{ fontFamily: "var(--font-jost)", fontWeight: 500, fontSize: "0.85rem", letterSpacing: "0.1em", color: "var(--muted)", marginLeft: "0.5rem" }}>
                     to buy
                   </span>
@@ -264,7 +273,7 @@ export default function ListingPage({ params: _params }: { params: { id: string 
                   fontFamily: "var(--font-cormorant)", fontWeight: 600,
                   fontSize: "1.3rem", color: "var(--dark)", marginTop: "0.3rem"
                 }}>
-                  {formatPrice(l.rent_price)}
+                  {formatPrice(l.rent_price, rentalFee)}
                   <span style={{ fontFamily: "var(--font-jost)", fontWeight: 500, fontSize: "0.85rem", letterSpacing: "0.1em", color: "var(--muted)", marginLeft: "0.5rem" }}>
                     / day to rent · up to {l.rent_duration_days} days
                   </span>
@@ -418,7 +427,7 @@ export default function ListingPage({ params: _params }: { params: { id: string 
                     onMouseOver={e => (e.currentTarget.style.opacity = "0.85")}
                     onMouseOut={e => (e.currentTarget.style.opacity = "1")}
                   >
-                    Buy now — {formatPrice(l.price)}
+                    Buy now — {formatPrice(l.price, saleFee)}
                   </button>
                 )}
 
@@ -486,7 +495,7 @@ export default function ListingPage({ params: _params }: { params: { id: string 
                     onMouseOver={e => (e.currentTarget.style.opacity = "0.8")}
                     onMouseOut={e => (e.currentTarget.style.opacity = "1")}
                   >
-                    Rent from {formatPrice(l.rent_price)} / day
+                    Rent from {formatPrice(l.rent_price, rentalFee)} / day
                   </button>
                 )}
               </div>

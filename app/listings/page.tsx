@@ -291,7 +291,7 @@ function FilterPanel({
 
 // ─── Listing card ─────────────────────────────────────────────────────────────
 
-function ListingCard({ listing }: { listing: Listing }) {
+function ListingCard({ listing, saleFee = 10, rentalFee = 10 }: { listing: Listing; saleFee?: number; rentalFee?: number }) {
   const cond = CONDITION_COLOR[listing.condition];
   return (
     <Link href={`/listings/${listing.id}`} style={{ textDecoration:"none" }}>
@@ -356,7 +356,7 @@ function ListingCard({ listing }: { listing: Listing }) {
                 fontFamily:"var(--font-cormorant)", fontStyle:"italic",
                 fontSize:"1.05rem", color:"#C4440A",
               }}>
-                ${(listing.price / 100).toLocaleString()}
+                ${Math.round(listing.price / 100 * (1 + saleFee / 100)).toLocaleString()}
               </span>
             )}
             {listing.rent_price && (listing.type === "rent" || listing.type === "both") && (
@@ -364,7 +364,7 @@ function ListingCard({ listing }: { listing: Listing }) {
                 fontFamily:"var(--font-jost)", fontSize:"0.78rem",
                 color:"var(--muted)", opacity:0.7,
               }}>
-                {listing.type === "both" ? "· " : ""}${(listing.rent_price / 100).toLocaleString()}/day
+                {listing.type === "both" ? "· " : ""}${Math.round(listing.rent_price / 100 * (1 + rentalFee / 100)).toLocaleString()}/day
               </span>
             )}
           </div>
@@ -515,6 +515,8 @@ function ListingsInner({ typeParam }: { typeParam: string | null }) {
   const [drawerOpen,  setDrawerOpen]  = useState(false);
   const [allListings, setAllListings] = useState<Listing[]>([]);
   const [loading,     setLoading]     = useState(true);
+  const [saleFee,     setSaleFee]     = useState(10); // default 10%
+  const [rentalFee,   setRentalFee]   = useState(10);
   const drawerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -528,6 +530,13 @@ function ListingsInner({ typeParam }: { typeParam: string | null }) {
         setAllListings((data ?? []) as Listing[]);
         setLoading(false);
       });
+    fetch("/api/platform/fee-settings")
+      .then(r => r.json())
+      .then((d: { saleFee: number; rentalFee: number }) => {
+        setSaleFee(d.saleFee);
+        setRentalFee(d.rentalFee);
+      })
+      .catch(() => {});
   }, []);
 
   // Close drawer on outside click
@@ -798,7 +807,7 @@ function ListingsInner({ typeParam }: { typeParam: string | null }) {
                   className="results-grid"
                   style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:"0.85rem" }}
                 >
-                  {paged.map(l => <ListingCard key={l.id} listing={l} />)}
+                  {paged.map(l => <ListingCard key={l.id} listing={l} saleFee={saleFee} rentalFee={rentalFee} />)}
                 </div>
 
                 {/* Load more */}
