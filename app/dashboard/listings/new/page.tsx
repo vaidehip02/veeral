@@ -14,7 +14,7 @@ import {
 const GARMENT_TYPES = [
   { value: "lehenga",       label: "Lehenga" },
   { value: "saree",         label: "Saree" },
-  { value: "salwar_kameez", label: "Salwar Kameez / Suit" },
+  { value: "salwar_kameez", label: "Salwar Kameez" },
   { value: "indo_western",  label: "Indo-Western" },
   { value: "jewellery",     label: "Jewellery / Accessories" },
   { value: "other",         label: "Other" },
