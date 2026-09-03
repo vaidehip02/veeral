@@ -30,7 +30,7 @@ interface Listing {
 // ─── Filter options ───────────────────────────────────────────────────────────
 
 const GARMENT_TYPES = ["Lehenga","Saree","Salwar Kameez","Indo-Western","Accessories","Other"];
-const ACCESSORY_TYPES = ["Jewellery","Handbag","Shoes","Clutch","Dupatta","Hair accessories","Other accessories"];
+const ACCESSORY_TYPES = ["Jewellery","Handbag","Shoes","Dupatta","Other accessories"];
 const OCCASIONS     = ["Bridal","Wedding guest","Engagement","Festival","Eid","Diwali","Casual","Party","Formal"];
 const US_SIZES      = ["0","2","4","6","8","10","12","14","16","Free"];
 const CONDITIONS    = [
