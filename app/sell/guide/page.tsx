@@ -13,7 +13,7 @@ const STEPS = [
     number: "02",
     title: "Photograph your item",
     body: "Good photos sell items. Use natural light, a clean background, and shoot the full garment flat or on a hanger. Include close-ups of embellishments, the blouse, and any flaws. Aim for at least 4–6 photos.",
-    tip: "Pro tip: photograph the garment tag showing the original brand and size — buyers love the authenticity.",
+    tip: null,
   },
   {
     number: "03",
@@ -25,7 +25,7 @@ const STEPS = [
     number: "04",
     title: "Set your price",
     body: "Enter your sale price (what you want to receive). Veeral adds a 10% buyer fee on top, so if you list at $300, the buyer pays $330 — you receive $300 minus Stripe's payment processing fee (~2.9% + 30¢). You can also set a rental price per day if you're open to renting.",
-    tip: "Tip: Check similar listings on Veeral and on Poshmark or eBay to price competitively. Items priced within 30–50% of retail move fastest.",
+    tip: "Tip: Search Veeral for your item before setting a price — just type \"yellow saree\" or \"red lehenga\" in the search bar to see what similar pieces are listing for. It's the fastest way to gauge demand and price competitively.",
   },
   {
     number: "05",
@@ -64,7 +64,7 @@ const FAQS = [
   },
   {
     q: "Can I sell items that aren't South Asian?",
-    a: "Veeral is specifically for South Asian fashion — lehengas, sarees, salwar kameez, indo-western pieces, and accessories. Items outside this category may be removed.",
+    a: "Yes — Veeral welcomes all clothing and accessories from South Asian brands, including dresses, skirts, and western-inspired styles. Many South Asian designers are creating beautiful fusion and contemporary pieces, and we want to be a home for all of it. The key is that the brand or designer should be South Asian. Items with no connection to a South Asian brand or maker may be removed.",
   },
   {
     q: "What condition items can I sell?",

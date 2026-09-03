@@ -7,7 +7,7 @@ const RENTER_STEPS = [
     number: "01",
     title: "Browse & find your piece",
     body: "Go to Browse and filter by Listing Type → For Rent. You can filter by garment type, size, colour, and price range. Each listing shows the daily rental rate and whether it's available to rent.",
-    tip: null,
+    tip: "Tip: Don't overthink the filters — just type what you have in mind, like \"yellow saree\" or \"pink lehenga\", directly into the search bar. It's often the fastest way to discover what's available before narrowing things down.",
   },
   {
     number: "02",
