@@ -40,7 +40,7 @@ const CONDITIONS    = [
   { value:"fair",     label:"Fair" },
 ] as const;
 const FABRICS = ["Silk","Georgette","Chiffon","Net","Velvet","Brocade","Cotton","Linen","Crepe","Tissue","Organza"];
-const EMBELLISHMENTS = ["Zari","Sequins","Mirror work","Thread embroidery","Beading","Stone work","Block print","Bandhani","Ikkat","Plain"];
+const COLORS = ["Red","Pink","Orange","Yellow","Green","Blue","Purple","Gold","Silver","White","Black","Beige","Maroon","Navy","Multicolor"];
 const SORT_OPTIONS: { value: SortOption; label: string }[] = [
   { value:"newest",     label:"Newest" },
   { value:"price_asc",  label:"Price: Low to high" },
@@ -60,14 +60,14 @@ interface Filters {
   priceMax:       string;
   conditions:     string[];
   fabrics:        string[];
-  embellishments: string[];
+  colors:         string[];
   designer:       string;
 }
 
 const DEFAULT_FILTERS: Filters = {
   garments:[], accessoryTypes:[], listingTypes:[], occasions:[], sizes:[],
   priceMin:"", priceMax:"", conditions:[], fabrics:[],
-  embellishments:[], designer:"",
+  colors:[], designer:"",
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -280,12 +280,12 @@ function FilterPanel({
         ))}
       </FilterSection>
 
-      {/* Embellishments */}
-      <FilterSection title="Embellishments" defaultOpen={false}>
-        {EMBELLISHMENTS.map(e => (
-          <CheckRow key={e} label={e}
-            checked={filters.embellishments.includes(e)}
-            onChange={() => update("embellishments", toggle(filters.embellishments, e))}
+      {/* Colors */}
+      <FilterSection title="Color" defaultOpen={false}>
+        {COLORS.map(c => (
+          <CheckRow key={c} label={c}
+            checked={filters.colors.includes(c)}
+            onChange={() => update("colors", toggle(filters.colors, c))}
           />
         ))}
       </FilterSection>
@@ -605,7 +605,9 @@ function ListingsInner({ typeParam }: { typeParam: string | null }) {
       if (filters.priceMax && effectivePrice > Number(filters.priceMax)) return false;
       // Condition
       if (filters.conditions.length && !filters.conditions.includes(l.condition)) return false;
-      // Fabric / embellishments / designer — not in DB yet, skip
+      // Color
+      if (filters.colors.length && !filters.colors.some(c => c.toLowerCase() === (l.color ?? "").toLowerCase())) return false;
+      // Fabric / designer — not in DB yet, skip
       return true;
     });
 
@@ -636,7 +638,7 @@ function ListingsInner({ typeParam }: { typeParam: string | null }) {
   if (filters.priceMin || filters.priceMax) activePills.push({ key:"price", label: filters.priceMin && filters.priceMax ? `$${filters.priceMin}–$${filters.priceMax}` : filters.priceMin ? `From $${filters.priceMin}` : `Under $${filters.priceMax}`, remove:() => setFilters({ ...filters, priceMin:"", priceMax:"" }) });
   filters.conditions.forEach(c => activePills.push({ key:`c-${c}`, label: CONDITION_LABEL[c as Condition], remove:() => setFilters({ ...filters, conditions: filters.conditions.filter(x => x !== c) }) }));
   filters.fabrics.forEach(f => activePills.push({ key:`f-${f}`, label:f, remove:() => setFilters({ ...filters, fabrics: filters.fabrics.filter(x => x !== f) }) }));
-  filters.embellishments.forEach(e => activePills.push({ key:`e-${e}`, label:e, remove:() => setFilters({ ...filters, embellishments: filters.embellishments.filter(x => x !== e) }) }));
+  filters.colors.forEach(c => activePills.push({ key:`c-${c}`, label:c, remove:() => setFilters({ ...filters, colors: filters.colors.filter(x => x !== c) }) }));
   if (filters.designer) activePills.push({ key:"des", label:filters.designer, remove:() => setFilters({ ...filters, designer:"" }) });
 
   const hasActiveFilters = activePills.length > 0;
