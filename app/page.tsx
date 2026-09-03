@@ -12,7 +12,7 @@ const CATEGORIES = [
   { label: "Sarees", slug: "saree" },
   { label: "Salwar Kameez", slug: "salwar_kameez" },
   { label: "Indo-Western", slug: "indo_western" },
-  { label: "Jewellery", slug: "jewellery" },
+  { label: "Accessories", slug: "accessories" },
 ];
 
 const MARQUEE_ITEMS = [
@@ -66,13 +66,13 @@ export default function HomePage() {
           <div style={{ flex: 1, height: "1px", background: "var(--warm-tan)" }} />
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
+        <div className="flex flex-wrap justify-center gap-2">
           {CATEGORIES.map((cat) => (
             <Link
               key={cat.slug}
               href={`/listings?category=${cat.slug}`}
               className="flex flex-col items-center py-5 px-2 text-center"
-              style={{ border: "1px solid var(--warm-tan)", background: "transparent", transition: "background 0.2s" }}
+              style={{ border: "1px solid var(--warm-tan)", background: "transparent", transition: "background 0.2s", width: "160px" }}
               onMouseOver={e => (e.currentTarget.style.background = "var(--warm-tan)")}
               onMouseOut={e => (e.currentTarget.style.background = "transparent")}
             >
