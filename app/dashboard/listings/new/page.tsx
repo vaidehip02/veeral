@@ -749,7 +749,7 @@ function NewListingForm() {
 
               <div id="field-description">
                 <label style={label}>Description <span style={{ color: "#C4440A" }}>*</span></label>
-                <textarea value={form.description} onChange={setF("description")} rows={5} maxLength={1000} placeholder="Describe the item — include fabric details, embellishments, condition notes, and any flaws or repairs. Add exact measurements if known (e.g. bust 36&quot;, waist 28&quot;, length 42&quot;) to help buyers find their best fit, especially if the size runs small or large." style={{ ...inp, border: `1px solid ${fieldErrors.description ? "#C4440A" : "var(--warm-tan)"}`, borderBottom: undefined, padding: "0.75rem", resize: "none" }} />
+                <textarea value={form.description} onChange={setF("description")} rows={5} maxLength={1000} placeholder="Describe the item — any flaws or repairs. Add exact measurements if known (e.g. bust 36&quot;, waist 28&quot;, length 42&quot;) to help buyers find their best fit, especially if the size runs small or large." style={{ ...inp, border: `1px solid ${fieldErrors.description ? "#C4440A" : "var(--warm-tan)"}`, borderBottom: undefined, padding: "0.75rem", resize: "none" }} />
                 {fieldErrors.description
                   ? <p style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.75rem", color: "#C4440A", marginTop: "0.3rem" }}>{fieldErrors.description}</p>
                   : <p style={hint}>{1000 - form.description.length} characters remaining</p>
