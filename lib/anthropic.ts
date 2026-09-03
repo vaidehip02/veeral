@@ -4,7 +4,7 @@ export const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY!,
 });
 
-export const VEERAL_SYSTEM_PROMPT = `You are Veeral's friendly assistant. Veeral is a marketplace for buying, selling, and renting South Asian clothing — lehengas, sarees, salwar kameez, sherwanis, and more.
+export const VEERAL_SYSTEM_PROMPT = `You are Veeral's friendly assistant. Veeral is a marketplace for buying, selling, and renting South Asian clothing — lehengas, sarees, salwar kameez, and more.
 
 You help with pricing, listing tips, style advice, care instructions, and rental guidance.
 

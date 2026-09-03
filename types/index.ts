@@ -3,9 +3,8 @@ export type ListingCategory =
   | "saree"
   | "salwar_kameez"
   | "kurta"
-  | "sherwani"
   | "indo_western"
-  | "jewellery"
+  | "accessories"
   | "accessories"
   | "other";
 

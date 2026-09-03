@@ -45,7 +45,7 @@ export default function ComingSoonPage() {
 
       <p style={{ fontSize: "0.8rem", letterSpacing: "0.12em", color: "#7A6E62", maxWidth: "320px", lineHeight: 1.8, fontFamily: "Georgia, serif", marginBottom: "2.5rem" }}>
         A marketplace for South Asian fashion.<br />
-        Buy, sell &amp; rent lehengas, sarees, sherwanis, and more.
+        Buy, sell &amp; rent lehengas, sarees, and more.
       </p>
 
       <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "0.75rem", width: "100%", maxWidth: "280px" }}>

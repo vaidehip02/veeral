@@ -387,7 +387,7 @@ export default function AdminSettingsPage() {
             {[
               { key: "label",     label: "Label (small text, e.g. Wedding Season)", ph: "Wedding Season" },
               { key: "heading",   label: "Heading (main title)",                    ph: "Dress for Every Occasion" },
-              { key: "sub",       label: "Subtext",                                 ph: "Lehengas, sarees & sherwanis…" },
+              { key: "sub",       label: "Subtext",                                 ph: "Lehengas, sarees & more…" },
               { key: "cta",       label: "Button text",                             ph: "Shop Now" },
               { key: "href",      label: "Button link",                             ph: "/listings?category=lehenga" },
               { key: "image_url", label: "Image URL (Cloudinary or leave blank)",   ph: "https://res.cloudinary.com/…" },

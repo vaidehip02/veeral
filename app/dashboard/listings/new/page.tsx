@@ -16,7 +16,7 @@ const GARMENT_TYPES = [
   { value: "saree",         label: "Saree" },
   { value: "salwar_kameez", label: "Salwar Kameez" },
   { value: "indo_western",  label: "Indo-Western" },
-  { value: "jewellery",     label: "Jewellery / Accessories" },
+  { value: "accessories",   label: "Accessories" },
   { value: "other",         label: "Other" },
 ];
 const DESIGNERS = [
@@ -41,9 +41,9 @@ const INCLUDED_OPTS: Record<string, string[]> = {
   lehenga:       ["Lehenga skirt", "Blouse", "Dupatta", "Jacket/Shrug", "Belt/Kamarband"],
   saree:         ["Saree", "Blouse", "Petticoat"],
   salwar_kameez: ["Kameez", "Salwar/Pants", "Dupatta"],
-  sherwani:      ["Sherwani", "Pants", "Dupatta/Stole"],
+  sherwani:      [],
   indo_western:  ["Main piece", "Jacket/Shrug", "Accessories"],
-  jewellery:     ["Main piece", "Accessories"],
+  accessories:   ["Jewellery", "Handbag", "Shoes", "Dupatta", "Other"],
   other:         ["Main piece", "Accessories"],
 };
 

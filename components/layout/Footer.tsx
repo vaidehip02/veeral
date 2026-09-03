@@ -25,8 +25,7 @@ export default function Footer() {
           {[
             ["Lehengas", "/listings?category=lehenga"],
             ["Sarees", "/listings?category=saree"],
-            ["Sherwanis", "/listings?category=sherwani"],
-            ["Jewellery", "/listings?category=jewellery"],
+            ["Accessories", "/listings?category=accessories"],
           ].map(([label, href]) => (
             <Link key={href} href={href} style={linkStyle}>{label}</Link>
           ))}

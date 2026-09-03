@@ -17,7 +17,7 @@ interface Slide {
 }
 
 const FALLBACK: Slide[] = [
-  { id: 1, label: "Wedding Season", heading: "Dress for\nEvery Occasion", sub: "Lehengas, sarees & sherwanis — new and pre-loved.", cta: "Shop Now", href: "/listings?category=lehenga", image_url: null, order_index: 0, active: true },
+  { id: 1, label: "Festival Season", heading: "Dress for\nEvery Occasion", sub: "Lehengas, sarees & more — new and pre-loved for Diwali, Navratri, and more.", cta: "Shop Now", href: "/listings?category=lehenga", image_url: null, order_index: 0, active: true },
   { id: 2, label: "New Arrivals",   heading: "Fresh Finds\nEvery Day",    sub: "Discover one-of-a-kind South Asian fashion from sellers near you.", cta: "Browse Listings", href: "/listings", image_url: null, order_index: 1, active: true },
   { id: 3, label: "Rent & Discover",heading: "Rent for\nOne Night",       sub: "Why buy when you can rent? Stunning outfits for any event.", cta: "Browse Rentals", href: "/listings?type=rent", image_url: null, order_index: 2, active: true },
 ];

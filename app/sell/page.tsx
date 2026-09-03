@@ -78,7 +78,7 @@ export default function SellPage() {
           fontSize: "1rem", letterSpacing: "0.04em", lineHeight: 1.8,
           color: "var(--muted)", maxWidth: "520px", margin: "0 auto 2.5rem"
         }}>
-          Turn your pre-loved lehengas, sarees, and sherwanis into cash — or list them for rent and earn every wedding season.
+          Turn your pre-loved lehengas, sarees, and more into cash — or list them for rent and earn every wedding season.
         </p>
         <Link href="/onboarding" style={{
           fontFamily: "var(--font-jost)", fontWeight: 700,

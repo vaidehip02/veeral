@@ -20,12 +20,11 @@ export type ShippingTier = "small" | "medium" | "large" | "custom" | "free";
 // Used to pre-select the tier picker when a seller sets a garment type.
 // Sellers can always override.
 export const CATEGORY_DEFAULT_TIER: Record<string, ShippingTier> = {
-  jewellery:     "small",
+  accessories:   "small",
   saree:         "medium",
   salwar_kameez: "medium",
   indo_western:  "medium",
   lehenga:       "large",
-  sherwani:      "large",
   other:         "medium",
 };
 
@@ -39,9 +38,9 @@ export const TIER_LABEL: Record<ShippingTier, string> = {
 };
 
 export const TIER_DESCRIPTION: Record<ShippingTier, string> = {
-  small:  "Jewellery, accessories, dupatta, stole",
+  small:  "Accessories, dupatta, stole",
   medium: "Saree, kurta, salwar kameez, indo-western",
-  large:  "Lehenga, sherwani, heavy bridal",
+  large:  "Lehenga, heavy bridal",
   custom: "Enter an amount between the min and max",
   free:   "You pay the label cost out of pocket",
 };

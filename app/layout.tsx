@@ -27,7 +27,7 @@ const jost = Jost({
 export const metadata: Metadata = {
   title: "Veeral — Buy, Sell & Rent Indian Clothing",
   description:
-    "A marketplace for South Asian fashion. Buy, sell, and rent lehengas, sarees, sherwanis, and more.",
+    "A marketplace for South Asian fashion. Buy, sell, and rent lehengas, sarees, and more.",
   icons: { icon: "/favicon.ico" },
   openGraph: {
     title: "Veeral",

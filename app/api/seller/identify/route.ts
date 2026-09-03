@@ -35,7 +35,7 @@ no markdown, just the raw JSON object.`,
               text: `Analyze this South Asian garment photo and return ONLY a JSON object with this exact structure:
 {
   "confident": true or false,
-  "garmentType": one of: "lehenga" | "saree" | "salwar_kameez" | "sherwani" | "indo_western" | "jewellery" | "other",
+  "garmentType": one of: "lehenga" | "saree" | "salwar_kameez" | "indo_western" | "accessories" | "other",
   "garmentLabel": human-readable name e.g. "Bridal Lehenga Set",
   "fabric": single most likely fabric e.g. "Silk" or "Georgette",
   "embellishments": array of up to 3 from: ["Zari / Zardozi", "Sequins", "Mirror work", "Thread embroidery", "Beading", "Stone work", "Block print", "Bandhani", "Ikkat", "Plain"],
