@@ -33,9 +33,9 @@ export default function Footer() {
         <div>
           <p style={headingStyle}>Sell</p>
           {[
-            ["Create listing", "/listings/new"],
+            ["Create listing", "/dashboard/listings/new"],
             ["Dashboard", "/dashboard"],
-            ["Seller guide", "/help"],
+            ["Seller guide", "/sell/guide"],
           ].map(([label, href]) => (
             <Link key={href} href={href} style={linkStyle}>{label}</Link>
           ))}
@@ -44,7 +44,8 @@ export default function Footer() {
           <p style={headingStyle}>Rent</p>
           {[
             ["Browse rentals", "/listings?type=rent"],
-            ["How renting works", "/help#renting"],
+            ["How renting works", "/rent/guide"],
+            ["List for rent", "/dashboard/listings/new"],
           ].map(([label, href]) => (
             <Link key={href} href={href} style={linkStyle}>{label}</Link>
           ))}
