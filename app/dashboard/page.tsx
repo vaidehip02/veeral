@@ -151,7 +151,7 @@ export default function DashboardOverview() {
   }, []);
 
   const QUICK_ACTIONS = [
-    { label: "Create new listing", href: "/listings/new", primary: true },
+    { label: "Create new listing", href: "/dashboard/listings/new", primary: true },
     { label: "View all orders", href: "/dashboard/orders", primary: false },
     { label: "View all rentals", href: "/dashboard/rentals", primary: false },
   ];
