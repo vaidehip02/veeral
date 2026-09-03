@@ -29,7 +29,8 @@ interface Listing {
 
 // ─── Filter options ───────────────────────────────────────────────────────────
 
-const GARMENT_TYPES = ["Lehenga","Saree","Salwar Kameez","Sherwani","Indo-Western","Jewellery","Other"];
+const GARMENT_TYPES = ["Lehenga","Saree","Salwar Kameez","Indo-Western","Accessories","Other"];
+const ACCESSORY_TYPES = ["Jewellery","Handbag","Shoes","Clutch","Dupatta","Hair accessories","Other accessories"];
 const OCCASIONS     = ["Bridal","Wedding guest","Engagement","Festival","Eid","Diwali","Casual","Party","Formal"];
 const US_SIZES      = ["0","2","4","6","8","10","12","14","16","Free"];
 const CONDITIONS    = [
@@ -50,20 +51,21 @@ const SORT_OPTIONS: { value: SortOption; label: string }[] = [
 // ─── Filter state ─────────────────────────────────────────────────────────────
 
 interface Filters {
-  garments:      string[];
-  listingTypes:  ListingType[]; // empty = show all; multiple = show any that match
-  occasions:     string[];
-  sizes:         string[];
-  priceMin:      string;
-  priceMax:      string;
-  conditions:    string[];
-  fabrics:       string[];
-  embellishments:string[];
-  designer:      string;
+  garments:       string[];
+  accessoryTypes: string[];
+  listingTypes:   ListingType[];
+  occasions:      string[];
+  sizes:          string[];
+  priceMin:       string;
+  priceMax:       string;
+  conditions:     string[];
+  fabrics:        string[];
+  embellishments: string[];
+  designer:       string;
 }
 
 const DEFAULT_FILTERS: Filters = {
-  garments:[], listingTypes:[], occasions:[], sizes:[],
+  garments:[], accessoryTypes:[], listingTypes:[], occasions:[], sizes:[],
   priceMin:"", priceMax:"", conditions:[], fabrics:[],
   embellishments:[], designer:"",
 };
@@ -154,10 +156,27 @@ function FilterPanel({
       {/* Garment type */}
       <FilterSection title="Garment type">
         {GARMENT_TYPES.map(g => (
-          <CheckRow key={g} label={g}
-            checked={filters.garments.includes(g)}
-            onChange={() => update("garments", toggle(filters.garments, g))}
-          />
+          <div key={g}>
+            <CheckRow label={g}
+              checked={filters.garments.includes(g)}
+              onChange={() => {
+                const next = toggle(filters.garments, g);
+                update("garments", next);
+                if (!next.includes("Accessories")) update("accessoryTypes", []);
+              }}
+            />
+            {/* Accessory sub-filter */}
+            {g === "Accessories" && filters.garments.includes("Accessories") && (
+              <div style={{ marginLeft: "1.5rem", marginTop: "0.4rem", display: "flex", flexDirection: "column", gap: "0.3rem" }}>
+                {ACCESSORY_TYPES.map(a => (
+                  <CheckRow key={a} label={a}
+                    checked={filters.accessoryTypes.includes(a)}
+                    onChange={() => update("accessoryTypes", toggle(filters.accessoryTypes, a))}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
         ))}
       </FilterSection>
 
@@ -568,8 +587,13 @@ function ListingsInner({ typeParam }: { typeParam: string | null }) {
         const searchable = [l.title, l.category, l.brand ?? "", l.color ?? ""].join(" ").toLowerCase();
         if (!searchable.includes(q)) return false;
       }
-      // Garment type (category in DB is lowercase, filter options are title case)
+      // Garment type
       if (filters.garments.length && !filters.garments.some(g => g.toLowerCase() === l.category?.toLowerCase())) return false;
+      // Accessory sub-type — matches against title until a subcategory DB field is added
+      if (filters.accessoryTypes.length && filters.garments.includes("Accessories")) {
+        const titleLower = (l.title ?? "").toLowerCase();
+        if (!filters.accessoryTypes.some(a => titleLower.includes(a.toLowerCase().replace(" accessories", "")))) return false;
+      }
       // Listing type
       if (filters.listingTypes.length > 0 && !filters.listingTypes.includes(l.type)) return false;
       // Occasion — not in DB yet, skip
