@@ -11,7 +11,6 @@ const CATEGORIES = [
   { label: "Lehengas", slug: "lehenga" },
   { label: "Sarees", slug: "saree" },
   { label: "Salwar Kameez", slug: "salwar_kameez" },
-  { label: "Sherwanis", slug: "sherwani" },
   { label: "Indo-Western", slug: "indo_western" },
   { label: "Jewellery", slug: "jewellery" },
 ];
