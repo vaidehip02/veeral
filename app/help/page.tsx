@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 // ── Shared components (must be defined before data that uses them) ─────────────
 
@@ -197,6 +197,17 @@ export default function HelpCenterPage() {
   const [query, setQuery] = useState("");
   // sectionId -> open boolean
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({});
+
+  // Scroll to section on load if URL has a hash (e.g. /help#renting)
+  useEffect(() => {
+    const hash = window.location.hash.replace("#", "");
+    if (hash) {
+      setOpenSections(prev => ({ ...prev, [hash]: true }));
+      setTimeout(() => {
+        document.getElementById(hash)?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 100);
+    }
+  }, []);
   // sectionId -> open item title (only one item open per section)
   const [openItems, setOpenItems] = useState<Record<string, string | null>>({});
 

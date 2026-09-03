@@ -45,7 +45,7 @@ export default function Footer() {
           <p style={headingStyle}>Rent</p>
           {[
             ["Browse rentals", "/listings?type=rent"],
-            ["How renting works", "/help"],
+            ["How renting works", "/help#renting"],
           ].map(([label, href]) => (
             <Link key={href} href={href} style={linkStyle}>{label}</Link>
           ))}
