@@ -54,7 +54,7 @@ export default function Footer() {
           <p style={headingStyle}>Company</p>
           {[
             ["About", "/help"],
-            ["Contact", "/help"],
+            ["Contact", "/contact"],
             ["Help Center", "/help"],
             ["Instagram", "https://www.instagram.com/shopveeral"],
             ["TikTok", "https://www.tiktok.com/@shopveeral"],
