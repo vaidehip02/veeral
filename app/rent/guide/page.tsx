@@ -19,7 +19,7 @@ const RENTER_STEPS = [
     number: "03",
     title: "Select your rental dates",
     body: "Click Rent. Choose your start date (when you need it) and the number of days. The system automatically calculates your return-by date, giving you time to ship it back before the deadline.",
-    tip: "Tip: Add 2–3 extra buffer days to account for shipping time on both ends — especially for events where you need the item a few days before.",
+    tip: "Tip: As long as you upload proof of shipping (a tracking number) by your return deadline, it's not considered late — so book dates that fit your event without worrying about transit time.",
   },
   {
     number: "04",
