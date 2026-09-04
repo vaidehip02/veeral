@@ -37,7 +37,7 @@ const RENTER_STEPS = [
     number: "06",
     title: "Return on time",
     body: "Ship the item back by the return-by date shown in your order. Purchase a shipping label at USPS, UPS, or FedEx and upload the tracking number to your order page — this is how \"on time\" is measured. Late returns incur a late fee (daily rate × days overdue × 1.5, capped at the deposit).",
-    tip: "Tip: Ship at least 1–2 days before your return deadline to account for any carrier delays.",
+    tip: "Tip: Upload your tracking number to your order page as soon as you ship — that timestamp is what determines whether your return is on time.",
   },
   {
     number: "07",
@@ -168,7 +168,7 @@ export default function RentGuidePage() {
             Fully refundable. Always.
           </h2>
           <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.88rem", color: "var(--muted)", lineHeight: 1.8, marginBottom: "1.5rem" }}>
-            Every rental includes a security deposit of 40% of the item&apos;s listed value. It&apos;s charged at checkout as a separate payment and held safely by Veeral — not the seller — until the return is confirmed.
+            Every rental includes a security deposit set by the seller. It&apos;s charged at checkout as a separate payment and held safely by Veeral — not the seller — until the return is confirmed in good condition.
           </p>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "1rem" }}>
             {[
