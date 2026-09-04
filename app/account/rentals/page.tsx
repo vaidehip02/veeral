@@ -20,6 +20,7 @@ interface BuyerRental {
   listing_id: string;
   seller_id: string;
   amount: number;         // cents — rental fee
+  listing_price: number | null; // cents — sale price
   deposit_amount: number | null;
   deposit_held: boolean;
   deposit_release_amount: number | null;
@@ -117,7 +118,7 @@ export default function BuyerRentalsPage() {
       const sellerIds  = Array.from(new Set(rows.map((o) => o.seller_id as string)));
 
       const [{ data: listings }, { data: sellers }] = await Promise.all([
-        supabase.from("listings").select("id, title, images").in("id", listingIds),
+        supabase.from("listings").select("id, title, images, price, type").in("id", listingIds),
         supabase.from("seller_profiles").select("id, username").in("id", sellerIds),
       ]);
 
@@ -129,6 +130,7 @@ export default function BuyerRentalsPage() {
           listing_id:             o.listing_id,
           seller_id:              o.seller_id,
           amount:                 o.amount,
+          listing_price:          (l?.type === "sale" || l?.type === "both") ? (l?.price ?? null) : null,
           deposit_amount:         o.deposit_amount ?? null,
           deposit_held:           o.deposit_held ?? false,
           deposit_release_amount: o.deposit_release_amount ?? null,
@@ -265,7 +267,20 @@ export default function BuyerRentalsPage() {
                           <button onClick={() => { setReturnDrawerId(rental.id); setTrackingInput(""); setSubmitError(null); }} style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.75rem", letterSpacing: "0.14em", textTransform: "uppercase", padding: "0.4rem 0.9rem", background: "var(--burnt-orange)", color: "var(--cream)", border: "none", cursor: "pointer" }}>
                             Mark as returned
                           </button>
+                          {rental.listing_price != null && (
+                            <Link
+                              href={`/listings/${rental.listing_id}?buy_from_rental=1`}
+                              style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.75rem", letterSpacing: "0.14em", textTransform: "uppercase", padding: "0.4rem 0.9rem", background: "#1A1A18", color: "var(--cream)", border: "none", textDecoration: "none", display: "inline-block" }}
+                            >
+                              Purchase this item — ${((rental.listing_price - (rental.deposit_amount ?? 0)) / 100).toLocaleString()} due
+                            </Link>
+                          )}
                         </div>
+                        {rental.listing_price != null && rental.deposit_amount != null && (
+                          <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.7rem", color: "var(--muted)", opacity: 0.6, marginTop: "0.5rem", lineHeight: 1.5 }}>
+                            Love it? Your ${(rental.deposit_amount / 100).toLocaleString()} deposit is credited toward the ${(rental.listing_price / 100).toLocaleString()} purchase price — you only pay the difference.
+                          </p>
+                        )}
                       </div>
                     </div>
                   </div>
