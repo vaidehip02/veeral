@@ -10,6 +10,13 @@ interface ProfileData {
   avatar_url: string | null;
 }
 
+interface SellerStats {
+  totalEarnings: number;
+  activeListings: number;
+  pendingOrders: number;
+  activeRentals: number;
+}
+
 interface SavedItem {
   saved_id: string;
   listing_id: string;
@@ -34,6 +41,7 @@ export default function ProfilePage() {
   const [saved,         setSaved]         = useState<SavedItem[]>([]);
   const [activeOrders,  setActiveOrders]  = useState(0);
   const [activeRentals, setActiveRentals] = useState(0);
+  const [sellerStats,   setSellerStats]   = useState<SellerStats | null>(null);
   const [loading,       setLoading]       = useState(true);
 
   useEffect(() => {
@@ -42,11 +50,13 @@ export default function ProfilePage() {
     supabase.auth.getUser().then(async ({ data: { user } }) => {
       if (!user) { setLoading(false); return; }
 
-      // Fetch in parallel: seller profile, active order counts, saved listings
+      // Fetch in parallel: seller profile, active order counts, saved listings, seller stats
       const [
         { data: sp },
         { data: orderRows },
         { data: savedRows },
+        { data: sellerListings },
+        { data: sellerOrders },
       ] = await Promise.all([
         supabase
           .from("seller_profiles")
@@ -63,6 +73,14 @@ export default function ProfilePage() {
           .select("id, listing_id")
           .eq("user_id", user.id)
           .order("saved_at", { ascending: false }),
+        supabase
+          .from("listings")
+          .select("id, status, type")
+          .eq("seller_id", user.id),
+        supabase
+          .from("orders")
+          .select("id, type, status, seller_payout, rental_end")
+          .eq("seller_id", user.id),
       ]);
 
       setProfile({
@@ -74,6 +92,19 @@ export default function ProfilePage() {
       if (orderRows) {
         setActiveOrders(orderRows.filter(o => o.rental_start === null).length);
         setActiveRentals(orderRows.filter(o => o.rental_start !== null).length);
+      }
+
+      // Seller stats — only set if user has listings or seller orders
+      if ((sellerListings && sellerListings.length > 0) || (sellerOrders && sellerOrders.length > 0)) {
+        const active = (sellerListings ?? []).filter(l => l.status === "active").length;
+        const pending = (sellerOrders ?? []).filter(o => o.status === "paid").length;
+        const activeRentalsAsSeller = (sellerOrders ?? []).filter(o =>
+          o.type === "rent" && ["paid","shipped","delivered"].includes(o.status)
+        ).length;
+        const earnings = (sellerOrders ?? [])
+          .filter(o => ["shipped","delivered","deposit_released","deposit_resolved"].includes(o.status))
+          .reduce((sum, o) => sum + (o.seller_payout ?? 0), 0);
+        setSellerStats({ totalEarnings: earnings, activeListings: active, pendingOrders: pending, activeRentals: activeRentalsAsSeller });
       }
 
       if (savedRows?.length) {
@@ -124,11 +155,18 @@ export default function ProfilePage() {
 
   const initials = profile ? getInitials(profile.display_name) : "?";
 
-  const STAT_TILES = [
+  const BUYER_TILES = [
     { label: "Active Orders",  value: activeOrders,  href: "/account/orders"  },
     { label: "Active Rentals", value: activeRentals, href: "/account/rentals" },
     { label: "Saved Items",    value: saved.length,  href: "/account/saved"   },
   ];
+
+  const SELLER_TILES = sellerStats ? [
+    { label: "Total Earnings",  value: `$${(sellerStats.totalEarnings / 100).toLocaleString()}`, href: "/dashboard/earnings" },
+    { label: "Active Listings", value: sellerStats.activeListings, href: "/dashboard/listings" },
+    { label: "Pending Orders",  value: sellerStats.pendingOrders,  href: "/dashboard/orders"   },
+    { label: "Active Rentals",  value: sellerStats.activeRentals,  href: "/dashboard/rentals"  },
+  ] : [];
 
   return (
     <div style={{ maxWidth: "860px" }}>
@@ -155,9 +193,12 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* ── Stat tiles ── */}
+      {/* ── Buyer section ── */}
+      <p style={{ fontFamily: "var(--font-jost)", fontWeight: 700, fontSize: "0.62rem", letterSpacing: "0.28em", textTransform: "uppercase", color: "var(--muted)", opacity: 0.5, marginBottom: "0.75rem" }}>
+        As a buyer
+      </p>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "1rem", marginBottom: "2.5rem" }}>
-        {STAT_TILES.map(tile => (
+        {BUYER_TILES.map(tile => (
           <Link key={tile.label} href={tile.href} style={{ textDecoration: "none" }}>
             <div style={{ background: "#fff", border: "1px solid var(--warm-tan)", padding: "1.25rem 1rem", transition: "box-shadow 0.2s", cursor: "pointer" }}
               onMouseOver={e => (e.currentTarget.style.boxShadow = "0 4px 16px rgba(0,0,0,0.06)")}
@@ -173,6 +214,39 @@ export default function ProfilePage() {
           </Link>
         ))}
       </div>
+
+      {/* ── Seller section ── */}
+      {sellerStats && (
+        <>
+          <div style={{ borderTop: "1px solid var(--warm-tan)", marginBottom: "1.5rem", paddingTop: "1.5rem" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "0.75rem" }}>
+              <p style={{ fontFamily: "var(--font-jost)", fontWeight: 700, fontSize: "0.62rem", letterSpacing: "0.28em", textTransform: "uppercase", color: "var(--muted)", opacity: 0.5 }}>
+                As a seller
+              </p>
+              <Link href="/dashboard" style={{ fontFamily: "var(--font-jost)", fontSize: "0.75rem", color: "var(--burnt-orange)", textDecoration: "none", letterSpacing: "0.04em" }}>
+                Full dashboard →
+              </Link>
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "1rem", marginBottom: "1.5rem" }}>
+              {SELLER_TILES.map(tile => (
+                <Link key={tile.label} href={tile.href} style={{ textDecoration: "none" }}>
+                  <div style={{ background: "#FAF6F1", border: "1px solid var(--warm-tan)", padding: "1.1rem 1rem", transition: "box-shadow 0.2s", cursor: "pointer" }}
+                    onMouseOver={e => (e.currentTarget.style.boxShadow = "0 4px 16px rgba(0,0,0,0.06)")}
+                    onMouseOut={e => (e.currentTarget.style.boxShadow = "none")}
+                  >
+                    <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.65rem", fontWeight: 600, letterSpacing: "0.2em", textTransform: "uppercase", color: "#6B5E52", marginBottom: "0.5rem" }}>
+                      {tile.label}
+                    </p>
+                    <p style={{ fontFamily: "var(--font-cormorant)", fontStyle: "italic", fontSize: "1.75rem", fontWeight: 400, color: "#1A1A18", lineHeight: 1 }}>
+                      {tile.value}
+                    </p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
 
       {/* ── Saved items ── */}
       <div>
