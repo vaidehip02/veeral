@@ -69,7 +69,7 @@ const OWNER_STEPS = [
   {
     number: "04",
     title: "Report damage if needed",
-    body: "If the item comes back damaged, report it through your dashboard before confirming the return. Veeral reviews the case and can retain part or all of the security deposit to cover repair or cleaning costs.",
+    body: "If the item comes back damaged, do not confirm the return. Report the damage through your dashboard with photos. Veeral reviews the case and can retain part or all of the security deposit to cover repair or cleaning costs — the decision is made based on the evidence you provide.",
     tip: null,
   },
 ];
@@ -93,7 +93,7 @@ const FAQS = [
   },
   {
     q: "How does the seller get paid for rentals?",
-    a: "Rental earnings are released after the return is confirmed and the review window closes. The seller receives the rental fee minus Veeral's commission and Stripe's payment processing fee.",
+    a: "Rental earnings are released after the return is confirmed and the review window closes. The seller receives the full rental fee minus only Stripe's payment processing fee — Veeral's fee is added on top of the rental price and paid by the renter, so it never comes out of your earnings.",
   },
 ];
 
