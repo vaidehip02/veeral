@@ -185,37 +185,6 @@ export default function RentGuidePage() {
         </div>
       </div>
 
-      {/* Dry cleaning fee guide */}
-      <div className="max-w-3xl mx-auto px-6 lg:px-10 py-16">
-        <p style={{ fontFamily: "var(--font-jost)", fontWeight: 700, fontSize: "0.62rem", letterSpacing: "0.28em", textTransform: "uppercase", color: "var(--burnt-orange)", marginBottom: "0.5rem" }}>
-          Dry cleaning fees
-        </p>
-        <h2 style={{ fontFamily: "var(--font-cormorant)", fontStyle: "italic", fontWeight: 400, fontSize: "1.8rem", color: "#1A1A18", marginBottom: "0.75rem" }}>
-          What to expect after your rental
-        </h2>
-        <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.88rem", color: "var(--muted)", lineHeight: 1.8, marginBottom: "1.5rem" }}>
-          Sellers may charge a dry cleaning fee after the rental is returned. These are estimated based on typical South Asian garment cleaning costs.
-        </p>
-        <div style={{ border: "1px solid var(--warm-tan)", overflow: "hidden" }}>
-          {[
-            { garment: "Accessories", fee: "$0" },
-            { garment: "Blouse / Crop top", fee: "$15" },
-            { garment: "Dupatta / Stole", fee: "$15" },
-            { garment: "Kurta / Salwar Kameez", fee: "$25" },
-            { garment: "Saree", fee: "$30" },
-            { garment: "Indo-western dress / skirt", fee: "$30" },
-            { garment: "Lehenga (skirt only)", fee: "$40" },
-            { garment: "Full Lehenga set (skirt + blouse + dupatta)", fee: "$65" },
-            { garment: "Heavy bridal lehenga", fee: "$85" },
-          ].map((row, i) => (
-            <div key={row.garment} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0.85rem 1.2rem", background: i % 2 === 0 ? "var(--cream)" : "#FAF6F1", borderBottom: i < 8 ? "1px solid var(--warm-tan)" : "none" }}>
-              <span style={{ fontFamily: "var(--font-jost)", fontSize: "0.85rem", color: "#1A1A18" }}>{row.garment}</span>
-              <span style={{ fontFamily: "var(--font-cormorant)", fontStyle: "italic", fontSize: "1.1rem", color: row.fee === "$0" ? "var(--muted)" : "var(--burnt-orange)", fontWeight: 500 }}>{row.fee}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
       {/* List your own item for rent */}
       <div className="max-w-3xl mx-auto px-6 lg:px-10 py-16">
         <p style={{ fontFamily: "var(--font-jost)", fontWeight: 700, fontSize: "0.62rem", letterSpacing: "0.28em", textTransform: "uppercase", color: "var(--burnt-orange)", marginBottom: "0.5rem" }}>
