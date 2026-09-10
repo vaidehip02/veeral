@@ -621,6 +621,11 @@ export default function CheckoutPage({ params: _params }: { params: { listingId:
                 <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.7rem", color: "#3D3830", textAlign: "center", marginTop: "-0.5rem" }}>
                   By placing an order you agree to Veeral&apos;s terms and conditions.
                 </p>
+                {isRental && (
+                  <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.68rem", color: "#7A6A62", textAlign: "center", marginTop: "-0.25rem", lineHeight: 1.6 }}>
+                    Rentals are charged as two separate transactions — the rental fee and a refundable security deposit.
+                  </p>
+                )}
               </form>
             )}
 
