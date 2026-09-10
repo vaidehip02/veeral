@@ -37,7 +37,7 @@ export default function RentalDrawer({
 
   useEffect(() => { setTimeout(() => setOpen(true), 10); }, []);
 
-  const startDate  = new Date();
+  const startDate  = addDays(new Date(), 7); // 7-day shipping buffer
   const returnDate = addDays(startDate, days);
   const rentalCost = pricePerDay * days;
   const deposit    = Math.round(salePrice * depositPct / 100);
@@ -191,6 +191,9 @@ export default function RentalDrawer({
                 </p>
               </div>
             </div>
+            <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.68rem", color: "#7A6A62", lineHeight: 1.5, marginTop: "0.4rem" }}>
+              Start date includes ~7 days for the seller to ship to you.
+            </p>
           </div>
 
           {/* Cost breakdown */}
