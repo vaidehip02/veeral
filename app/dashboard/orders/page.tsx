@@ -417,7 +417,7 @@ function OrderCard({
 
           {/* Actions */}
           <div style={{ display: "flex", gap: "0.6rem", flexWrap: "wrap" }}>
-            {order.status === "paid" && (
+            {(order.status === "paid" || order.status === "active") && (
               <button
                 onClick={onShip}
                 style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.6rem", letterSpacing: "0.14em", textTransform: "uppercase", padding: "0.4rem 0.9rem", background: "var(--burnt-orange)", color: "var(--cream)", border: "none", cursor: "pointer" }}

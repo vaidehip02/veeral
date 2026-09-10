@@ -43,6 +43,7 @@ export const SELLER_SALE_STATUS: Record<string, StatusDisplay> = {
 export const SELLER_RENT_STATUS: Record<string, StatusDisplay> = {
   pending:          { label: "Processing",       bg: "#F5F5F5",  text: "#555"    },
   paid:             { label: "Ready to ship",    bg: "#FFF8E1",  text: "#E65100" },
+  active:           { label: "Ready to ship",    bg: "#FFF8E1",  text: "#E65100" },
   shipped:          { label: "Shipped",          bg: "#EEF2FF",  text: "#3730A3" },
   delivered:        { label: "Out on rental",    bg: "#E8F5E9",  text: "#2D6A4F" },
   return_pending:   { label: "Return pending",   bg: "#FEF3C7",  text: "#92400E" },
