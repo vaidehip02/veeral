@@ -7,7 +7,7 @@ import { SELLER_SALE_STATUS, SELLER_RENT_STATUS } from "@/lib/orderStatus";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-type DBStatus = "pending" | "paid" | "active" | "shipped" | "delivered" | "cancelled" | "refunded"
+type DBStatus = "pending" | "paid" | "active" | "shipped" | "delivered" | "cancelled" | "refunded" | "return_pending" | "deposit_released" | "damage_claimed" | "deposit_resolved"
   | "return_pending" | "deposit_released" | "damage_claimed" | "deposit_resolved";
 
 interface SellerOrder {
@@ -417,7 +417,7 @@ function OrderCard({
 
           {/* Actions */}
           <div style={{ display: "flex", gap: "0.6rem", flexWrap: "wrap" }}>
-            {(order.status === "paid" || order.status === "active") && (
+            {(order.status === "paid" || order.status === "active" || order.status === "pending") && (
               <button
                 onClick={onShip}
                 style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.6rem", letterSpacing: "0.14em", textTransform: "uppercase", padding: "0.4rem 0.9rem", background: "var(--burnt-orange)", color: "var(--cream)", border: "none", cursor: "pointer" }}
