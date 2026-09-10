@@ -7,7 +7,7 @@ import { SELLER_SALE_STATUS, SELLER_RENT_STATUS } from "@/lib/orderStatus";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-type DBStatus = "pending" | "paid" | "shipped" | "delivered" | "cancelled" | "refunded"
+type DBStatus = "pending" | "paid" | "active" | "shipped" | "delivered" | "cancelled" | "refunded"
   | "return_pending" | "deposit_released" | "damage_claimed" | "deposit_resolved";
 
 interface SellerOrder {
