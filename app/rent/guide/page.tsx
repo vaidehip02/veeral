@@ -89,7 +89,7 @@ const FAQS = [
   },
   {
     q: "Can I extend my rental?",
-    a: "Currently rentals cannot be extended after booking. If you need more time, message the seller — they can choose to accommodate. Otherwise, you must return by the original deadline to avoid late fees.",
+    a: "Rentals cannot be extended after booking. If you need more time, message the seller directly — they can choose to accommodate, but are not required to. You must return by the original deadline to avoid late fees. That said, if you've fallen in love with the piece, you may be able to purchase it instead — on your active rental, look for the \"Purchase this item\" option, which credits your deposit toward the purchase price.",
   },
   {
     q: "How does the seller get paid for rentals?",
