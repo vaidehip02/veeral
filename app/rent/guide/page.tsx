@@ -76,6 +76,10 @@ const OWNER_STEPS = [
 
 const FAQS = [
   {
+    q: "Why do I see two separate charges on my card?",
+    a: "Rental checkouts on Veeral always produce two Stripe charges: one for the rental fee (including Veeral's fee and shipping), and a second for the refundable security deposit. They are kept separate so the deposit can be released back to you independently after the return is confirmed. Both will appear on your card statement — this is expected and not a billing error.",
+  },
+  {
     q: "Is the security deposit always refunded?",
     a: "Yes, as long as the item is returned on time and in the same condition it was sent. Damage or late returns may result in partial or full retention of the deposit.",
   },
