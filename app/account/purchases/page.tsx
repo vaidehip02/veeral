@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
@@ -87,7 +87,7 @@ function rentalStatusBadge(status: RentalStatus): Badge {
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
-export default function PurchasesPage() {
+function PurchasesContent() {
   const sp = useSearchParams();
   const [rows, setRows]               = useState<PurchaseRow[]>([]);
   const [loading, setLoading]         = useState(true);
@@ -493,5 +493,13 @@ export default function PurchasesPage() {
         </>
       )}
     </div>
+  );
+}
+
+export default function PurchasesPage() {
+  return (
+    <Suspense fallback={<div style={{ padding: "3rem", textAlign: "center", fontFamily: "var(--font-jost)", fontSize: "0.85rem", color: "var(--muted)", opacity: 0.5 }}>Loading…</div>}>
+      <PurchasesContent />
+    </Suspense>
   );
 }
