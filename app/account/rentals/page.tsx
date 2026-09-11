@@ -217,8 +217,12 @@ export default function BuyerRentalsPage() {
             <div style={{ display: "flex", flexDirection: "column", gap: "1rem", marginBottom: "3rem" }}>
 
               {active.map((rental) => {
+                const isInTransit = (rental.status === "shipped" || rental.status === "paid" || rental.status === "pending") &&
+                  rental.rental_start && new Date(rental.rental_start) > new Date();
                 const days  = rental.rental_end ? getDaysLeft(rental.rental_end) : 999;
-                const badge = getCountdownBadge(days);
+                const badge = isInTransit
+                  ? { bg: "#E3F2FD", text: "#1565C0", label: "In transit" }
+                  : getCountdownBadge(days);
                 const thumb = rental.images[0] ?? null;
                 return (
                   <div key={rental.id} style={{ background: "#fff", border: "1px solid var(--warm-tan)", borderLeft: `3px solid ${badge.text}`, padding: "1.25rem 1.5rem" }}>
