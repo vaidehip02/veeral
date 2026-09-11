@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
     const resend = new Resend(process.env.RESEND_API_KEY);
     const { error } = await resend.emails.send({
       from: "Veeral <hello@shopveeral.com>",
-      to: "help@shopveeral.com",
+      to: "vaidehi@shopveeral.com",
       replyTo: email,
       subject: `[Contact] ${subject}`,
       html: `

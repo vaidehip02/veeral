@@ -269,7 +269,7 @@ export default function BuyerRentalsPage() {
                           </button>
                           {rental.listing_price != null && (
                             <Link
-                              href={`/listings/${rental.listing_id}?buy_from_rental=1`}
+                              href={`/checkout/${rental.listing_id}?buy_from_rental=1&deposit_credit=${rental.deposit_amount ?? 0}`}
                               style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.75rem", letterSpacing: "0.14em", textTransform: "uppercase", padding: "0.4rem 0.9rem", background: "#1A1A18", color: "var(--cream)", border: "none", textDecoration: "none", display: "inline-block" }}
                             >
                               Purchase this item — ${((rental.listing_price - (rental.deposit_amount ?? 0)) / 100).toLocaleString()} due

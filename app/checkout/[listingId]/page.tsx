@@ -142,6 +142,7 @@ export default function CheckoutPage({ params: _params }: { params: { listingId:
   const startDate  = sp.get("startDate")  || "";
   const returnDate = sp.get("returnDate") || "";
   const depositPct = Number(sp.get("depositPct") || 40);
+  const depositCreditCents = Number(sp.get("deposit_credit") || 0); // from buy_from_rental flow
 
   // ── Fetch listing from Supabase ──────────────────────────────────────────
   const [listing, setListing] = useState<ListingData | null>(null);
@@ -221,13 +222,13 @@ export default function CheckoutPage({ params: _params }: { params: { listingId:
     ? resolveTierCents(l.shipping_tier as ShippingTier | null, l.shipping_cents, shippingConfig)
     : shippingConfig.mediumCents;
   const shipping          = shippingCents / 100; // dollars for display
-  const subtotalDollars   = isRental ? rentalCostDollars : ((l?.price ?? 0) / 100);
+  const subtotalDollars   = isRental ? rentalCostDollars : (((l?.price ?? 0) - depositCreditCents) / 100);
   const feePercent: number | null = isRental ? rentalFee : saleFee;
 
   // Cents (what Stripe actually charges) — DB values are already cents
   const rentalCents  = Math.round(rentalCostDollars * 100);
   const depositCents = Math.round(depositDollars * 100);
-  const saleCents    = l?.price ?? 0;
+  const saleCents    = Math.max(0, (l?.price ?? 0) - depositCreditCents);
 
   // Checkout state machine
   // sale:   "address" → "paying" → "done"
@@ -437,6 +438,16 @@ export default function CheckoutPage({ params: _params }: { params: { listingId:
                     ${subtotalDollars.toLocaleString()}
                   </span>
                 </div>
+
+                {/* Deposit credit (buy-from-rental) */}
+                {depositCreditCents > 0 && (
+                  <div style={rowBetween}>
+                    <span style={{ fontFamily: "var(--font-jost)", fontWeight: 500, fontSize: "0.85rem", color: "#2D6A4F" }}>Deposit credit</span>
+                    <span style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.85rem", color: "#2D6A4F" }}>
+                      −${(depositCreditCents / 100).toLocaleString()}
+                    </span>
+                  </div>
+                )}
 
                 {/* Shipping */}
                 <div style={rowBetween}>
