@@ -52,25 +52,41 @@ export default function HeroCarousel() {
   }, [current, go, slides.length]);
 
   const slide = slides[current];
+  const hasImage = !!slide.image_url;
 
   return (
     <div
       className="relative w-full overflow-hidden"
-      style={{ height: "clamp(320px, 55vh, 520px)", background: "#EDE8E2", transition: "background 0.5s ease" }}
+      style={{ height: "clamp(320px, 55vh, 520px)", background: "#EDE8E2" }}
     >
+      {/* Full-bleed background image (mobile) */}
+      {hasImage && (
+        <>
+          <div className="sm:hidden" style={{ position: "absolute", inset: 0, transition: "opacity 0.3s ease", opacity: animating ? 0 : 1 }}>
+            <Image src={slide.image_url!} alt={slide.heading} fill style={{ objectFit: "cover" }} priority />
+            {/* dark overlay for text readability */}
+            <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to right, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.2) 100%)" }} />
+          </div>
+        </>
+      )}
+
       <div
         className="h-full flex items-center max-w-7xl mx-auto px-6 lg:px-16"
         style={{ opacity: animating ? 0 : 1, transition: "opacity 0.3s ease" }}
       >
         {/* Left: text */}
-        <div className="flex-1 pr-8">
-          <p style={{ fontFamily: "var(--font-jost)", fontWeight: 500, fontSize: "0.58rem", letterSpacing: "0.25em", textTransform: "uppercase", color: "var(--burnt-orange)", marginBottom: "1rem" }}>
+        <div className="flex-1 pr-8" style={{ position: "relative", zIndex: 1 }}>
+          <p style={{ fontFamily: "var(--font-jost)", fontWeight: 500, fontSize: "0.58rem", letterSpacing: "0.25em", textTransform: "uppercase", color: hasImage ? "#F4A96A" : "var(--burnt-orange)", marginBottom: "1rem" }}>
             ✦ {slide.label}
           </p>
-          <h2 style={{ fontFamily: "var(--font-cormorant)", fontWeight: 500, fontSize: "clamp(2.2rem, 5vw, 3.8rem)", lineHeight: 1.1, letterSpacing: "-0.01em", color: "var(--dark)", marginBottom: "1rem", whiteSpace: "pre-line" }}>
+          <h2 style={{ fontFamily: "var(--font-cormorant)", fontWeight: 500, fontSize: "clamp(2.2rem, 5vw, 3.8rem)", lineHeight: 1.1, letterSpacing: "-0.01em", color: hasImage ? "#fff" : "var(--dark)", marginBottom: "1rem", whiteSpace: "pre-line" }}
+              className={hasImage ? "sm:text-inherit" : ""}
+          >
             {slide.heading}
           </h2>
-          <p style={{ fontFamily: "var(--font-jost)", fontWeight: 200, fontSize: "clamp(0.8rem, 1.4vw, 0.9rem)", letterSpacing: "0.06em", lineHeight: 1.7, color: "var(--muted)", marginBottom: "2rem", maxWidth: "340px" }}>
+          <p style={{ fontFamily: "var(--font-jost)", fontWeight: 200, fontSize: "clamp(0.8rem, 1.4vw, 0.9rem)", letterSpacing: "0.06em", lineHeight: 1.7, color: hasImage ? "rgba(255,255,255,0.85)" : "var(--muted)", marginBottom: "2rem", maxWidth: "340px" }}
+             className={hasImage ? "sm:text-inherit" : ""}
+          >
             {slide.sub}
           </p>
           <Link
@@ -83,13 +99,13 @@ export default function HeroCarousel() {
           </Link>
         </div>
 
-        {/* Right: image */}
+        {/* Right: image (desktop only) */}
         <div
           className="hidden sm:block flex-shrink-0"
-          style={{ width: "clamp(200px, 35%, 380px)", height: "clamp(260px, 48vh, 460px)", background: "var(--warm-tan)", opacity: slide.image_url ? 1 : 0.6, position: "relative" }}
+          style={{ width: "clamp(200px, 35%, 380px)", height: "clamp(260px, 48vh, 460px)", background: "var(--warm-tan)", opacity: hasImage ? 1 : 0.6, position: "relative" }}
         >
-          {slide.image_url ? (
-            <Image src={slide.image_url} alt={slide.heading} fill style={{ objectFit: "cover" }} />
+          {hasImage ? (
+            <Image src={slide.image_url!} alt={slide.heading} fill style={{ objectFit: "cover" }} />
           ) : (
             <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
               <span style={{ fontFamily: "var(--font-jost)", fontSize: "0.55rem", letterSpacing: "0.2em", textTransform: "uppercase", color: "var(--muted)", opacity: 0.7 }}>
@@ -112,7 +128,7 @@ export default function HeroCarousel() {
       ))}
 
       {/* Dots */}
-      <div style={{ position: "absolute", bottom: "1.2rem", left: "50%", transform: "translateX(-50%)", display: "flex", gap: "0.5rem" }}>
+      <div style={{ position: "absolute", bottom: "1.2rem", left: "50%", transform: "translateX(-50%)", display: "flex", gap: "0.5rem", zIndex: 10 }}>
         {slides.map((_, i) => (
           <button key={i} onClick={() => go(i)} aria-label={`Slide ${i + 1}`}
             style={{ width: i === current ? "20px" : "6px", height: "6px", borderRadius: "3px", background: i === current ? "var(--burnt-orange)" : "var(--warm-tan)", border: "none", cursor: "pointer", transition: "all 0.3s ease" }}
