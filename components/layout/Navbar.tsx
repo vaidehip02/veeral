@@ -129,7 +129,7 @@ export default function Navbar() {
       }}>
         {customBanner?.active && customBanner.text
           ? customBanner.text
-          : "New listings added daily — discover South Asian fashion ✦"}
+          : "Share your South Asian fashion ✦"}
       </div>
 
       {/* ── Main bar ──────────────────────────────────────────── */}
