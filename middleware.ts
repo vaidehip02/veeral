@@ -16,6 +16,7 @@ export async function middleware(request: NextRequest) {
     MAINTENANCE_MODE &&
     pathname !== "/coming-soon" &&
     pathname !== "/api/bypass" &&
+    !pathname.startsWith("/api/stripe/") &&
     bypassToken !== "veeralbeta2025"
   ) {
     return NextResponse.redirect(new URL("/coming-soon", request.url));
