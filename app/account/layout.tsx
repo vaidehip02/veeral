@@ -15,22 +15,12 @@ const NAV_ITEMS = [
     ),
   },
   {
-    label: "Orders",
-    href: "/account/orders",
+    label: "Purchases",
+    href: "/account/purchases",
     icon: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
         <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
         <line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/>
-      </svg>
-    ),
-  },
-  {
-    label: "Rentals",
-    href: "/account/rentals",
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-        <rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>
-        <path d="m9 16 2 2 4-4"/>
       </svg>
     ),
   },
@@ -87,7 +77,10 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
       .catch(() => {});
   }, [pathname]); // re-check when navigating
 
-  const isActive = (href: string) => pathname.startsWith(href);
+  const isActive = (href: string) => {
+    if (href === "/account/purchases") return pathname.startsWith("/account/purchases") || pathname.startsWith("/account/orders") || pathname.startsWith("/account/rentals");
+    return pathname.startsWith(href);
+  };
 
   return (
     <div style={{ background: "var(--cream)", minHeight: "100vh" }}>

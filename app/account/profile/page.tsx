@@ -156,8 +156,8 @@ export default function ProfilePage() {
   const initials = profile ? getInitials(profile.display_name) : "?";
 
   const BUYER_TILES = [
-    { label: "Active Orders",  value: activeOrders,  href: "/account/orders"  },
-    { label: "Active Rentals", value: activeRentals, href: "/account/rentals" },
+    { label: "Active Orders",  value: activeOrders,  href: "/account/purchases?tab=purchases" },
+    { label: "Active Rentals", value: activeRentals, href: "/account/purchases?tab=rentals"  },
     { label: "Saved Items",    value: saved.length,  href: "/account/saved"   },
   ];
 
