@@ -281,8 +281,8 @@ export default function PurchasesPage() {
                         {[
                           { k: "Seller", v: `@${row.seller_username}` },
                           { k: "Period", v: row.rental_start && row.rental_end ? `${fmtDate(row.rental_start)} – ${fmtDate(row.rental_end)}` : "—" },
-                          row.deposit_amount != null ? { k: "Deposit", v: `$${(row.deposit_amount / 100).toLocaleString()}` } : null,
-                        ].filter(Boolean).map(({ k, v }) => (
+                          ...(row.deposit_amount != null ? [{ k: "Deposit", v: `$${(row.deposit_amount / 100).toLocaleString()}` }] : []),
+                        ].map(({ k, v }) => (
                           <span key={k} style={{ fontFamily: "var(--font-jost)", fontSize: "0.75rem", color: "var(--muted)", opacity: 0.75 }}>
                             <span style={{ fontWeight: 600, opacity: 0.5, textTransform: "uppercase", letterSpacing: "0.1em", fontSize: "0.75rem" }}>{k} </span>{v}
                           </span>
