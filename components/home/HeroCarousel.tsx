@@ -76,16 +76,17 @@ export default function HeroCarousel() {
       >
         {/* Left: text */}
         <div className="flex-1 pr-8" style={{ position: "relative", zIndex: 1 }}>
-          <p style={{ fontFamily: "var(--font-jost)", fontWeight: 500, fontSize: "0.58rem", letterSpacing: "0.25em", textTransform: "uppercase", color: hasImage ? "#F4A96A" : "var(--burnt-orange)", marginBottom: "1rem" }}>
+          <p style={{ fontFamily: "var(--font-jost)", fontWeight: 500, fontSize: "0.58rem", letterSpacing: "0.25em", textTransform: "uppercase", marginBottom: "1rem" }}
+             className={hasImage ? "text-[#F4A96A] sm:text-[var(--burnt-orange)]" : "text-[var(--burnt-orange)]"}>
             ✦ {slide.label}
           </p>
-          <h2 style={{ fontFamily: "var(--font-cormorant)", fontWeight: 500, fontSize: "clamp(2.2rem, 5vw, 3.8rem)", lineHeight: 1.1, letterSpacing: "-0.01em", color: hasImage ? "#fff" : "var(--dark)", marginBottom: "1rem", whiteSpace: "pre-line" }}
-              className={hasImage ? "sm:text-inherit" : ""}
+          <h2 style={{ fontFamily: "var(--font-cormorant)", fontWeight: 500, fontSize: "clamp(2.2rem, 5vw, 3.8rem)", lineHeight: 1.1, letterSpacing: "-0.01em", marginBottom: "1rem", whiteSpace: "pre-line" }}
+              className={hasImage ? "text-white sm:text-[var(--dark)]" : "text-[var(--dark)]"}
           >
             {slide.heading}
           </h2>
-          <p style={{ fontFamily: "var(--font-jost)", fontWeight: 200, fontSize: "clamp(0.8rem, 1.4vw, 0.9rem)", letterSpacing: "0.06em", lineHeight: 1.7, color: hasImage ? "rgba(255,255,255,0.85)" : "var(--muted)", marginBottom: "2rem", maxWidth: "340px" }}
-             className={hasImage ? "sm:text-inherit" : ""}
+          <p style={{ fontFamily: "var(--font-jost)", fontWeight: 200, fontSize: "clamp(0.8rem, 1.4vw, 0.9rem)", letterSpacing: "0.06em", lineHeight: 1.7, marginBottom: "2rem", maxWidth: "340px" }}
+             className={hasImage ? "text-white/85 sm:text-[var(--muted)]" : "text-[var(--muted)]"}
           >
             {slide.sub}
           </p>
