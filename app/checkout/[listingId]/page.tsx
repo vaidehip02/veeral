@@ -245,9 +245,11 @@ export default function CheckoutPage({ params: _params }: { params: { listingId:
   const [feeTooltip,   setFeeTooltip]   = useState(false);
 
   // Veeral fee is added ON TOP of the subtotal — never on shipping or deposit.
-  const veeralFeeDollars = feePercent !== null
-    ? Math.round(subtotalDollars * (feePercent / 100))
+  // Use ceil so small orders always pay at least 1 cent; never show $0.
+  const veeralFeeCents = feePercent !== null
+    ? Math.max(1, Math.ceil(subtotalDollars * (feePercent / 100) * 100))
     : null;
+  const veeralFeeDollars = veeralFeeCents !== null ? veeralFeeCents / 100 : null;
 
   const [form, setForm] = useState({
     firstName: "", lastName: "", email: "",
@@ -500,7 +502,7 @@ export default function CheckoutPage({ params: _params }: { params: { listingId:
                       </span>
                     </span>
                     <span style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.85rem", color: "#1A1A18" }}>
-                      ${veeralFeeDollars.toLocaleString()}
+                      ${veeralFeeDollars.toLocaleString("en-US", { minimumFractionDigits: 2 })}
                     </span>
                   </div>
                 )}
@@ -531,7 +533,7 @@ export default function CheckoutPage({ params: _params }: { params: { listingId:
                   </span>
                   <span style={{ fontFamily: "var(--font-cormorant)", fontWeight: 600, fontSize: "1.7rem", color: "#C4440A" }}>
                     {veeralFeeDollars !== null
-                      ? `$${(subtotalDollars + shipping + veeralFeeDollars + (isRental ? depositDollars : 0)).toLocaleString()}`
+                      ? `$${(subtotalDollars + shipping + veeralFeeDollars + (isRental ? depositDollars : 0)).toLocaleString("en-US", { minimumFractionDigits: 2 })}`
                       : "—"}
                   </span>
                 </div>
@@ -647,8 +649,8 @@ export default function CheckoutPage({ params: _params }: { params: { listingId:
                 <Elements stripe={stripePromise} options={{ clientSecret: saleSecret, appearance: elementsAppearance }}>
                   <PaymentForm
                     label="Item + Veeral fee + shipping"
-                    amount={saleCents + ((veeralFeeDollars ?? 0) * 100) + shippingCents}
-                    buttonLabel={`Pay $${((l.price / 100) + (veeralFeeDollars ?? 0) + shipping).toLocaleString()} — complete order`}
+                    amount={saleCents + (veeralFeeCents ?? 0) + shippingCents}
+                    buttonLabel={`Pay $${((saleCents + (veeralFeeCents ?? 0) + shippingCents) / 100).toLocaleString("en-US", { minimumFractionDigits: 2 })} — complete order`}
                     onSuccess={() => setStage("done")}
                     onError={setApiError}
                   />
@@ -667,8 +669,8 @@ export default function CheckoutPage({ params: _params }: { params: { listingId:
                 <Elements stripe={stripePromise} options={{ clientSecret: rentalSecret, appearance: elementsAppearance }}>
                   <PaymentForm
                     label="Rental fee + Veeral fee + shipping"
-                    amount={rentalCents + ((veeralFeeDollars ?? 0) * 100) + shippingCents}
-                    buttonLabel={`Pay $${(rentalCostDollars + (veeralFeeDollars ?? 0) + shipping).toLocaleString()} — rental fee`}
+                    amount={rentalCents + (veeralFeeCents ?? 0) + shippingCents}
+                    buttonLabel={`Pay $${((rentalCents + (veeralFeeCents ?? 0) + shippingCents) / 100).toLocaleString("en-US", { minimumFractionDigits: 2 })} — rental fee`}
                     onSuccess={() => setStage("paying_deposit")}
                     onError={setApiError}
                   />
