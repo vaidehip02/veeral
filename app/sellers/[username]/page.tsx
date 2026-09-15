@@ -258,79 +258,69 @@ export default function SellerProfilePage({ params }: { params: { username: stri
   return (
     <div style={{ background: "var(--cream)", minHeight: "100vh" }}>
 
-      {/* Banner — seller-uploaded collage or warm gradient fallback */}
-      <div style={{ width: "100%", height: "220px", background: "#C4946A", overflow: "hidden", position: "relative" }}>
-        {profile.banner_images?.length ? (
-          <div style={{ display: "flex", height: "100%", gap: "2px" }}>
-            {profile.banner_images.map((url, i) => (
-              <div key={i} style={{ flex: i === 0 ? "2" : "1", height: "100%", overflow: "hidden" }}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div style={{ width: "100%", height: "100%", background: "linear-gradient(135deg, #C4946A 0%, #A0614A 50%, #C4440A 100%)", opacity: 0.7 }} />
-        )}
-        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 40%, rgba(0,0,0,0.25) 100%)" }} />
-      </div>
+      {/* Banner */}
+      <div style={{ width: "100%", height: "200px", background: "#E8DDD3" }} />
 
       <div className="max-w-5xl mx-auto" style={{ padding: "0 1.5rem" }}>
 
-        {/* Avatar row — no buttons here */}
-        <div style={{ marginTop: "-48px", marginBottom: "1.25rem" }}>
-          <div style={{ width: "96px", height: "96px", borderRadius: "50%", background: profile.avatar_url ? "transparent" : "#C4440A", border: "4px solid var(--cream)", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", flexShrink: 0 }}>
-            {profile.avatar_url ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={profile.avatar_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-            ) : (
-              <span style={{ fontFamily: "var(--font-jost)", fontWeight: 700, fontSize: "1.5rem", color: "#fff" }}>{initials}</span>
-            )}
+        {/* Avatar + name + buttons row */}
+        <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", flexWrap: "wrap", gap: "1rem", marginTop: "-48px", marginBottom: "1.5rem" }}>
+          <div style={{ display: "flex", alignItems: "flex-end", gap: "1rem", flexWrap: "wrap" }}>
+            <div style={{ width: "96px", height: "96px", borderRadius: "50%", background: profile.avatar_url ? "transparent" : "#C4440A", border: "4px solid var(--cream)", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", flexShrink: 0 }}>
+              {profile.avatar_url ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={profile.avatar_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              ) : (
+                <span style={{ fontFamily: "var(--font-jost)", fontWeight: 700, fontSize: "1.5rem", color: "#fff" }}>{initials}</span>
+              )}
+            </div>
+            <div style={{ paddingBottom: "0.25rem" }}>
+              <h1 style={{ fontFamily: "var(--font-cormorant)", fontStyle: "italic", fontWeight: 400, fontSize: "clamp(1.5rem, 3vw, 2rem)", color: "#1A1A18", lineHeight: 1.1, marginBottom: "0.15rem" }}>
+                {profile.display_name.split(" ")[0]}
+              </h1>
+              <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.78rem", color: "var(--muted)", opacity: 0.6, letterSpacing: "0.04em" }}>
+                @{profile.username}
+              </p>
+            </div>
           </div>
+
+          {currentUser !== profile.id && (
+            <div style={{ display: "flex", gap: "0.6rem", flexWrap: "wrap", paddingBottom: "0.25rem" }}>
+              <button
+                onClick={toggleFollow}
+                disabled={followState.loading}
+                style={{
+                  fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.78rem",
+                  letterSpacing: "0.18em", textTransform: "uppercase",
+                  padding: "0.6rem 1.4rem",
+                  background: followState.following ? "transparent" : "var(--burnt-orange)",
+                  color: followState.following ? "var(--burnt-orange)" : "var(--cream)",
+                  border: "1px solid var(--burnt-orange)",
+                  cursor: followState.loading ? "default" : "pointer",
+                  transition: "all 0.15s", opacity: followState.loading ? 0.6 : 1,
+                }}
+              >
+                {followState.following ? "Following" : "Follow"}
+                {followState.count > 0 && (
+                  <span style={{ marginLeft: "0.5rem", opacity: 0.7, fontWeight: 400 }}>
+                    {followState.count}
+                  </span>
+                )}
+              </button>
+              <Link
+                href={`/account/messages?seller=${params.username}`}
+                style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.78rem", letterSpacing: "0.18em", textTransform: "uppercase", padding: "0.6rem 1.4rem", background: "var(--burnt-orange)", color: "var(--cream)", border: "1px solid var(--burnt-orange)", textDecoration: "none", display: "inline-block", transition: "opacity 0.15s" }}
+                onMouseOver={e => (e.currentTarget.style.opacity = "0.8")}
+                onMouseOut={e => (e.currentTarget.style.opacity = "1")}
+              >
+                Message
+              </Link>
+            </div>
+          )}
         </div>
 
-        {/* Name */}
-        <h1 style={{ fontFamily: "var(--font-cormorant)", fontStyle: "italic", fontWeight: 400, fontSize: "clamp(1.75rem, 3vw, 2.25rem)", color: "#1A1A18", lineHeight: 1.1, marginBottom: "0.2rem" }}>
-          {profile.display_name}
-        </h1>
-        <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.82rem", color: "var(--muted)", opacity: 0.6, marginBottom: "1rem", letterSpacing: "0.04em" }}>
-          @{profile.username}
-        </p>
 
-        {/* Buttons below name */}
-        {currentUser !== profile.id && (
-          <div style={{ display: "flex", gap: "0.6rem", flexWrap: "wrap", marginBottom: "1rem" }}>
-            <button
-              onClick={toggleFollow}
-              disabled={followState.loading}
-              style={{
-                fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.78rem",
-                letterSpacing: "0.18em", textTransform: "uppercase",
-                padding: "0.6rem 1.4rem",
-                background: followState.following ? "transparent" : "var(--burnt-orange)",
-                color: followState.following ? "var(--burnt-orange)" : "var(--cream)",
-                border: "1px solid var(--burnt-orange)",
-                cursor: followState.loading ? "default" : "pointer",
-                transition: "all 0.15s", opacity: followState.loading ? 0.6 : 1,
-              }}
-            >
-              {followState.following ? "Following" : "Follow"}
-              {followState.count > 0 && (
-                <span style={{ marginLeft: "0.5rem", opacity: 0.7, fontWeight: 400 }}>
-                  {followState.count}
-                </span>
-              )}
-            </button>
-            <Link
-              href={`/account/messages?seller=${params.username}`}
-              style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.78rem", letterSpacing: "0.18em", textTransform: "uppercase", padding: "0.6rem 1.4rem", background: "transparent", color: "var(--muted)", border: "1px solid var(--warm-tan)", textDecoration: "none", display: "inline-block", transition: "border-color 0.15s" }}
-            >
-              Message
-            </Link>
-          </div>
-        )}
-
-
+        {/* Bio — no duplicate name block needed */}
         {/* Bio */}
         {profile.bio && (
           <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.88rem", color: "var(--muted)", lineHeight: 1.75, maxWidth: "520px", marginBottom: "0.75rem" }}>
