@@ -94,6 +94,10 @@ export default function SettingsPage() {
   const [profileSaving, setProfileSaving] = useState(false);
   const [profileError, setProfileError] = useState("");
 
+  const [bannerImages, setBannerImages] = useState<string[]>([]);
+  const [bannerUploading, setBannerUploading] = useState(false);
+  const [bannerSaved, setBannerSaved] = useState(false);
+
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [addingAddress, setAddingAddress] = useState(false);
   const [newAddr, setNewAddr] = useState<Omit<Address, "id" | "isDefault">>({ label:"", line1:"", line2:"", city:"", state:"", zip:"" });
@@ -116,11 +120,12 @@ export default function SettingsPage() {
       // Try seller_profiles for display_name, fall back to user metadata
       supabase
         .from("seller_profiles")
-        .select("display_name")
+        .select("display_name, banner_images")
         .eq("id", user.id)
         .single()
         .then(({ data }) => {
           setName(data?.display_name ?? user.user_metadata?.full_name ?? "");
+          setBannerImages(data?.banner_images ?? []);
         });
     });
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -166,6 +171,42 @@ export default function SettingsPage() {
     setAddresses(prev => [...prev, { ...newAddr, id:`a${Date.now()}`, isDefault: prev.length === 0 }]);
     setAddingAddress(false);
     setNewAddr({ label:"", line1:"", line2:"", city:"", state:"", zip:"" });
+  };
+
+  const handleBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? []);
+    if (!files.length) return;
+    const remaining = 4 - bannerImages.length;
+    if (remaining <= 0) return;
+    setBannerUploading(true);
+    const urls: string[] = [];
+    for (const file of files.slice(0, remaining)) {
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("folder", "veeral/banners");
+      const res = await fetch("/api/upload", { method: "POST", body: fd });
+      if (res.ok) {
+        const { url } = await res.json();
+        if (url) urls.push(url);
+      }
+    }
+    const next = [...bannerImages, ...urls].slice(0, 4);
+    setBannerImages(next);
+    // Auto-save to DB
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      await supabase.from("seller_profiles").update({ banner_images: next }).eq("id", user.id);
+      setBannerSaved(true);
+      setTimeout(() => setBannerSaved(false), 2500);
+    }
+    setBannerUploading(false);
+  };
+
+  const removeBannerImage = async (idx: number) => {
+    const next = bannerImages.filter((_, i) => i !== idx);
+    setBannerImages(next);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) await supabase.from("seller_profiles").update({ banner_images: next }).eq("id", user.id);
   };
 
   const card: React.CSSProperties = {
@@ -218,6 +259,47 @@ export default function SettingsPage() {
               Upload photo
             </button>
           </div>
+        </Field>
+
+        <Field label={`Profile banner photos (${bannerImages.length}/4)`}>
+          <p style={{ fontFamily:"var(--font-jost)", fontSize:"0.78rem", color:"var(--muted)", opacity:0.6, marginBottom:"0.75rem" }}>
+            These photos appear as a collage at the top of your seller profile. Up to 4 photos.
+          </p>
+          {/* Preview grid */}
+          {bannerImages.length > 0 && (
+            <div style={{ display:"flex", gap:"0.5rem", marginBottom:"0.75rem", flexWrap:"wrap" }}>
+              {bannerImages.map((url, i) => (
+                <div key={i} style={{ position:"relative", width:"80px", height:"80px", flexShrink:0 }}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={url} alt="" style={{ width:"100%", height:"100%", objectFit:"cover", border:"1px solid var(--warm-tan)" }} />
+                  <button
+                    onClick={() => removeBannerImage(i)}
+                    style={{ position:"absolute", top:"2px", right:"2px", width:"18px", height:"18px", borderRadius:"50%", background:"rgba(0,0,0,0.6)", color:"#fff", border:"none", cursor:"pointer", fontSize:"0.65rem", display:"flex", alignItems:"center", justifyContent:"center", lineHeight:1 }}
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+          {bannerImages.length < 4 && (
+            <label style={{ display:"inline-block", cursor:"pointer" }}>
+              <input type="file" accept="image/*" multiple onChange={handleBannerUpload} style={{ display:"none" }} disabled={bannerUploading} />
+              <span style={{
+                fontFamily:"var(--font-jost)", fontWeight:600,
+                fontSize:"0.75rem", letterSpacing:"0.16em", textTransform:"uppercase",
+                padding:"0.5rem 1rem",
+                background:"transparent", color: bannerUploading ? "var(--muted)" : "var(--burnt-orange)",
+                border:"1px solid", borderColor: bannerUploading ? "var(--warm-tan)" : "var(--burnt-orange)",
+                display:"inline-block", opacity: bannerUploading ? 0.6 : 1,
+              }}>
+                {bannerUploading ? "Uploading…" : `+ Add photo${bannerImages.length === 0 ? "s" : ""}`}
+              </span>
+            </label>
+          )}
+          {bannerSaved && (
+            <p style={{ fontFamily:"var(--font-jost)", fontSize:"0.75rem", color:"#2D6A4F", marginTop:"0.5rem" }}>✓ Banner saved</p>
+          )}
         </Field>
         {profileError && (
           <p style={{ fontFamily:"var(--font-jost)", fontSize:"0.75rem", color:"#C62828", marginBottom:"0.75rem" }}>

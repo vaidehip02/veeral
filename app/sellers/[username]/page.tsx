@@ -14,6 +14,7 @@ interface SellerProfile {
   bio: string | null;
   location: string | null;
   created_at: string;
+  banner_images: string[] | null;
 }
 
 interface ActiveListing {
@@ -86,7 +87,7 @@ export default function SellerProfilePage({ params }: { params: { username: stri
       // 1. Look up seller profile by username
       const { data: sp } = await supabase
         .from("seller_profiles")
-        .select("id, username, display_name, avatar_url, bio, location, created_at")
+        .select("id, username, display_name, avatar_url, bio, location, created_at, banner_images")
         .eq("username", params.username)
         .single();
 
@@ -257,25 +258,20 @@ export default function SellerProfilePage({ params }: { params: { username: stri
   return (
     <div style={{ background: "var(--cream)", minHeight: "100vh" }}>
 
-      {/* Banner — listing photo collage or warm gradient fallback */}
+      {/* Banner — seller-uploaded collage or warm gradient fallback */}
       <div style={{ width: "100%", height: "220px", background: "#C4946A", overflow: "hidden", position: "relative" }}>
-        {listings.length > 0 ? (
+        {profile.banner_images?.length ? (
           <div style={{ display: "flex", height: "100%", gap: "2px" }}>
-            {listings.slice(0, 4).map((l, i) => (
-              <div key={l.id} style={{ flex: i === 0 ? "2" : "1", height: "100%", overflow: "hidden", position: "relative" }}>
-                {l.images?.[0] ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={l.images[0]} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                ) : (
-                  <div style={{ width: "100%", height: "100%", background: `hsl(${20 + i * 15}, 35%, ${60 - i * 5}%)` }} />
-                )}
+            {profile.banner_images.map((url, i) => (
+              <div key={i} style={{ flex: i === 0 ? "2" : "1", height: "100%", overflow: "hidden" }}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
               </div>
             ))}
           </div>
         ) : (
           <div style={{ width: "100%", height: "100%", background: "linear-gradient(135deg, #C4946A 0%, #A0614A 50%, #C4440A 100%)", opacity: 0.7 }} />
         )}
-        {/* subtle dark gradient at bottom for avatar readability */}
         <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 40%, rgba(0,0,0,0.25) 100%)" }} />
       </div>
 
