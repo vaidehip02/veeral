@@ -257,13 +257,32 @@ export default function SellerProfilePage({ params }: { params: { username: stri
   return (
     <div style={{ background: "var(--cream)", minHeight: "100vh" }}>
 
-      {/* Banner */}
-      <div style={{ width: "100%", height: "200px", background: "#E8DDD3" }} />
+      {/* Banner — listing photo collage or warm gradient fallback */}
+      <div style={{ width: "100%", height: "220px", background: "#C4946A", overflow: "hidden", position: "relative" }}>
+        {listings.length > 0 ? (
+          <div style={{ display: "flex", height: "100%", gap: "2px" }}>
+            {listings.slice(0, 4).map((l, i) => (
+              <div key={l.id} style={{ flex: i === 0 ? "2" : "1", height: "100%", overflow: "hidden", position: "relative" }}>
+                {l.images?.[0] ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={l.images[0]} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                ) : (
+                  <div style={{ width: "100%", height: "100%", background: `hsl(${20 + i * 15}, 35%, ${60 - i * 5}%)` }} />
+                )}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div style={{ width: "100%", height: "100%", background: "linear-gradient(135deg, #C4946A 0%, #A0614A 50%, #C4440A 100%)", opacity: 0.7 }} />
+        )}
+        {/* subtle dark gradient at bottom for avatar readability */}
+        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 40%, rgba(0,0,0,0.25) 100%)" }} />
+      </div>
 
       <div className="max-w-5xl mx-auto" style={{ padding: "0 1.5rem" }}>
 
-        {/* Avatar row */}
-        <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", flexWrap: "wrap", gap: "1rem", marginTop: "-48px", marginBottom: "1.5rem" }}>
+        {/* Avatar row — no buttons here */}
+        <div style={{ marginTop: "-48px", marginBottom: "1.25rem" }}>
           <div style={{ width: "96px", height: "96px", borderRadius: "50%", background: profile.avatar_url ? "transparent" : "#C4440A", border: "4px solid var(--cream)", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", flexShrink: 0 }}>
             {profile.avatar_url ? (
               // eslint-disable-next-line @next/next/no-img-element
@@ -272,47 +291,49 @@ export default function SellerProfilePage({ params }: { params: { username: stri
               <span style={{ fontFamily: "var(--font-jost)", fontWeight: 700, fontSize: "1.5rem", color: "#fff" }}>{initials}</span>
             )}
           </div>
-          <div style={{ display: "flex", gap: "0.6rem", alignItems: "center", flexWrap: "wrap" }}>
-            {currentUser !== profile.id && (
-              <button
-                onClick={toggleFollow}
-                disabled={followState.loading}
-                style={{
-                  fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.78rem",
-                  letterSpacing: "0.18em", textTransform: "uppercase",
-                  padding: "0.6rem 1.4rem",
-                  background: followState.following ? "var(--burnt-orange)" : "transparent",
-                  color: followState.following ? "var(--cream)" : "var(--muted)",
-                  border: "1px solid",
-                  borderColor: followState.following ? "var(--burnt-orange)" : "var(--warm-tan)",
-                  cursor: followState.loading ? "default" : "pointer",
-                  marginBottom: "0.25rem", transition: "all 0.15s", opacity: followState.loading ? 0.6 : 1,
-                }}
-              >
-                {followState.following ? "Following" : "Follow"}
-                {followState.count > 0 && (
-                  <span style={{ marginLeft: "0.5rem", opacity: 0.7, fontWeight: 400 }}>
-                    {followState.count}
-                  </span>
-                )}
-              </button>
-            )}
-            <Link
-              href={`/account/messages?seller=${params.username}`}
-              style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.78rem", letterSpacing: "0.18em", textTransform: "uppercase", padding: "0.6rem 1.4rem", background: "transparent", color: "var(--muted)", border: "1px solid var(--warm-tan)", textDecoration: "none", marginBottom: "0.25rem", transition: "border-color 0.15s", display: "inline-block" }}
-            >
-              Message
-            </Link>
-          </div>
         </div>
 
         {/* Name */}
         <h1 style={{ fontFamily: "var(--font-cormorant)", fontStyle: "italic", fontWeight: 400, fontSize: "clamp(1.75rem, 3vw, 2.25rem)", color: "#1A1A18", lineHeight: 1.1, marginBottom: "0.2rem" }}>
           {profile.display_name}
         </h1>
-        <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.82rem", color: "var(--muted)", opacity: 0.6, marginBottom: "0.75rem", letterSpacing: "0.04em" }}>
+        <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.82rem", color: "var(--muted)", opacity: 0.6, marginBottom: "1rem", letterSpacing: "0.04em" }}>
           @{profile.username}
         </p>
+
+        {/* Buttons below name */}
+        {currentUser !== profile.id && (
+          <div style={{ display: "flex", gap: "0.6rem", flexWrap: "wrap", marginBottom: "1rem" }}>
+            <button
+              onClick={toggleFollow}
+              disabled={followState.loading}
+              style={{
+                fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.78rem",
+                letterSpacing: "0.18em", textTransform: "uppercase",
+                padding: "0.6rem 1.4rem",
+                background: followState.following ? "transparent" : "var(--burnt-orange)",
+                color: followState.following ? "var(--burnt-orange)" : "var(--cream)",
+                border: "1px solid var(--burnt-orange)",
+                cursor: followState.loading ? "default" : "pointer",
+                transition: "all 0.15s", opacity: followState.loading ? 0.6 : 1,
+              }}
+            >
+              {followState.following ? "Following" : "Follow"}
+              {followState.count > 0 && (
+                <span style={{ marginLeft: "0.5rem", opacity: 0.7, fontWeight: 400 }}>
+                  {followState.count}
+                </span>
+              )}
+            </button>
+            <Link
+              href={`/account/messages?seller=${params.username}`}
+              style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.78rem", letterSpacing: "0.18em", textTransform: "uppercase", padding: "0.6rem 1.4rem", background: "transparent", color: "var(--muted)", border: "1px solid var(--warm-tan)", textDecoration: "none", display: "inline-block", transition: "border-color 0.15s" }}
+            >
+              Message
+            </Link>
+          </div>
+        )}
+
 
         {/* Bio */}
         {profile.bio && (
