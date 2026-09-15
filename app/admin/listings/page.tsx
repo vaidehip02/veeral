@@ -78,9 +78,12 @@ export default function AdminListingsPage() {
 
   const updateStatus = async (id: string, status: ListingStatus) => {
     setActionErr(null);
-    const supabase = createClient();
-    const { error } = await supabase.from("listings").update({ status }).eq("id", id);
-    if (error) { setActionErr("Failed to update status — " + error.message); return; }
+    const res = await fetch(`/api/admin/listings/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status }),
+    });
+    if (!res.ok) { setActionErr("Failed to update status"); return; }
     setListings(prev => prev.map(l => l.id === id ? { ...l, status } : l));
   };
 

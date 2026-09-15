@@ -58,6 +58,12 @@ function memberSince(iso: string) {
 
 type FilterTab = "all" | "sale" | "rent";
 
+interface FollowState {
+  following: boolean;
+  count: number;
+  loading: boolean;
+}
+
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function SellerProfilePage({ params }: { params: { username: string } }) {
@@ -70,6 +76,8 @@ export default function SellerProfilePage({ params }: { params: { username: stri
   const [notFound,     setNotFound]     = useState(false);
   const [activeTab,    setActiveTab]    = useState<FilterTab>("all");
   const [showAll,      setShowAll]      = useState(false);
+  const [followState,  setFollowState]  = useState<FollowState>({ following: false, count: 0, loading: false });
+  const [currentUser,  setCurrentUser]  = useState<string | null>(null);
 
   useEffect(() => {
     const supabase = createClient();
@@ -137,6 +145,57 @@ export default function SellerProfilePage({ params }: { params: { username: stri
 
     load();
   }, [params.username]);
+
+  // Load current user + follow state
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setCurrentUser(user?.id ?? null);
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!profile) return;
+    async function loadFollow() {
+      const supabase = createClient();
+
+      const [{ data: followData }, { count }] = await Promise.all([
+        supabase.from("seller_follows").select("seller_id").eq("seller_id", profile!.id),
+        supabase.from("seller_follows").select("*", { count: "exact", head: true }).eq("seller_id", profile!.id),
+      ]);
+
+      const { data: { user } } = await supabase.auth.getUser();
+      const isFollowing = user ? (followData ?? []).some(r => r.seller_id === profile!.id) : false;
+
+      // Re-fetch just for current user
+      if (user) {
+        const { data: myFollow } = await supabase
+          .from("seller_follows")
+          .select("seller_id")
+          .eq("follower_id", user.id)
+          .eq("seller_id", profile!.id)
+          .maybeSingle();
+        setFollowState({ following: !!myFollow, count: count ?? 0, loading: false });
+      } else {
+        setFollowState({ following: false, count: count ?? 0, loading: false });
+      }
+    }
+    loadFollow();
+  }, [profile]);
+
+  async function toggleFollow() {
+    if (!profile) return;
+    if (!currentUser) { window.location.href = "/auth/login"; return; }
+    setFollowState(s => ({ ...s, loading: true }));
+    const method = followState.following ? "DELETE" : "POST";
+    const res = await fetch(`/api/follows/${profile.id}`, { method });
+    if (res.ok) {
+      const delta = followState.following ? -1 : 1;
+      setFollowState(s => ({ following: !s.following, count: Math.max(0, s.count + delta), loading: false }));
+    } else {
+      setFollowState(s => ({ ...s, loading: false }));
+    }
+  }
 
   // ── Loading ──────────────────────────────────────────────────────────────────
 
@@ -214,12 +273,38 @@ export default function SellerProfilePage({ params }: { params: { username: stri
               <span style={{ fontFamily: "var(--font-jost)", fontWeight: 700, fontSize: "1.5rem", color: "#fff" }}>{initials}</span>
             )}
           </div>
-          <Link
-            href={`/account/messages?seller=${params.username}`}
-            style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.78rem", letterSpacing: "0.18em", textTransform: "uppercase", padding: "0.6rem 1.4rem", background: "transparent", color: "var(--muted)", border: "1px solid var(--warm-tan)", textDecoration: "none", marginBottom: "0.25rem", transition: "border-color 0.15s", display: "inline-block" }}
-          >
-            Message
-          </Link>
+          <div style={{ display: "flex", gap: "0.6rem", alignItems: "center", flexWrap: "wrap" }}>
+            {currentUser !== profile.id && (
+              <button
+                onClick={toggleFollow}
+                disabled={followState.loading}
+                style={{
+                  fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.78rem",
+                  letterSpacing: "0.18em", textTransform: "uppercase",
+                  padding: "0.6rem 1.4rem",
+                  background: followState.following ? "var(--burnt-orange)" : "transparent",
+                  color: followState.following ? "var(--cream)" : "var(--muted)",
+                  border: "1px solid",
+                  borderColor: followState.following ? "var(--burnt-orange)" : "var(--warm-tan)",
+                  cursor: followState.loading ? "default" : "pointer",
+                  marginBottom: "0.25rem", transition: "all 0.15s", opacity: followState.loading ? 0.6 : 1,
+                }}
+              >
+                {followState.following ? "Following" : "Follow"}
+                {followState.count > 0 && (
+                  <span style={{ marginLeft: "0.5rem", opacity: 0.7, fontWeight: 400 }}>
+                    {followState.count}
+                  </span>
+                )}
+              </button>
+            )}
+            <Link
+              href={`/account/messages?seller=${params.username}`}
+              style={{ fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.78rem", letterSpacing: "0.18em", textTransform: "uppercase", padding: "0.6rem 1.4rem", background: "transparent", color: "var(--muted)", border: "1px solid var(--warm-tan)", textDecoration: "none", marginBottom: "0.25rem", transition: "border-color 0.15s", display: "inline-block" }}
+            >
+              Message
+            </Link>
+          </div>
         </div>
 
         {/* Name */}
