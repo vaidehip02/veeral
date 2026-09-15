@@ -159,13 +159,12 @@ export default function SellerProfilePage({ params }: { params: { username: stri
     async function loadFollow() {
       const supabase = createClient();
 
-      const [{ data: followData }, { count }] = await Promise.all([
+      const [, { count }] = await Promise.all([
         supabase.from("seller_follows").select("seller_id").eq("seller_id", profile!.id),
         supabase.from("seller_follows").select("*", { count: "exact", head: true }).eq("seller_id", profile!.id),
       ]);
 
       const { data: { user } } = await supabase.auth.getUser();
-      const isFollowing = user ? (followData ?? []).some(r => r.seller_id === profile!.id) : false;
 
       // Re-fetch just for current user
       if (user) {
