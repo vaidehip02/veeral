@@ -54,14 +54,17 @@ export async function POST(
   const itemTitle     = (listing as { title?: string } | null)?.title ?? "your rental";
   const rentPricePerDay = (listing as { rent_price?: number } | null)?.rent_price ?? 0;
 
-  // ── Late-fee calculation ──────────────────────────────────────────
+  // ── Late fee: already charged at mark-returned time ───────────────
+  // Re-compute only for display/tracking — money was already moved.
   const lfSettings  = await getLateFeeSettings();
   const overdueDays = computeDaysOverdue(order.rental_end, order.return_noted_at, lfSettings.gracePeriodDays);
   const rawLateFee  = computeLateFee(rentPricePerDay, overdueDays, lfSettings);
-  const lateFee     = Math.min(rawLateFee, depositCents); // cap at deposit
+  const lateFee     = Math.min(rawLateFee, depositCents);
 
-  const renterRefund = Math.max(0, depositCents - lateFee);
-  const sellerAmount = depositCents - renterRefund; // = lateFee (capped)
+  // Remaining deposit available for damage claims (deposit minus already-charged late fee)
+  const remainingDeposit = Math.max(0, depositCents - lateFee);
+  const renterRefund = remainingDeposit; // on good condition confirm, refund the remainder
+  const sellerAmount = 0; // late fee already transferred; damage claims handled separately
 
   // ── Seller's Stripe Connect account + rental fee payout amount ───
   const [{ data: sellerProfile }, { data: rentalOrder }] = await Promise.all([

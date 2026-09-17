@@ -510,22 +510,16 @@ export default function SellerRentalsPage() {
                 </p>
 
                 {(() => {
-                  const overdueDays = drawerRental.rental_end
-                    ? Math.max(0, -getDaysUntilShipBack(drawerRental.rental_end) - gracePeriodDays)
-                    : 0;
-                  const estLateFee = overdueDays > 0 && drawerRental.rent_price_per_day > 0
-                    ? Math.min(Math.round(drawerRental.rent_price_per_day * overdueDays * lateFeeMultiplier), drawerRental.deposit_amount)
-                    : 0;
-                  const renterRefund = drawerRental.deposit_amount - estLateFee;
+                  const alreadyChargedLateFee = drawerRental.late_fee_cents ?? 0;
+                  const remainingDeposit = Math.max(0, drawerRental.deposit_amount - alreadyChargedLateFee);
                   return (
-                    <div style={{ background: overdueDays > 0 ? "#FDECEA" : "#FEF3C7", padding: "0.75rem 1rem", marginBottom: "1.75rem" }}>
-                      <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.78rem", color: overdueDays > 0 ? "#991B1B" : "#92400E", lineHeight: 1.6, margin: 0 }}>
-                        {overdueDays > 0 ? (
+                    <div style={{ background: alreadyChargedLateFee > 0 ? "#FDECEA" : "#FEF3C7", padding: "0.75rem 1rem", marginBottom: "1.75rem" }}>
+                      <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.78rem", color: alreadyChargedLateFee > 0 ? "#991B1B" : "#92400E", lineHeight: 1.6, margin: 0 }}>
+                        {alreadyChargedLateFee > 0 ? (
                           <>
-                            <strong>Return is {overdueDays} day{overdueDays !== 1 ? "s" : ""} late.</strong>{" "}
-                            Est. late fee: <strong>{fmt(estLateFee)}</strong> (deducted from deposit).{" "}
-                            Renter refund: <strong>{fmt(renterRefund)}</strong>.{" "}
-                            Exact fee is computed at confirmation time.
+                            <strong>Late fee of {fmt(alreadyChargedLateFee)} already charged</strong> when renter submitted return
+                            {drawerRental.late_fee_days != null && ` (${drawerRental.late_fee_days} day${drawerRental.late_fee_days !== 1 ? "s" : ""} overdue)`}.{" "}
+                            Remaining deposit to release: <strong>{fmt(remainingDeposit)}</strong>.
                           </>
                         ) : (
                           <>
@@ -540,13 +534,17 @@ export default function SellerRentalsPage() {
 
                 {confirmError && <p style={{ fontFamily: "var(--font-jost)", fontSize: "0.75rem", color: "#991B1B", marginBottom: "0.75rem" }}>{confirmError}</p>}
 
+                {(() => {
+                  const alreadyChargedLateFee = drawerRental.late_fee_cents ?? 0;
+                  const remainingDeposit = Math.max(0, drawerRental.deposit_amount - alreadyChargedLateFee);
+                  return (
                 <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
                   <button
                     onClick={() => confirmReturn(drawerRental.id)}
                     disabled={confirming}
                     style={{ width: "100%", padding: "0.75rem", fontFamily: "var(--font-jost)", fontWeight: 600, fontSize: "0.7rem", letterSpacing: "0.18em", textTransform: "uppercase", background: confirming ? "var(--warm-tan)" : "var(--burnt-orange)", color: confirming ? "var(--muted)" : "var(--cream)", border: "none", cursor: confirming ? "not-allowed" : "pointer" }}
                   >
-                    {confirming ? "Processing…" : `✓ Good condition — release ${fmt(drawerRental.deposit_amount)} deposit`}
+                    {confirming ? "Processing…" : `✓ Good condition — release ${fmt(remainingDeposit)} deposit`}
                   </button>
                   <button
                     onClick={() => { setShowClaimForm(true); setClaimError(null); }}
@@ -561,6 +559,8 @@ export default function SellerRentalsPage() {
                     Cancel
                   </button>
                 </div>
+                  );
+                })()}
               </>
             ) : (
               <>
