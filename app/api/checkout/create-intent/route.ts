@@ -124,12 +124,39 @@ export async function POST(req: NextRequest) {
       //        Seller's share is transferred by confirm-return or process-auto-release.
       // PI 2: deposit — no transfer, no fee, platform-held until return confirmed.
       // platform_fee is recorded on the order for internal accounting only.
+      //
+      // We also create/retrieve a Stripe Customer for the buyer and attach it to
+      // the rental PI with setup_future_usage='off_session' so the payment method
+      // is saved for unreturned-rental auto-charges.
+
+      // Create or retrieve Stripe customer for buyer
+      const { data: existingOrder } = await admin
+        .from("orders")
+        .select("buyer_stripe_customer_id")
+        .eq("buyer_id", user.id)
+        .not("buyer_stripe_customer_id", "is", null)
+        .limit(1)
+        .single();
+
+      let buyerCustomerId: string;
+      if (existingOrder?.buyer_stripe_customer_id) {
+        buyerCustomerId = existingOrder.buyer_stripe_customer_id;
+      } else {
+        const { data: authUser } = await admin.auth.admin.getUserById(user.id);
+        const customer = await stripe.customers.create({
+          email: authUser.user?.email ?? undefined,
+          metadata: { supabase_user_id: user.id },
+        });
+        buyerCustomerId = customer.id;
+      }
 
       const rentalPi = await stripe.paymentIntents.create({
         // Buyer pays: rental cost + fee + shipping
         amount:   rentalFeeCents + fees.feeAmount + SHIPPING_CENTS,
         currency: "usd",
         automatic_payment_methods: { enabled: true },
+        customer: buyerCustomerId,
+        setup_future_usage: "off_session",
         // No application_fee_amount / transfer_data — separate charges model.
         metadata: {
           order_id:    orderId,
@@ -158,7 +185,10 @@ export async function POST(req: NextRequest) {
 
       await admin
         .from("orders")
-        .update({ deposit_payment_intent_id: depositPi.id })
+        .update({
+          deposit_payment_intent_id: depositPi.id,
+          buyer_stripe_customer_id:  buyerCustomerId,
+        })
         .eq("id", orderId);
 
       return NextResponse.json({

@@ -5,6 +5,10 @@
       "schedule": "0 9 * * *"
     },
     {
+      "path": "/api/cron/process-unreturned",
+      "schedule": "0 10 * * *"
+    },
+    {
       "path": "/api/orders/process-ship-deadline",
       "schedule": "0 9 * * *"
     },
