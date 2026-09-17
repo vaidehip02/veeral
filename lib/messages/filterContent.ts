@@ -1,7 +1,7 @@
 // Detects contact info that could enable off-platform transactions.
 // Runs server-side only — cannot be bypassed by the client.
 
-const SOCIAL_PLATFORMS = "instagram|tiktok|facebook|snapchat|twitter|whatsapp|telegram|signal|wechat|viber|linkedin|pinterest|youtube|fb|insta";
+const SOCIAL_PLATFORMS = "instagram|tiktok|facebook|snapchat|twitter|whatsapp|telegram|signal|wechat|viber|linkedin|pinterest|youtube|fb|ig|insta|snap|tt|yt";
 
 const PATTERNS: { name: string; regex: RegExp }[] = [
   // Email addresses
@@ -24,6 +24,9 @@ const PATTERNS: { name: string; regex: RegExp }[] = [
 
   // "my instagram", "my snapchat", etc. — implies sharing a handle
   { name: "off-platform contact request", regex: new RegExp(`my\\s+(${SOCIAL_PLATFORMS})`, "i") },
+
+  // Bare platform abbreviations used as nouns/handles: "ig", "fb", "snap", "tt"
+  { name: "social media handle", regex: /\b(ig|fb|snap|tt)\b/i },
 
   // Bare platform mentions as communication channels (not buying/selling context)
   { name: "messaging app", regex: /\b(whatsapp|telegram|signal|wechat|viber)\b/i },
