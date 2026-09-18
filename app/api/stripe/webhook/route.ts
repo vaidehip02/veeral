@@ -265,7 +265,6 @@ async function sendOrderEmails(orderId: string): Promise<void> {
           depositAmount,
           sellerPayout,
           shippingAddress,
-          orderDate,
         }),
       });
     }

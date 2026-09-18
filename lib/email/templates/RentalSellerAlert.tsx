@@ -15,7 +15,6 @@ export interface RentalSellerAlertProps {
   depositAmount: number;
   sellerPayout: number;
   shippingAddress?: string;
-  orderDate: string;
 }
 
 const C = {
@@ -40,7 +39,7 @@ const lineValue: React.CSSProperties = { color: C.dark, fontSize: "14px", margin
 export default function RentalSellerAlert({
   orderId, sellerName, itemTitle, buyerDisplayName,
   rentalStart, rentalEnd, rentalDays,
-  rentalFee, depositAmount, sellerPayout, shippingAddress, orderDate,
+  rentalFee, depositAmount, sellerPayout, shippingAddress,
 }: RentalSellerAlertProps) {
   const firstName = sellerName.split(" ")[0] || sellerName;
 

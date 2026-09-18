@@ -1,6 +1,6 @@
 import {
   Html, Head, Body, Container, Section,
-  Text, Heading, Hr, Preview, Row, Column,
+  Text, Heading, Hr, Preview,
 } from "@react-email/components";
 
 export interface ItemShippedProps {
