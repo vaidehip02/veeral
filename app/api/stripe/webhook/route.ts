@@ -5,6 +5,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { sendEmail } from "@/lib/email/send";
 import BuyerReceipt from "@/lib/email/templates/BuyerReceipt";
 import SellerSaleAlert from "@/lib/email/templates/SellerSaleAlert";
+import RentalReceipt from "@/lib/email/templates/RentalReceipt";
+import RentalSellerAlert from "@/lib/email/templates/RentalSellerAlert";
 import Stripe from "stripe";
 
 // Node runtime required — Edge runtime doesn't support the raw-body + crypto
@@ -161,21 +163,17 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({ received: true });
 }
 
-// ── Send buyer receipt + seller sale alert ────────────────────────────────────
+// ── Send buyer receipt + seller sale/rental alert ─────────────────────────────
 async function sendOrderEmails(orderId: string): Promise<void> {
   const admin = createAdminClient();
 
   const { data: order, error: orderErr } = await admin
     .from("orders")
     .select(`
-      id,
-      buyer_id,
-      seller_id,
-      amount,
-      platform_fee,
-      seller_payout,
-      shipping_cents,
-      created_at,
+      id, buyer_id, seller_id, type,
+      amount, platform_fee, seller_payout, deposit_amount,
+      shipping_cents, shipping_address, created_at,
+      rental_start, rental_end,
       listing:listings ( title ),
       seller:seller_profiles ( display_name )
     `)
@@ -209,44 +207,107 @@ async function sendOrderEmails(orderId: string): Promise<void> {
     year: "numeric", month: "long", day: "numeric",
   });
 
-  // Amounts stored in cents — convert to dollars for templates
-  const grossAmount  = order.amount        / 100;
-  const platformFee  = order.platform_fee  / 100;
-  const sellerPayout = order.seller_payout / 100;
-  const shippingCost = (order.shipping_cents ?? 0) / 100;
-  const total        = grossAmount + shippingCost;
+  const grossAmount   = order.amount        / 100;
+  const platformFee   = order.platform_fee  / 100;
+  const sellerPayout  = order.seller_payout / 100;
+  const shippingCost  = (order.shipping_cents ?? 0) / 100;
+  const depositAmount = (order.deposit_amount ?? 0) / 100;
+  const shippingAddress = (order as { shipping_address?: string | null }).shipping_address ?? undefined;
 
-  if (buyerEmail) {
-    await sendEmail({
-      to:      buyerEmail,
-      subject: `Your Veeral receipt — Order #${shortId}`,
-      react:   createElement(BuyerReceipt, {
-        orderId:           `#${shortId}`,
-        buyerName,
-        itemTitle,
-        itemPrice:         grossAmount,
-        shippingCost,
-        total,
-        sellerDisplayName,
-        orderDate,
-      }),
-    });
-  }
+  if (order.type === "rent") {
+    // ── Rental-specific emails ──────────────────────────────────────────────
+    const rentalStart = order.rental_start
+      ? new Date(order.rental_start).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })
+      : "";
+    const rentalEnd = order.rental_end
+      ? new Date(order.rental_end).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })
+      : "";
+    const rentalDays = order.rental_start && order.rental_end
+      ? Math.round((new Date(order.rental_end).getTime() - new Date(order.rental_start).getTime()) / 86400000)
+      : 0;
+    const total = grossAmount + shippingCost + depositAmount;
 
-  if (sellerEmail) {
-    await sendEmail({
-      to:      sellerEmail,
-      subject: `You made a sale on Veeral — ${itemTitle}`,
-      react:   createElement(SellerSaleAlert, {
-        orderId:          `#${shortId}`,
-        sellerName:       sellerDisplayName,
-        itemTitle,
-        grossAmount,
-        platformFee,
-        sellerPayout,
-        buyerDisplayName: buyerName,
-        orderDate,
-      }),
-    });
+    if (buyerEmail) {
+      await sendEmail({
+        to:      buyerEmail,
+        subject: `Rental confirmed — ${itemTitle}`,
+        react:   createElement(RentalReceipt, {
+          orderId: `#${shortId}`,
+          buyerName,
+          itemTitle,
+          sellerDisplayName,
+          rentalStart,
+          rentalEnd,
+          rentalDays,
+          rentalFee:     grossAmount,
+          depositAmount,
+          total,
+          shippingCost,
+          orderDate,
+          shippingAddress,
+        }),
+      });
+    }
+
+    if (sellerEmail) {
+      await sendEmail({
+        to:      sellerEmail,
+        subject: `Your item has been rented — ${itemTitle}`,
+        react:   createElement(RentalSellerAlert, {
+          orderId:          `#${shortId}`,
+          sellerName:       sellerDisplayName,
+          itemTitle,
+          buyerDisplayName: buyerName,
+          rentalStart,
+          rentalEnd,
+          rentalDays,
+          rentalFee:        grossAmount,
+          depositAmount,
+          sellerPayout,
+          shippingAddress,
+          orderDate,
+        }),
+      });
+    }
+
+  } else {
+    // ── Sale emails ─────────────────────────────────────────────────────────
+    const total = grossAmount + shippingCost;
+
+    if (buyerEmail) {
+      await sendEmail({
+        to:      buyerEmail,
+        subject: `Your Veeral receipt — Order #${shortId}`,
+        react:   createElement(BuyerReceipt, {
+          orderId:           `#${shortId}`,
+          buyerName,
+          itemTitle,
+          itemPrice:         grossAmount,
+          shippingCost,
+          total,
+          sellerDisplayName,
+          orderDate,
+          shippingAddress,
+        }),
+      });
+    }
+
+    if (sellerEmail) {
+      await sendEmail({
+        to:      sellerEmail,
+        subject: `You made a sale on Veeral — ${itemTitle}`,
+        react:   createElement(SellerSaleAlert, {
+          orderId:          `#${shortId}`,
+          sellerName:       sellerDisplayName,
+          itemTitle,
+          grossAmount,
+          platformFee,
+          sellerPayout,
+          buyerDisplayName: buyerName,
+          orderDate,
+          shippingAddress,
+        }),
+      });
+    }
   }
 }

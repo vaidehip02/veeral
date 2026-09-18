@@ -4,6 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { sendEmail } from "@/lib/email/send";
 import { createElement } from "react";
 import ReturnReceived from "@/lib/email/templates/ReturnReceived";
+import ReturnSubmitted from "@/lib/email/templates/ReturnSubmitted";
 import { validateTrackingNumber } from "@/lib/rentals/validateTracking";
 import { getLateFeeSettings, computeLateFee, computeDaysOverdue } from "@/lib/rentals/lateFee";
 import { stripe } from "@/lib/stripe";
@@ -105,10 +106,33 @@ export async function POST(
     return NextResponse.json({ error: "Failed to update order" }, { status: 500 });
   }
 
-  // ── Email seller ──────────────────────────────────────────────────
+  const itemTitle = (listing as { title?: string } | null)?.title ?? "your item";
+
+  // ── Email buyer: return submitted confirmation ────────────────────
+  admin.auth.admin.getUserById(user.id).then(({ data }) => {
+    const buyerEmail = data.user?.email;
+    const buyerName = data.user?.user_metadata?.full_name ?? buyerEmail ?? "Renter";
+    if (buyerEmail) {
+      sendEmail({
+        to: buyerEmail,
+        subject: `Return submitted — ${itemTitle}`,
+        react: createElement(ReturnSubmitted, {
+          orderId: orderId.slice(0, 8).toUpperCase(),
+          buyerName,
+          itemTitle,
+          trackingNumber: tracking_number?.trim() ?? "",
+          lateFee: lateFee > 0 ? lateFee : undefined,
+          daysOverdue: overdueDays > 0 ? overdueDays : undefined,
+          depositAmount: depositCents,
+          depositRefund: renterRefund,
+        }),
+      }).catch(err => console.error("[mark-returned] Buyer email error:", err));
+    }
+  });
+
+  // ── Email seller: return tracking received ────────────────────────
   admin.auth.admin.getUserById(order.seller_id).then(({ data }) => {
     const sellerEmail = data.user?.email;
-    const itemTitle = (listing as { title?: string } | null)?.title ?? "your item";
     if (sellerEmail) {
       sendEmail({
         to: sellerEmail,
@@ -118,7 +142,7 @@ export async function POST(
           trackingNumber: tracking_number?.trim(),
           orderId: orderId.slice(0, 8).toUpperCase(),
         }),
-      }).catch(err => console.error("[mark-returned] Email error:", err));
+      }).catch(err => console.error("[mark-returned] Seller email error:", err));
     }
   });
 
