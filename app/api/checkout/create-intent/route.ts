@@ -150,14 +150,17 @@ export async function POST(req: NextRequest) {
         buyerCustomerId = customer.id;
       }
 
+      // Rentals require a saved card for unreturned-item auto-charge.
+      // Link and wallets are excluded because they don't reliably attach
+      // a reusable payment method to the Customer object.
       const rentalPi = await stripe.paymentIntents.create({
-        // Buyer pays: rental cost + fee + shipping
         amount:   rentalFeeCents + fees.feeAmount + SHIPPING_CENTS,
         currency: "usd",
-        automatic_payment_methods: { enabled: true },
+        payment_method_types: ["card"],
         customer: buyerCustomerId,
-        setup_future_usage: "off_session",
-        // No application_fee_amount / transfer_data — separate charges model.
+        payment_method_options: {
+          card: { setup_future_usage: "off_session" },
+        },
         metadata: {
           order_id:    orderId,
           pi_role:     "rental_fee",
@@ -171,9 +174,8 @@ export async function POST(req: NextRequest) {
       const depositPi = await stripe.paymentIntents.create({
         amount:   depositCents,
         currency: "usd",
-        automatic_payment_methods: { enabled: true },
-        // No application_fee_amount — deposit is fully refundable, no Veeral cut.
-        // No transfer_data — stays on platform until return is confirmed.
+        payment_method_types: ["card"],
+        customer: buyerCustomerId,
         metadata: {
           order_id:    orderId,
           pi_role:     "deposit",
