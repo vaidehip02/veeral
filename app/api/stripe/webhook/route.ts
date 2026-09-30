@@ -85,6 +85,15 @@ export async function POST(req: NextRequest) {
           break;
         }
 
+        // Mark listing as sold immediately on payment so it can't be bought twice.
+        // For rentals, listing stays active until the rental period ends.
+        if (piRole !== "rental_fee") {
+          const listingId = pi.metadata?.listing_id;
+          if (listingId) {
+            await admin.from("listings").update({ status: "sold" }).eq("id", listingId);
+          }
+        }
+
         // Capture the actual Stripe processing fee from the balance transaction.
         // Fire-and-forget — failure here must never fail the webhook response.
         if (pi.latest_charge) {
