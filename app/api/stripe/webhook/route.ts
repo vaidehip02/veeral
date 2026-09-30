@@ -72,7 +72,7 @@ export async function POST(req: NextRequest) {
           .eq("id", orderId)
           .eq("status", "pending")  // idempotency guard — only transition from pending
           .select("id")
-          .single();
+          .maybeSingle();
 
         if (error) {
           console.error("[webhook] order paid update error:", orderId, error);
